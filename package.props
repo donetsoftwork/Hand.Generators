@@ -1,0 +1,18 @@
+<Project>
+
+  <PropertyGroup>
+    <VersionBase>0.1.0</VersionBase>    
+    <LangVersion>Latest</LangVersion>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <Authors>jiangxiangji</Authors>
+    <Company>Hand.Generators</Company>
+    <Copyright>Copyright (c) Hand.Generators All Rights Reserved</Copyright>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/donetsoftwork/Hand.Generators</RepositoryUrl>
+    <PackageProjectUrl>https://donetsoftwork.github.io/Hand.Generators</PackageProjectUrl>
+    <!-- SourceLink settings -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <PackageOutputPath>D:\nuget</PackageOutputPath>
+  </PropertyGroup>
+</Project>

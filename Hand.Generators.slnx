@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/Benchmarks/">
+    <Project Path="Benchmarks/SyntaxBench/SyntaxBench.csproj" />
+  </Folder>
+  <Folder Name="/docs/">
+    <File Path="docs/spirit.md" />
+    <File Path="docs/tree.md" />
+  </Folder>
+  <Folder Name="/UnitTests/">
+    <Project Path="UnitTests/EasySyntaxTests/EasySyntaxTests.csproj" />
+  </Folder>
+  <Folder Name="/解决方案项/">
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="LICENSE.txt" />
+    <File Path="package.props" />
+    <File Path="readme.md" />
+  </Folder>
+  <Project Path="Hand.Generators.Attributes/Hand.Generators.Attributes.csproj" />
+  <Project Path="Hand.Generators.EasySyntax/Hand.Generators.EasySyntax.csproj" Id="5d587150-259f-42dc-8385-047dffd8f7b1" />
+</Solution>
