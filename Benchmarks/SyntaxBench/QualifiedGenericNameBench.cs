@@ -1,4 +1,5 @@
 using BenchmarkDotNet.Attributes;
+using Hand;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -10,10 +11,11 @@ public class QualifiedGenericNameBench
     [Benchmark(Baseline = true)]
     public QualifiedNameSyntax QualifiedName()
     {
-        return SyntaxFactory.QualifiedName(
-            SyntaxFactory.IdentifierName("System.Collections.Generic"), 
-            SyntaxFactory.GenericName("List")
-                .AddTypeArgumentListArguments(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword))));
+        //return SyntaxFactory.QualifiedName(
+        //    SyntaxFactory.IdentifierName("System.Collections.Generic"), 
+        //    SyntaxFactory.GenericName("List")
+        //        .AddTypeArgumentListArguments(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword))));
+        return SyntaxGenerator.Generic("List", SyntaxGenerator.IntType).Qualified("System.Collections.Generic");
     }
     [Benchmark]
     public TypeSyntax ParseTypeName()
@@ -23,7 +25,8 @@ public class QualifiedGenericNameBench
     [Benchmark]
     public GenericNameSyntax GenericName()
     {
-        return SyntaxFactory.GenericName("System.Collections.Generic.List")
-            .AddTypeArgumentListArguments(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)));
+        //return SyntaxFactory.GenericName("System.Collections.Generic.List")
+        //    .AddTypeArgumentListArguments(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)));
+        return SyntaxGenerator.Generic("System.Collections.Generic.List", SyntaxGenerator.IntType);
     }
 }

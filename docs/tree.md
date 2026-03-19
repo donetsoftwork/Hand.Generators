@@ -50,7 +50,7 @@ public abstract class SyntaxTree
 
 ## 三、SyntaxTree基本元素
 ### 1. 声明命名空间
-#### 1.1 默认方式
+#### 1.1 原始方式
 ~~~csharp
 var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName("Models"));
 var fns = SyntaxFactory.FileScopedNamespaceDeclaration(SyntaxFactory.IdentifierName("Services"));
@@ -72,7 +72,7 @@ namespace Services;
 ~~~
 
 ### 2. 预定义类型
-#### 2.1 默认方式
+#### 2.1 原始方式
 >* SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.BoolKeyword))
 >* SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ByteKeyword))
 >* SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.SByteKeyword))
@@ -127,7 +127,7 @@ namespace Services;
 >* void
 
 ### 3. 常量表达式
-#### 3.1 默认方式
+#### 3.1 原始方式
 >* SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(1))
 >* SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(1U))
 >* SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(1L))
@@ -180,7 +180,7 @@ namespace Services;
 >* []
 
 ### 4. 运算
-#### 4.1 默认方式
+#### 4.1 原始方式
 >* SyntaxFactory.BinaryExpression(SyntaxKind.AddExpression, left, right)
 >* SyntaxFactory.BinaryExpression(SyntaxKind.SubtractExpression, left, right)
 >* SyntaxFactory.BinaryExpression(SyntaxKind.MultiplyExpression, left, right)
@@ -250,7 +250,7 @@ namespace Services;
 >* owner?.member
 
 ### 5. 定义变量
-#### 5.1 默认方式
+#### 5.1 原始方式
 ~~~csharp
 var x = SyntaxFactory.VariableDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)))
     .AddVariables(SyntaxFactory.VariableDeclarator("x"));
@@ -279,7 +279,7 @@ var z = 1;
 ~~~
 
 ### 6. 定义参数
-#### 6.1 默认方式
+#### 6.1 原始方式
 ~~~csharp
 var a = SyntaxFactory.Parameter(SyntaxFactory.Identifier("a"))
     .WithType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)));
@@ -298,14 +298,11 @@ var b = SyntaxGenerator.IntType.Parameter("b", SyntaxGenerator.Literal(1));
 #### 6.3 生成的代码
 ~~~csharp
 int a
-~~~
-
-~~~csharp
 int b = 1
 ~~~
 
 ### 7.定义函数
-#### 7.1 默认方式
+#### 7.1 原始方式
 ~~~csharp
 var method = SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)), "Increment")
     .AddParameterListParameters(
@@ -345,7 +342,7 @@ int Increment(int num, int value = 1)
 ~~~
 
 ### 8. 定义字段
-#### 8.1 默认方式
+#### 8.1 原始方式
 ~~~csharp
 var _x = SyntaxFactory.FieldDeclaration(SyntaxFactory.VariableDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword))))
     .AddDeclarationVariables(
@@ -373,7 +370,7 @@ int _y = 1;
 ~~~
 
 ### 9. 定义属性
-#### 9.1 默认方式
+#### 9.1 原始方式
 ~~~csharp
 var Id = SyntaxFactory.PropertyDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)), SyntaxFactory.Identifier("Id"))
     .AddAccessorListAccessors(
@@ -401,9 +398,14 @@ var Age = SyntaxFactory.PropertyDeclaration(SyntaxFactory.PredefinedType(SyntaxF
 ~~~csharp
 var Id = SyntaxGenerator.IntType.Property(SyntaxFactory.Identifier("Id"), SyntaxKind.GetAccessorDeclaration, SyntaxKind.SetAccessorDeclaration);
 var Name = SyntaxGenerator.StringType.GetOnlyProperty(SyntaxFactory.Identifier("Name"), SyntaxFactory.IdentifierName("_name"));
-var getAge = SyntaxGenerator.PropertyGetDeclaration().ToBuilder().Return(SyntaxFactory.IdentifierName("_age"));
-var setAge = SyntaxGenerator.PropertySetDeclaration().ToBuilder().Add(SyntaxFactory.IdentifierName("_age").AssignValue()).End();
-var property = SyntaxGenerator.IntType.Property(SyntaxFactory.Identifier("Age"), getAge, setAge);
+var getAge = SyntaxGenerator.PropertyGetDeclaration()
+    .ToBuilder()
+    .Return(SyntaxFactory.IdentifierName("_age"));
+var setAge = SyntaxGenerator.PropertySetDeclaration()
+    .ToBuilder()
+    .Add(SyntaxFactory.IdentifierName("_age").AssignValue())
+    .End();
+var Age = SyntaxGenerator.IntType.Property(SyntaxFactory.Identifier("Age"), getAge, setAge);
 ~~~
 
 #### 9.3 生成的代码
@@ -431,7 +433,7 @@ int Age
 ~~~
 
 ### 10. 声明类和结构体
-#### 10.1 默认方式
+#### 10.1 原始方式
 ~~~csharp
 var userClass = SyntaxFactory.ClassDeclaration("UserClass");
 var userStruct = SyntaxFactory.StructDeclaration("UserStruct");
@@ -450,7 +452,7 @@ struct UserStruct
 ~~~
 
 ### 11.定义构造函数
-#### 11.1 默认方式
+#### 11.1 原始方式
 ~~~csharp
 var constructor = SyntaxFactory.ConstructorDeclaration("UserId")
     .AddParameterListParameters(
@@ -479,7 +481,7 @@ UserId(int original)
 ~~~
 
 ### 12. 声明记录类
-#### 12.1 默认方式
+#### 12.1 原始方式
 ~~~csharp
 var record = SyntaxFactory.RecordDeclaration(SyntaxFactory.Token(SyntaxKind.RecordKeyword), "Person")
     .AddParameterListParameters(
@@ -505,7 +507,7 @@ record Person(string Name);
 ~~~
 
 ### 13. 声明记录结构体
-#### 13.1 默认方式
+#### 13.1 原始方式
 ~~~csharp
 var recordDeclaration = SyntaxFactory.RecordDeclaration(SyntaxKind.RecordStructDeclaration, SyntaxFactory.Token(SyntaxKind.RecordKeyword), SyntaxFactory.Identifier("UserId"))
     .WithClassOrStructKeyword(SyntaxFactory.Token(SyntaxKind.StructKeyword))
@@ -537,7 +539,7 @@ record struct UserId(int Id);
 >* internal
 >* public
 
-#### 14.2 默认方式
+#### 14.2 原始方式
 ~~~csharp
 var field = SyntaxFactory.FieldDeclaration(
     SyntaxFactory.VariableDeclaration(
@@ -581,7 +583,7 @@ public int Id { get; init; }
 >* const
 >* volatile‌
 
-#### 15.2 默认方式
+#### 15.2 原始方式
 ~~~csharp
 var field = SyntaxFactory.FieldDeclaration(
     SyntaxFactory.VariableDeclaration(
@@ -614,7 +616,7 @@ private readonly int _id;
 >* ref
 >* out
 
-#### 16.2 默认方式
+#### 16.2 原始方式
 ~~~csharp
 var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("name"))
     .WithType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)))
@@ -639,7 +641,7 @@ ref string name
 >* extern‌
 >* async
 
-#### 17.2 默认方式
+#### 17.2 原始方式
 ~~~csharp
 var method = SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)), "CreateId")
     .AddModifiers(SyntaxFactory.Token(SyntaxKind.VirtualKeyword))
@@ -674,7 +676,7 @@ virtual int CreateId()
 >* partial
 
 
-#### 18.2 默认方式
+#### 18.2 原始方式
 ~~~csharp
 var method = SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)), "CreateId")
     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword))
@@ -753,7 +755,7 @@ int Age
 ~~~
 
 ### 2. if/else分支逻辑
-#### 2.1 默认方式
+#### 2.1 原始方式
 ~~~csharp
 var value = SyntaxFactory.IdentifierName("value");
 var method = SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)), "BoolToString")
@@ -797,7 +799,7 @@ string BoolToString(bool? value)
 ~~~
 
 ### 3. switch/case分支逻辑
-#### 3.1 默认方式
+#### 3.1 原始方式
 ~~~csharp
 var value = SyntaxFactory.IdentifierName("value");
 var method = SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.BoolKeyword)), "IntToBool")
@@ -856,7 +858,7 @@ bool IntToBool(int value)
 ~~~
 
 ### 4. foreach循环
-#### 4.1 默认方式
+#### 4.1 原始方式
 ~~~csharp
 var list = SyntaxFactory.IdentifierName("list");
 var item = SyntaxFactory.IdentifierName("item");
@@ -907,7 +909,7 @@ int Count(int[] list)
 ~~~
 
 ### 5. for循环
-#### 5.1 默认方式
+#### 5.1 原始方式
 ~~~csharp
 var i = SyntaxFactory.IdentifierName("i");
 var num = SyntaxFactory.IdentifierName("num");
@@ -962,7 +964,7 @@ int Total(int num)
 ~~~
 
 ### 6. while循环
-#### 6.1 默认方式
+#### 6.1 原始方式
 ~~~csharp
 var readerType = SyntaxFactory.IdentifierName("DbDataReader");
 var reader = SyntaxFactory.IdentifierName("reader");
@@ -1027,7 +1029,7 @@ List<int> GetIds(DbDataReader reader)
 ~~~
 
 ### 6. do/while循环
-#### 6.1 默认方式
+#### 6.1 原始方式
 ~~~csharp
 var console = SyntaxFactory.IdentifierName("Console");
 var writeLine = console.Access("WriteLine");
@@ -1151,4 +1153,8 @@ namespace Models
 >* 只是树形结构细节太多影响代码审阅
 >* 为此笔者开源项目对部分SyntaxFactory进行简化
 >* dotnet add package Hand.Generators.EasySyntax --version 0.1.0.1-alpha
->* 源码稍后整理再发布
+
+源码托管地址: https://github.com/donetsoftwork/Hand.Generators ，欢迎大家直接查看源码。
+gitee同步更新:https://gitee.com/donetsoftwork/hand.-generators
+
+如果大家喜欢请动动您发财的小手手帮忙点一下Star,谢谢！！！

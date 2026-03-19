@@ -61,7 +61,7 @@ public static partial class GenerateServices
     public static AssignmentExpressionSyntax ModuloAssign(this ExpressionSyntax variable, ExpressionSyntax value)
         => SyntaxFactory.AssignmentExpression(SyntaxKind.ModuloAssignmentExpression, variable, value);
     /// <summary>
-    /// &=
+    /// &amp;=
     /// </summary>
     /// <param name="variable"></param>
     /// <param name="value"></param>
@@ -85,7 +85,7 @@ public static partial class GenerateServices
     public static AssignmentExpressionSyntax XOrAssign(this ExpressionSyntax variable, ExpressionSyntax value)
         => SyntaxFactory.AssignmentExpression(SyntaxKind.ExclusiveOrAssignmentExpression, variable, value);
     /// <summary>
-    /// <<=
+    /// &lt;&lt;=
     /// </summary>
     /// <param name="variable"></param>
     /// <param name="value"></param>
@@ -112,8 +112,7 @@ public static partial class GenerateServices
     /// <summary>
     /// 给字段赋值
     /// </summary>
-    /// <param name="field"></param>
-    /// <param name="value"></param>
+    /// <param name="variable"></param>
     /// <returns></returns>
     public static AssignmentExpressionSyntax AssignValue(this ExpressionSyntax variable)
         => Assign(variable, _value);

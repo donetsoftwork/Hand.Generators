@@ -1,0 +1,200 @@
+# SourceGenerator之partial范式
+>* 封装SourceGenerator常用功能
+>* partial范式的最佳实践
+
+## 一、什么是partial范式
+>* partial关键字允许将一个类或方法分散到多个文件中
+>* 所以partial是代码生成的一个很好的抓手
+>* 再配合Attribute特性,可以更准确定位需要生成代码的类或方法
+>* 对代码按规则自动补足,减少重复代码编写及其可能导致的失误
+>* 笔者称之为SourceGenerator的partial范式
+>* 开源项目Hand.GenerateCore用于践行partial范式
+
+## 二、partial范式的要素
+### 1. 标记定位
+>* 通过Attribute特性来标记需要代码补足的位置
+>* Attribute的命名最好与调用的SourceGenerator一致
+>* 需要生成的类有相应的Attribute也可以增加可读性(有预期该类包含自动生成的代码)
+>* partial范式通过官方方法SyntaxValueProvider.ForAttributeWithMetadataName来标记定位
+
+### 2. 节点过滤
+>* ISyntaxFilter是节点过滤接口
+>* SyntaxFilter是默认实现,实现按节点类型和是否为partial来过滤
+
+~~~csharp
+interface ISyntaxFilter
+{
+    bool Match(SyntaxNode node, CancellationToken cancellation);
+}
+class SyntaxFilter(bool isPartial, params SyntaxKind[] kinds)
+    : ISyntaxFilter
+~~~
+
+### 3. 转化源对象
+>* IGeneratorSource是转化源接口
+>* GenerateFileName是生成文件名属性
+>* Generate是生成代码方法
+
+~~~csharp
+public interface IGeneratorSource
+{
+    string GenerateFileName { get; }
+    SyntaxGenerator Generate();
+}
+~~~
+
+### 4. 转化过滤
+>* 对节点预处理
+>* 如果不满足生成必要条件返回null会被自动过滤
+>* ISyntaxTransform是转化接口
+>* PassTransform是默认实现,直接返回官方对象
+>* TSource一般实现接口IGeneratorSource
+
+~~~csharp
+interface IGeneratorTransform<TSource>
+{
+    TSource? Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellation);
+}
+class PassTransform : IGeneratorTransform<GeneratorAttributeSyntaxContext>
+{
+    public GeneratorAttributeSyntaxContext Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellation)
+        => context;
+}
+~~~
+
+### 5. 执行生成
+>* IGeneratorExecutor是执行接口
+>* GeneratorExecutor是默认实现,一般可以执行使用
+
+~~~csharp
+interface IGeneratorExecutor<TSource>
+{
+    void Execute(SourceProductionContext context, TSource source);
+}
+class GeneratorExecutor<TSource> : IGeneratorExecutor<TSource>
+    where TSource : IGeneratorSource
+{
+    public virtual void Execute(SourceProductionContext context, TSource source)
+    {
+        var cancellation = context.CancellationToken;
+        if (cancellation.IsCancellationRequested)
+            return;
+        var builder = source.Generate();
+        var code = builder.Build()
+            .WithGenerated()
+            .ToFullString();
+        context.AddSource(source.GenerateFileName, code);
+    }
+}
+~~~
+
+### 6. 生成器基类ValuesGenerator
+>* 通过ValuesGenerator简化代码生成器开发
+>* 把业务逻辑都提取到TSource中
+>* filter、transform和executor都会很简单
+
+~~~csharp
+class ValuesGenerator<TSource>(
+    string attributeName, 
+    ISyntaxFilter filter, 
+    ISyntaxTransform<TSource> transform, 
+    ISyntaxExecutor<TSource> executor);
+~~~
+
+## 三、通过ValuesGenerator实现代码生成器的Case
+>* 定义类型HelloGenerator继承ValuesGenerator即可
+>* 另外需要实现HelloGeneratorAttribute、HelloTransform和HelloSource
+
+### 1. HelloGenerator代码非常简单
+>* 含义是查找HelloGenerator标记
+>* 查找含partial修饰的类
+>* 转化为HelloSource
+>* 用HelloSource生成代码
+
+~~~csharp
+public class HelloGenerator()
+    : ValuesGenerator<HelloSource>(
+    "GenerateCoreTests.Hello.HelloGeneratorAttribute",
+    new SyntaxFilter(true, SyntaxKind.ClassDeclaration),
+    new HelloTransform(),
+    new GeneratorExecutor<HelloSource>())
+{
+}
+~~~
+
+### 2. HelloGeneratorAttribute非常简单
+~~~csharp
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+public class HelloGeneratorAttribute : Attribute
+{
+}
+~~~
+
+### 3. HelloTransform非常简单
+~~~csharp
+public class HelloTransform : IGeneratorTransform<HelloSource>
+{
+    public HelloSource? Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellation)
+    {
+        if (context.TargetNode is ClassDeclarationSyntax type && context.TargetSymbol is INamedTypeSymbol symbol)
+            return new(type, symbol);
+        return null;
+    }
+}
+~~~
+
+### 4. HelloSource是比较纯净的业务逻辑
+~~~csharp
+public class HelloSource(ClassDeclarationSyntax type, INamedTypeSymbol symbol)
+    : IGeneratorSource
+{
+    private readonly ClassDeclarationSyntax _type = type;
+    private readonly INamedTypeSymbol _symbol = symbol;
+    public string GenerateFileName
+        => $"{_symbol.ToDisplayString()}.Hello.g.cs";
+    public SyntaxGenerator Generate()
+    {
+        var builder = SyntaxGenerator.Clone(_type);
+        var method = GenerateMethod();
+        builder.AddMember(method);
+        return builder;
+    }
+    public static MethodDeclarationSyntax GenerateMethod()
+    {
+        var name = SyntaxFactory.IdentifierName("name");
+        var expression = SyntaxGenerator.Interpolation()
+            .Add("Hello: '")
+            .Add(name)
+            .Add("'")
+            .Build();
+
+        return SyntaxGenerator.VoidType.Method("SayHello", SyntaxGenerator.StringType.Parameter(name.Identifier))
+            .Public()
+            .Static()
+            .ToBuilder()
+            .Add(SyntaxFactory.IdentifierName("Console").Access("WriteLine").Invocation([expression]))
+            .End();
+    }
+}
+~~~
+
+### 5. 测试代码如下
+~~~csharp
+namespace GenerateCoreTests.Hello;
+
+[HelloGenerator]
+public partial class HelloTests;
+~~~
+
+### 6. 生成代码如下
+~~~csharp
+// <auto-generated/>
+namespace GenerateCoreTests.Hello;
+partial class HelloTests
+{
+    public static void SayHello(string name)
+    {
+        Console.WriteLine($"Hello: '{name}'");
+    }
+}
+~~~

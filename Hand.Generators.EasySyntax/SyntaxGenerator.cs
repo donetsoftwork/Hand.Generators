@@ -126,8 +126,9 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="recordName"></param>
     /// <returns></returns>
     public static RecordDeclarationSyntax RecordStructDeclaration(SyntaxToken recordName)
-        => SyntaxFactory.RecordDeclaration(SyntaxKind.RecordStructDeclaration, SyntaxFactory.Token(SyntaxKind.RecordKeyword), recordName)
-            .WithClassOrStructKeyword(SyntaxFactory.Token(SyntaxKind.StructKeyword));
+        => SyntaxFactory.RecordDeclaration(SyntaxKind.RecordStructDeclaration, default, default, SyntaxFactory.Token(SyntaxKind.RecordKeyword), SyntaxFactory.Token(SyntaxKind.StructKeyword), recordName, default, default, default, default, default, default, default, default);
+        //SyntaxFactory.RecordDeclaration(SyntaxKind.RecordStructDeclaration, SyntaxFactory.Token(SyntaxKind.RecordKeyword), recordName)
+        //    .WithClassOrStructKeyword(SyntaxFactory.Token(SyntaxKind.StructKeyword));
     /// <summary>
     /// 定义记录结构体
     /// </summary>
@@ -152,8 +153,9 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="parameters"></param>
     /// <returns></returns>
     public static ConstructorDeclarationSyntax ConstructorDeclaration(SyntaxToken typeName, params ParameterSyntax[] parameters)
-        => SyntaxFactory.ConstructorDeclaration(typeName)
-        .WithParameterList(ParameterList(parameters));
+        => SyntaxFactory.ConstructorDeclaration(default, default, typeName, ParameterList(parameters), default, default, default, default);
+        //SyntaxFactory.ConstructorDeclaration(typeName)
+        //.WithParameterList(ParameterList(parameters));
     #endregion
     /// <summary>
     /// 
@@ -163,10 +165,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="parameters"></param>
     /// <returns></returns>
     public static OperatorDeclarationSyntax OperatorDeclaration(SyntaxKind kind, TypeSyntax returnType, params ParameterSyntax[] parameters)
-    {
-        return SyntaxFactory.OperatorDeclaration(returnType, SyntaxFactory.Token(kind))
-            .WithParameterList(ParameterList(parameters));
-    }
+        => SyntaxFactory.OperatorDeclaration(default, SyntaxFactory.TokenList(GenerateServices._public, GenerateServices._static), returnType, default, SyntaxFactory.Token(SyntaxKind.OperatorKeyword), default, SyntaxFactory.Token(kind), ParameterList(parameters), default, default, default);
     /// <summary>
     /// 含a、b参数
     /// </summary>
@@ -175,14 +174,13 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     public static OperatorDeclarationSyntax EqualOperatorDeclaration(TypeSyntax type)
         => EqualOperatorDeclaration(type.Parameter("a"), type.Parameter("b"));
     /// <summary>
-    /// 
+    /// 重载==
     /// </summary>
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
     public static OperatorDeclarationSyntax EqualOperatorDeclaration(ParameterSyntax a, ParameterSyntax b)
-        => SyntaxFactory.OperatorDeclaration(BoolType, SyntaxFactory.Token(SyntaxKind.EqualsEqualsToken))
-            .WithParameterList(ParameterList(a, b));
+        => OperatorDeclaration(SyntaxKind.EqualsEqualsToken, BoolType, a, b);
     /// <summary>
     /// 含a、b参数
     /// </summary>
@@ -191,14 +189,13 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     public static OperatorDeclarationSyntax NotEqualOperatorDeclaration(TypeSyntax type)
         => NotEqualOperatorDeclaration(type.Parameter("a"), type.Parameter("b"));
     /// <summary>
-    /// 
+    /// 重载!=
     /// </summary>
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
     public static OperatorDeclarationSyntax NotEqualOperatorDeclaration(ParameterSyntax a, ParameterSyntax b)
-        => SyntaxFactory.OperatorDeclaration(BoolType, SyntaxFactory.Token(SyntaxKind.NotEqualsExpression))
-            .WithParameterList(ParameterList(a, b));
+        => OperatorDeclaration(SyntaxKind.ExclamationEqualsToken, BoolType, a, b);
     #region DeclareAccessor
     ///// <summary>
     ///// 定义处理器
@@ -445,6 +442,22 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     public static LiteralExpressionSyntax Literal(char value)
         => SyntaxFactory.LiteralExpression(SyntaxKind.CharacterLiteralExpression, SyntaxFactory.Literal(value));
     #endregion
+    #region Interpolation
+    /// <summary>
+    /// 开始构造插值表达式
+    /// </summary>
+    /// <param name="start">String/VerbatimString/SingleLineRawString/MultiLineRawString</param>
+    /// <param name="end">String/MultiLineRawString</param>
+    /// <returns></returns>
+    public static InterpolationBuilder Interpolation(SyntaxKind start, SyntaxKind end)
+        => new(start, end);
+    /// <summary>
+    /// 开始构造插值表达式
+    /// </summary>
+    /// <returns></returns>
+    public static InterpolationBuilder Interpolation()
+        => new(SyntaxKind.InterpolatedStringStartToken, SyntaxKind.InterpolatedStringEndToken);
+    #endregion
     /// <summary>
     /// 抛出异常
     /// </summary>
@@ -547,9 +560,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     {
         return SyntaxFactory.CompilationUnit()
             .WithUsings(List(usings))
-            .AddMembers(root.WithLeadingTrivia(SyntaxFactory.TriviaList(
-                SyntaxFactory.Comment("// <auto-generated/>")
-            )))
+            .AddMembers(root)
             .NormalizeWhitespace();
     }
     /// <summary>
@@ -562,8 +573,34 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     public static TypeDeclarationSyntax CheckType(TypeDeclarationSyntax type, ParameterSyntax[] parameters, MemberDeclarationSyntax[] members)
     {
         if (parameters.Length > 0)
-            return type.AddParameterListParameters(parameters).AddMembers(members);
-        return type.AddMembers(members);
+            return CheckMembers(type.AddParameterListParameters(parameters), members);
+        return CheckMembers(type, members);
+    }
+    /// <summary>
+    /// 处理成员
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="members"></param>
+    /// <returns></returns>
+    public static TypeDeclarationSyntax CheckMembers(TypeDeclarationSyntax type,  MemberDeclarationSyntax[] members)
+    {
+        if (members.Length > 0)
+        {
+            if (type.SemicolonToken.IsKind(SyntaxKind.SemicolonToken))
+            {
+                // 如果简化类型(分号结尾)
+                // 增加花括号并去掉分号
+                return type.AddMembers(members)
+                    .WithOpenBraceToken(SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
+                    .WithCloseBraceToken(SyntaxFactory.Token(SyntaxKind.CloseBraceToken))
+                    .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.None));
+            }
+            else
+            {
+                return type.AddMembers(members);
+            }
+        }
+        return type;
     }
     /// <summary>
     /// 构造语法树
@@ -581,6 +618,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="ns"></param>
     /// <param name="usings"></param>
     /// <param name="type"></param>
+    /// <param name="parameters"></param>
     /// <param name="members"></param>
     /// <returns></returns>
     public static CompilationUnitSyntax Build(BaseNamespaceDeclarationSyntax ns, List<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, ParameterSyntax[] parameters, MemberDeclarationSyntax[] members)
@@ -599,10 +637,20 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <returns></returns>
     public static SyntaxGenerator Clone(TypeDeclarationSyntax type)
     {
-        var typeNew = SyntaxFactory.TypeDeclaration(type.Kind(), type.Identifier)
-            .WithTypeParameterList(type.TypeParameterList)
-            .WithKeyword(type.Keyword)
-            .Partial();
+        var typeNew = SyntaxFactory.TypeDeclaration(
+            type.Kind(),
+            default,
+            new SyntaxTokenList(GenerateServices._partial),
+            type.Keyword,
+            type.Identifier,
+            typeParameterList: type.TypeParameterList,
+            baseList: null,
+            type.ConstraintClauses,
+            type.OpenBraceToken,
+            default,
+            type.CloseBraceToken,
+            type.SemicolonToken);
+
         var parent = type.Parent;
         if (parent is null)
             return new SyntaxGenerator([], typeNew, []);
@@ -649,48 +697,17 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     public static NamespaceBuilder Create(string ns, TypeDeclarationSyntax type, params MemberDeclarationSyntax[] members)
         => new(SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(ns)), [], type, [.. members]);
     /// <summary>
-    /// 添加Using
-    /// </summary>
-    /// <param name="syntaxTree"></param>
-    /// <param name="names"></param>
-    /// <returns></returns>
-    public static SyntaxTree Using(SyntaxTree syntaxTree, params NameSyntax[] names)
-    {
-        int count = names.Length;
-        if (count == 0)
-            return syntaxTree;
-        var list = new UsingDirectiveSyntax[count];
-        for (int i = 0; i < count; i++)
-            list[i] = SyntaxFactory.UsingDirective(names[i]);
-        return Using(syntaxTree, list);
-    }
-    /// <summary>
-    /// 添加Using
-    /// </summary>
-    /// <param name="syntaxTree"></param>
-    /// <param name="usings"></param>
-    /// <returns></returns>
-    public static SyntaxTree Using(SyntaxTree syntaxTree, params UsingDirectiveSyntax[] usings)
-    {
-        var delta = Plus(syntaxTree.GetRoot().DescendantNodes().OfType<UsingDirectiveSyntax>(), usings);
-        if (delta.Count == 0)
-            return syntaxTree;
-        var root = syntaxTree.GetCompilationUnitRoot()
-            .AddUsings([.. delta]);
-        return root.SyntaxTree;
-    }
-    /// <summary>
     /// 追加引用
     /// </summary>
     /// <param name="list0">原引用</param>
     /// <param name="delta">引用增量</param>
     /// <returns></returns>
-    public static IReadOnlyCollection<UsingDirectiveSyntax> Plus(IEnumerable<UsingDirectiveSyntax> list0, UsingDirectiveSyntax[] delta)
+    public static IReadOnlyCollection<UsingDirectiveSyntax> Plus(IEnumerable<UsingDirectiveSyntax> list0, params IReadOnlyCollection<UsingDirectiveSyntax> delta)
     {
         var keys = new HashSet<string>(list0
             .Select(item => item.ToFullString())
             .Distinct());
-        var list = new List<UsingDirectiveSyntax>(delta.Length);
+        var list = new List<UsingDirectiveSyntax>(delta.Count);
         foreach (var item in delta)
         {
             var key = item.ToFullString();

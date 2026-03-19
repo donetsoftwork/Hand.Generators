@@ -268,7 +268,6 @@ public static partial class GenerateServices
     /// </summary>
     /// <typeparam name="TParent"></typeparam>
     /// <param name="builder"></param>
-    /// <param name="expression"></param>
     /// <returns></returns>
     public static TryBuilder<TParent, StatementBuilder<TParent>> Try<TParent>(this StatementBuilder<TParent> builder)
         => new(builder);
@@ -288,17 +287,10 @@ public static partial class GenerateServices
     /// <summary>
     /// 返回
     /// </summary>
+    /// <param name="builder"></param>
     /// <param name="variable"></param>
     public static TParent Return<TParent>(this StatementBuilder<TParent> builder, SyntaxToken variable)
         => Return(builder, SyntaxFactory.IdentifierName(variable));
-    ///// <summary>
-    ///// 返回
-    ///// </summary>
-    ///// <typeparam name="TParent"></typeparam>
-    ///// <param name="builder"></param>
-    ///// <returns></returns>
-    //public static TParent Return<TParent>(this StatementBuilder<TParent> builder)
-    //    => builder.BuildCore();
     #endregion
     /// <summary>
     /// 返回true

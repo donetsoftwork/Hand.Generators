@@ -7,6 +7,7 @@ namespace Hand.Builders;
 /// <summary>
 /// If
 /// </summary>
+/// <typeparam name="TGrandpa"></typeparam>
 /// <typeparam name="TParent"></typeparam>
 /// <param name="parent"></param>
 /// <param name="condition"></param>
@@ -15,6 +16,9 @@ public class IfBuilder<TGrandpa, TParent>(TParent parent, ExpressionSyntax condi
     where TParent : StatementBuilder<TGrandpa>
 {
     #region 配置
+    /// <summary>
+    /// 当前条件
+    /// </summary>
     protected readonly ExpressionSyntax _condition = condition;
     /// <summary>
     /// 当前条件

@@ -43,7 +43,7 @@ public static partial class GenerateServices
     /// <summary>
     /// 转化为变量名
     /// </summary>
-    /// <param name="field"></param>
+    /// <param name="property"></param>
     /// <returns></returns>
     public static IdentifierNameSyntax ToIdentifierName(this PropertyDeclarationSyntax property)
         => SyntaxFactory.IdentifierName(property.Identifier);
@@ -129,31 +129,31 @@ public static partial class GenerateServices
     public static BinaryExpressionSyntax Modulo(this ExpressionSyntax left, ExpressionSyntax right)
         => SyntaxFactory.BinaryExpression(SyntaxKind.ModuloExpression, left, right);
     /// <summary>
-    /// &
+    /// &amp;
     /// </summary>
-    /// <param name="variable"></param>
-    /// <param name="value"></param>
+    /// <param name="left"></param>
+    /// <param name="right"></param>
     /// <returns></returns>
     public static BinaryExpressionSyntax And(this ExpressionSyntax left, ExpressionSyntax right)
         => SyntaxFactory.BinaryExpression(SyntaxKind.BitwiseAndExpression, left, right);
     /// <summary>
     /// |
     /// </summary>
-    /// <param name="variable"></param>
-    /// <param name="value"></param>
+    /// <param name="left"></param>
+    /// <param name="right"></param>
     /// <returns></returns>
     public static BinaryExpressionSyntax Or(this ExpressionSyntax left, ExpressionSyntax right)
         => SyntaxFactory.BinaryExpression(SyntaxKind.BitwiseOrExpression, left, right);
     /// <summary>
     /// ^
     /// </summary>
-    /// <param name="variable"></param>
-    /// <param name="value"></param>
+    /// <param name="left"></param>
+    /// <param name="right"></param>
     /// <returns></returns>
     public static BinaryExpressionSyntax Xor(this ExpressionSyntax left, ExpressionSyntax right)
         => SyntaxFactory.BinaryExpression(SyntaxKind.ExclusiveOrExpression, left, right);
     /// <summary>
-    /// <<
+    /// &lt;&lt;
     /// </summary>
     /// <param name="variable"></param>
     /// <param name="value"></param>
@@ -169,18 +169,18 @@ public static partial class GenerateServices
     public static BinaryExpressionSyntax RightShift(this ExpressionSyntax variable, ExpressionSyntax value)
         => SyntaxFactory.BinaryExpression(SyntaxKind.RightShiftExpression, variable, value);
     /// <summary>
-    /// &&
+    /// &amp;&amp;
     /// </summary>
-    /// <param name="variable"></param>
-    /// <param name="value"></param>
+    /// <param name="left"></param>
+    /// <param name="right"></param>
     /// <returns></returns>
     public static BinaryExpressionSyntax LogicalAnd(this ExpressionSyntax left, ExpressionSyntax right)
         => SyntaxFactory.BinaryExpression(SyntaxKind.LogicalAndExpression, left, right);
     /// <summary>
     /// ||
     /// </summary>
-    /// <param name="variable"></param>
-    /// <param name="value"></param>
+    /// <param name="left"></param>
+    /// <param name="right"></param>
     /// <returns></returns>
     public static BinaryExpressionSyntax LogicalOr(this ExpressionSyntax left, ExpressionSyntax right)
         => SyntaxFactory.BinaryExpression(SyntaxKind.LogicalOrExpression, left, right);
@@ -358,7 +358,7 @@ public static partial class GenerateServices
     public static BinaryExpressionSyntax GreaterOrEqual(this ExpressionSyntax left, ExpressionSyntax right)
         => SyntaxFactory.BinaryExpression(SyntaxKind.GreaterThanOrEqualExpression, left, right);
     /// <summary>
-    /// <
+    /// &lt;
     /// </summary>
     /// <param name="left"></param>
     /// <param name="right"></param>
@@ -366,7 +366,7 @@ public static partial class GenerateServices
     public static BinaryExpressionSyntax LessThan(this ExpressionSyntax left, ExpressionSyntax right)
         => SyntaxFactory.BinaryExpression(SyntaxKind.LessThanExpression, left, right);
     /// <summary>
-    /// <=
+    /// &lt;=
     /// </summary>
     /// <param name="left"></param>
     /// <param name="right"></param>
@@ -511,7 +511,7 @@ public static partial class GenerateServices
     /// <summary>
     /// 标签
     /// </summary>
-    /// <param name="statement"></param>
+    /// <param name="expression"></param>
     /// <param name="name"></param>
     /// <returns></returns>
     public static LabeledStatementSyntax Label(this ExpressionSyntax expression, SyntaxToken name)
@@ -519,7 +519,7 @@ public static partial class GenerateServices
     /// <summary>
     /// 标签
     /// </summary>
-    /// <param name="statement"></param>
+    /// <param name="expression"></param>
     /// <param name="name"></param>
     /// <returns></returns>
     public static LabeledStatementSyntax Label(this ExpressionSyntax expression, string name)

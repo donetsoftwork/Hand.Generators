@@ -16,6 +16,9 @@ public class CatchBuilder<TGrandpa, TParent>(TryBuilder<TGrandpa, TParent> @try,
     where TParent : StatementBuilder<TGrandpa>
 {
     #region 配置
+    /// <summary>
+    /// try节点
+    /// </summary>
     protected readonly TryBuilder<TGrandpa, TParent> _try = @try;
     private readonly CatchDeclarationSyntax? _declaration = declaration;
     private readonly ExpressionSyntax? _when = when;

@@ -6,6 +6,7 @@ namespace Hand.Builders;
 /// <summary>
 /// Else
 /// </summary>
+/// <typeparam name="TGrandpa"></typeparam>
 /// <typeparam name="TParent"></typeparam>
 /// <param name="parent"></param>
 /// <param name="if"></param>
@@ -15,7 +16,9 @@ public class ElseBuilder<TGrandpa, TParent>(TParent parent, IfBuilder<TGrandpa, 
 {
     #region 配置
     private readonly IfBuilder<TGrandpa, TParent> _if = @if;
-
+    /// <summary>
+    /// If
+    /// </summary>
     public IfBuilder<TGrandpa, TParent> If
         => _if;
     #endregion

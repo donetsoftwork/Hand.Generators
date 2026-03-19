@@ -1,5 +1,9 @@
 using Hand;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Linq.Expressions;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace EasySyntaxTests;
 
@@ -114,6 +118,14 @@ public class ExpressionTest
         Assert.Equal("true||false", code);
     }
     [Fact]
+    public void LogicalNot()
+    {
+        var read = SyntaxFactory.IdentifierName("reader").Access("Read");
+        var expression = read.Invocation().LogicalNot();
+        var code = expression.ToFullString();
+        Assert.Equal("!reader.Read()", code);
+    }
+    [Fact]
     public void PreIncrement()
     {
         var i = SyntaxFactory.IdentifierName("i");
@@ -162,11 +174,78 @@ public class ExpressionTest
         Assert.Equal("user.Name", code);        
     }
     [Fact]
+    public void Score()
+    {
+        var type = SyntaxFactory.IdentifierName("Student");
+        var score = SyntaxFactory.IdentifierName("Score");
+        var other = SyntaxFactory.IdentifierName("other");
+        var method = SyntaxGenerator.IntType.Method("Compare", type.Parameter(other.Identifier))
+            .ToBuilder()
+            .Return(score.Subtract(score.Qualified(other)));
+        var code = method.NormalizeWhitespace().ToFullString();
+        Assert.NotEmpty(code);
+    }
+    [Fact]
     public void ConditionalAccess()
     {
         var user = SyntaxFactory.IdentifierName("user");
         var userName = user.ConditionalAccess("Name");
         var code = userName.ToFullString();
         Assert.Equal("user?.Name", code);
+    }
+    [Fact]
+    public void Interpolation()
+    {
+        var interpolation = SyntaxGenerator.Interpolation()
+            .Add("Hello ")
+            .Add(SyntaxFactory.IdentifierName("name"))
+            .Add("!")
+            .Build();
+        var code = interpolation.ToFullString();
+        Assert.Equal("$\"Hello {name}!\"", code);
+
+        InterpolatedStringContentSyntax[] contents = [
+            SyntaxFactory.InterpolatedStringText(SyntaxFactory.Token(
+                        SyntaxTriviaList.Empty,
+                        SyntaxKind.InterpolatedStringTextToken,
+                        "Hello ",
+                        "Hello ",
+                        SyntaxTriviaList.Empty)),
+            SyntaxFactory.Interpolation(SyntaxFactory.IdentifierName("name")),
+            SyntaxFactory.InterpolatedStringText(SyntaxFactory.Token(
+                SyntaxTriviaList.Empty,
+                SyntaxKind.InterpolatedStringTextToken,
+                "!",
+                "!",
+                SyntaxTriviaList.Empty))
+        ];
+        var interpolation0 = SyntaxFactory.InterpolatedStringExpression(SyntaxFactory.Token(SyntaxKind.InterpolatedStringStartToken), SyntaxGenerator.List(contents));
+        var code0 = interpolation0.ToFullString();
+        Assert.Equal("$\"Hello {name}!\"", code0);
+    }
+    [Fact]
+    public void InterpolationFormat()
+    {
+        var interpolation = SyntaxGenerator.Interpolation()
+            .Add("Today is: ")
+            .Add(SyntaxFactory.IdentifierName("now"), "yyyy-MM-dd")
+            .Build();
+        var code = interpolation.ToFullString();
+        Assert.Equal("$\"Today is: {now:yyyy-MM-dd}\"", code);
+
+        InterpolatedStringContentSyntax[] contents = [
+            SyntaxFactory.InterpolatedStringText(SyntaxFactory.Token(
+                        SyntaxTriviaList.Empty,
+                        SyntaxKind.InterpolatedStringTextToken,
+                        "Today is: ",
+                        "Today is: ",
+                        SyntaxTriviaList.Empty)),
+            SyntaxFactory.Interpolation(SyntaxFactory.IdentifierName("now"), default,  SyntaxFactory.InterpolationFormatClause(
+                SyntaxFactory.Token(SyntaxKind.ColonToken),
+                SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.InterpolatedStringTextToken, "yyyy-MM-dd", "yyyy-MM-dd", SyntaxTriviaList.Empty)))
+        ];
+        var interpolation0 = SyntaxFactory.InterpolatedStringExpression(SyntaxFactory.Token(SyntaxKind.InterpolatedStringStartToken), SyntaxGenerator.List(contents));
+        var code0 = interpolation0.ToFullString();
+        Assert.Equal("$\"Today is: {now:yyyy-MM-dd}\"", code0);
     }
 }

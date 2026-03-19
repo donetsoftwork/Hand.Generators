@@ -11,5 +11,8 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Hand.Generators.EasySyntax\Hand.Generators.EasySyntax.csproj" />
+  </ItemGroup>
 
 </Project>

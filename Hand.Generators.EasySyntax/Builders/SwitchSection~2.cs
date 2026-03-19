@@ -16,6 +16,9 @@ public class SwitchSection<TGrandpa, TParent>(SwitchBuilder<TGrandpa, TParent> @
     where TParent : StatementBuilder<TGrandpa>
 {
     #region 配置
+    /// <summary>
+    /// Switch节点
+    /// </summary>
     protected readonly SwitchBuilder<TGrandpa, TParent> _switch = @switch;
     private readonly SwitchLabelSyntax _label = label;
     private bool _isReturn = false;

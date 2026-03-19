@@ -4,7 +4,6 @@
 ### 基础类型
 >* ParseTypeName代码为SyntaxFactory.ParseTypeName("int")
 >* PredefinedType代码为SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword))
->* Int代码为SyntaxGenerator.Int
 >* ParseTypeName性能差,内存占用大
 
 | Method         | Mean       | Error     | StdDev    | Median     | Ratio | RatioSD | Gen0   | Allocated | Alloc Ratio |
@@ -44,15 +43,15 @@
 | ParseTypeName | 284.3 ns | 0.69 ns | 0.74 ns |  2.21 |    0.02 | 0.0658 | 0.0001 |   1.11 KB |        1.08 |
 
 ### 限定名泛型
->* QualifiedName代码为SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName("System.Collections.Generic"), SyntaxFactory.GenericName("List").AddTypeArgumentListArguments(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword))))
+>* QualifiedName代码为SyntaxGenerator.Generic("List", SyntaxGenerator.IntType).Qualified("System.Collections.Generic")
 >* ParseTypeName代码为SyntaxFactory.ParseTypeName("System.Collections.Generic.List<int>")
->* IdentifierName代码为SyntaxFactory.GenericName("System.Collections.Generic.List").AddTypeArgumentListArguments(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)))
+>* GenericName代码为SyntaxGenerator.Generic("System.Collections.Generic.List", SyntaxGenerator.IntType)
 
-| Method        | Mean     | Error   | StdDev  | Median   | Ratio | RatioSD | Gen0   | Gen1   | Allocated | Alloc Ratio |
-|-------------- |---------:|--------:|--------:|---------:|------:|--------:|-------:|-------:|----------:|------------:|
-| QualifiedName | 155.1 ns | 1.99 ns | 2.30 ns | 156.3 ns |  1.00 |    0.02 | 0.0755 | 0.0001 |   1.27 KB |        1.00 |
-| ParseTypeName | 423.1 ns | 5.66 ns | 6.51 ns | 423.2 ns |  2.73 |    0.06 | 0.0663 | 0.0001 |   1.12 KB |        0.88 |
-| GenericName   | 131.2 ns | 1.53 ns | 1.70 ns | 129.8 ns |  0.85 |    0.02 | 0.0607 |      - |   1.02 KB |        0.80 |
+| Method        | Mean      | Error    | StdDev   | Median    | Ratio | RatioSD | Gen0   | Gen1   | Allocated | Alloc Ratio |
+|-------------- |----------:|---------:|---------:|----------:|------:|--------:|-------:|-------:|----------:|------------:|
+| QualifiedName |  72.81 ns | 2.099 ns | 2.333 ns |  71.06 ns |  1.00 |    0.04 | 0.0384 |      - |     664 B |        1.00 |
+| ParseTypeName | 425.04 ns | 1.605 ns | 1.717 ns | 426.37 ns |  5.84 |    0.18 | 0.0663 | 0.0001 |    1144 B |        1.72 |
+| GenericName   |  42.27 ns | 0.637 ns | 0.708 ns |  42.81 ns |  0.58 |    0.02 | 0.0236 |      - |     408 B |        0.61 |
 
 ## 访问成员
 >* Qualified代码为SyntaxFactory.QualifiedName(owner, member)
@@ -63,3 +62,4 @@
 |---------- |---------:|----------:|----------:|------:|-------:|----------:|------------:|
 | Qualified | 9.328 ns | 0.0473 ns | 0.0486 ns |  1.00 | 0.0065 |     112 B |        1.00 |
 | Access    | 9.689 ns | 0.0834 ns | 0.0893 ns |  1.04 | 0.0065 |     112 B |        1.00 |
+

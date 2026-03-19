@@ -11,26 +11,26 @@ namespace Hand;
 public static partial class GenerateServices
 {
     #region SyntaxToken
-    private static readonly SyntaxToken _public = SyntaxFactory.Token(SyntaxKind.PublicKeyword);
-    private static readonly SyntaxToken _private = SyntaxFactory.Token(SyntaxKind.PrivateKeyword);
-    private static readonly SyntaxToken _protected = SyntaxFactory.Token(SyntaxKind.ProtectedKeyword);
-    private static readonly SyntaxToken _internal = SyntaxFactory.Token(SyntaxKind.InternalKeyword);
-    private static readonly SyntaxToken _partial = SyntaxFactory.Token(SyntaxKind.PartialKeyword);
-    private static readonly SyntaxToken _static = SyntaxFactory.Token(SyntaxKind.StaticKeyword);
-    private static readonly SyntaxToken _abstract = SyntaxFactory.Token(SyntaxKind.AbstractKeyword);
-    private static readonly SyntaxToken _virtual = SyntaxFactory.Token(SyntaxKind.VirtualKeyword);
-    private static readonly SyntaxToken _override = SyntaxFactory.Token(SyntaxKind.OverrideKeyword);
-    private static readonly SyntaxToken _async‌ = SyntaxFactory.Token(SyntaxKind.AsyncKeyword);
-    private static readonly SyntaxToken _extern‌ = SyntaxFactory.Token(SyntaxKind.ExternKeyword);
-    private static readonly SyntaxToken _new‌ = SyntaxFactory.Token(SyntaxKind.NewKeyword);
-    private static readonly SyntaxToken _sealed‌ = SyntaxFactory.Token(SyntaxKind.SealedKeyword);
-    private static readonly SyntaxToken _readonly = SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword);
-    private static readonly SyntaxToken _volatile‌ = SyntaxFactory.Token(SyntaxKind.VolatileKeyword);
-    private static readonly SyntaxToken _const = SyntaxFactory.Token(SyntaxKind.ConstKeyword);
-    private static readonly SyntaxToken _params = SyntaxFactory.Token(SyntaxKind.ParamsKeyword);
-    private static readonly SyntaxToken _in = SyntaxFactory.Token(SyntaxKind.InKeyword);
-    private static readonly SyntaxToken _ref = SyntaxFactory.Token(SyntaxKind.RefKeyword);
-    private static readonly SyntaxToken _out = SyntaxFactory.Token(SyntaxKind.OutKeyword);
+    internal static readonly SyntaxToken _public = SyntaxFactory.Token(SyntaxKind.PublicKeyword);
+    internal static readonly SyntaxToken _private = SyntaxFactory.Token(SyntaxKind.PrivateKeyword);
+    internal static readonly SyntaxToken _protected = SyntaxFactory.Token(SyntaxKind.ProtectedKeyword);
+    internal static readonly SyntaxToken _internal = SyntaxFactory.Token(SyntaxKind.InternalKeyword);
+    internal static readonly SyntaxToken _partial = SyntaxFactory.Token(SyntaxKind.PartialKeyword);
+    internal static readonly SyntaxToken _static = SyntaxFactory.Token(SyntaxKind.StaticKeyword);
+    internal static readonly SyntaxToken _abstract = SyntaxFactory.Token(SyntaxKind.AbstractKeyword);
+    internal static readonly SyntaxToken _virtual = SyntaxFactory.Token(SyntaxKind.VirtualKeyword);
+    internal static readonly SyntaxToken _override = SyntaxFactory.Token(SyntaxKind.OverrideKeyword);
+    internal static readonly SyntaxToken _async‌ = SyntaxFactory.Token(SyntaxKind.AsyncKeyword);
+    internal static readonly SyntaxToken _extern‌ = SyntaxFactory.Token(SyntaxKind.ExternKeyword);
+    internal static readonly SyntaxToken _new‌ = SyntaxFactory.Token(SyntaxKind.NewKeyword);
+    internal static readonly SyntaxToken _sealed‌ = SyntaxFactory.Token(SyntaxKind.SealedKeyword);
+    internal static readonly SyntaxToken _readonly = SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword);
+    internal static readonly SyntaxToken _volatile‌ = SyntaxFactory.Token(SyntaxKind.VolatileKeyword);
+    internal static readonly SyntaxToken _const = SyntaxFactory.Token(SyntaxKind.ConstKeyword);
+    internal static readonly SyntaxToken _params = SyntaxFactory.Token(SyntaxKind.ParamsKeyword);
+    internal static readonly SyntaxToken _in = SyntaxFactory.Token(SyntaxKind.InKeyword);
+    internal static readonly SyntaxToken _ref = SyntaxFactory.Token(SyntaxKind.RefKeyword);
+    internal static readonly SyntaxToken _out = SyntaxFactory.Token(SyntaxKind.OutKeyword);
     #endregion
     #region Modifiers
     /// <summary>

@@ -398,7 +398,7 @@ public static partial class GenerateServices
     /// 定义变量
     /// </summary>
     /// <param name="catchType"></param>
-    /// <param name="CatchName"></param>
+    /// <param name="catchName"></param>
     /// <returns></returns>
     public static CatchDeclarationSyntax Catch(this TypeSyntax catchType, SyntaxToken catchName)
         => SyntaxFactory.CatchDeclaration(catchType, catchName);
@@ -465,10 +465,7 @@ public static partial class GenerateServices
     /// <param name="items"></param>
     /// <returns></returns>
     public static PropertyDeclarationSyntax Property(this TypeSyntax propertyType, SyntaxToken propertyName, params AccessorDeclarationSyntax[] items)
-    {
-        return SyntaxFactory.PropertyDeclaration(propertyType, propertyName)
-            .WithAccessorList(SyntaxFactory.AccessorList(SyntaxGenerator.List(items)));
-    }
+        => SyntaxFactory.PropertyDeclaration(default, default, propertyType, default, propertyName, SyntaxFactory.AccessorList(SyntaxGenerator.List(items)), default, default, default);
     /// <summary>
     /// 定义自动属性
     /// </summary>
@@ -523,8 +520,7 @@ public static partial class GenerateServices
     /// <returns></returns>
     public static PropertyDeclarationSyntax GetOnlyProperty(this TypeSyntax propertyType, SyntaxToken propertyName, ExpressionSyntax value)
         => Property(propertyType, propertyName, 
-            SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                .WithBody(SyntaxFactory.Block(value.Return())));
+            SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration, default, default, SyntaxFactory.Token(SyntaxKind.GetKeyword), SyntaxFactory.Block(value.Return()), default, default));
     /// <summary>
     /// 定义只读属性
     /// </summary>
