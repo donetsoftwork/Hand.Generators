@@ -337,7 +337,7 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
     /// <returns></returns>
     public static SymbolTypeDescriptor GetDescriptor(Compilation compilation, INamedTypeSymbol symbol)
     {
-        // 提取字段、属性、方法和运算符重载等信息
+        // 提取字段、属性、构造函数、方法和运算符重载等信息
         var builder = new SymbolTypeBuilder()
             .WithField()
             .WithProperty()

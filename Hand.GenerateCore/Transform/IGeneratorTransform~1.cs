@@ -1,4 +1,4 @@
-using Microsoft.CodeAnalysis;
+using Hand.Generators;
 using System.Threading;
 
 namespace Hand.Transform;
@@ -15,5 +15,5 @@ public interface IGeneratorTransform<TSource>
     /// <param name="context"></param>
     /// <param name="cancellation"></param>
     /// <returns></returns>
-    TSource? Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellation);
+    TSource? Transform(AttributeContext context, CancellationToken cancellation);
 }

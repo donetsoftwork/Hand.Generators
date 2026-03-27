@@ -33,26 +33,11 @@ public abstract class AttributeGenerator<TSource>(string attributeName, ISyntaxF
     /// <inheritdoc />
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-//#if DEBUG
-//        System.Diagnostics.Debugger.Launch();
-//#endif
-        // 按Attribute查找
-        var provider = context.SyntaxProvider.ForAttributeWithMetadataName(_attributeName, _filter.Match, _transform.Transform);
         //#if DEBUG
         //        System.Diagnostics.Debugger.Launch();
         //#endif
-        // 处理数据
-        Initialize(context, Check(provider));
-    }
-    /// <summary>
-    /// 过滤null节点
-    /// </summary>
-    /// <param name="provider"></param>
-    /// <returns></returns>
-    public IncrementalValuesProvider<TSource> Check(IncrementalValuesProvider<TSource?> provider)
-    {
-        return provider.Where(item => item is not null)
-            .Select((item, _) => item!);
+        var provider = GenerateProvider.CreateByAttribute(context, _attributeName, _filter, _transform);
+        Initialize(context, provider);
     }
     /// <summary>
     /// 处理数据

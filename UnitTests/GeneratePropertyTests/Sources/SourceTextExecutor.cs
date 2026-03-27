@@ -1,5 +1,6 @@
 using Hand.Executors;
 using Hand.GenerateProperty;
+using Hand.Generators;
 using Hand.Symbols;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -9,10 +10,10 @@ namespace GeneratePropertyTests.Sources;
 /// <summary>
 /// 实体属性执行器
 /// </summary>
-public class SourceTextExecutor : IGeneratorExecutor<GeneratorAttributeSyntaxContext>
+public class SourceTextExecutor : IGeneratorExecutor<AttributeContext>
 {
     /// <inheritdoc />
-    public void Execute(SourceProductionContext sourceContext, GeneratorAttributeSyntaxContext generatorContext)
+    public void Execute(SourceProductionContext sourceContext, AttributeContext generatorContext)
     {
         var cancellation = sourceContext.CancellationToken;
 //#if DEBUG

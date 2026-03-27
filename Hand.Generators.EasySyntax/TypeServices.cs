@@ -277,7 +277,7 @@ public static partial class GenerateServices
     /// <param name="arguments"></param>
     /// <returns></returns>
     public static ObjectCreationExpressionSyntax New(this TypeSyntax type, params IEnumerable<ArgumentSyntax> arguments)
-        => SyntaxFactory.ObjectCreationExpression(type, ArgumentList(arguments), default);
+        => SyntaxFactory.ObjectCreationExpression(type, SyntaxGenerator.ArgumentList(arguments), default);
     /// <summary>
     /// 初始化
     /// </summary>
@@ -285,7 +285,7 @@ public static partial class GenerateServices
     /// <param name="arguments"></param>
     /// <returns></returns>
     public static ObjectCreationExpressionSyntax New(this TypeSyntax type, IEnumerable<ExpressionSyntax> arguments)
-        => SyntaxFactory.ObjectCreationExpression(type, ArgumentList(arguments), default);
+        => SyntaxFactory.ObjectCreationExpression(type, SyntaxGenerator.ArgumentList(arguments), default);
     /// <summary>
     /// 初始化
     /// </summary>
@@ -293,7 +293,7 @@ public static partial class GenerateServices
     /// <param name="arguments"></param>
     /// <returns></returns>
     public static ObjectCreationExpressionSyntax New(this TypeSyntax type, IEnumerable<SyntaxToken> arguments)
-        => SyntaxFactory.ObjectCreationExpression(type, ArgumentList(arguments), default);
+        => SyntaxFactory.ObjectCreationExpression(type, SyntaxGenerator.ArgumentList(arguments), default);
     /// <summary>
     /// 初始化
     /// </summary>
@@ -301,7 +301,7 @@ public static partial class GenerateServices
     /// <param name="arguments"></param>
     /// <returns></returns>
     public static ObjectCreationExpressionSyntax New(this TypeSyntax type, IEnumerable<string> arguments)
-        => SyntaxFactory.ObjectCreationExpression(type, ArgumentList(arguments), default);
+        => SyntaxFactory.ObjectCreationExpression(type, SyntaxGenerator.ArgumentList(arguments), default);
     #endregion
     #region Throw
     /// <summary>
@@ -605,35 +605,5 @@ public static partial class GenerateServices
     /// <returns></returns>
     public static ParameterListSyntax ParameterList(IEnumerable<ParameterSyntax> parameters)
         => SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(parameters));
-    #endregion
-    #region ArgumentList
-    /// <summary>
-    /// 实参列表
-    /// </summary>
-    /// <param name="arguments"></param>
-    /// <returns></returns>
-    public static ArgumentListSyntax ArgumentList(IEnumerable<ArgumentSyntax> arguments)
-        => SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(arguments));
-    /// <summary>
-    /// 实参列表
-    /// </summary>
-    /// <param name="arguments"></param>
-    /// <returns></returns>
-    public static ArgumentListSyntax ArgumentList(IEnumerable<ExpressionSyntax> arguments)
-        => ArgumentList(arguments.Select(SyntaxFactory.Argument));
-    /// <summary>
-    /// 实参列表
-    /// </summary>
-    /// <param name="arguments"></param>
-    /// <returns></returns>
-    public static ArgumentListSyntax ArgumentList(IEnumerable<SyntaxToken> arguments)
-        => ArgumentList(arguments.Select(name => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(name))));
-    /// <summary>
-    /// 实参列表
-    /// </summary>
-    /// <param name="arguments"></param>
-    /// <returns></returns>
-    public static ArgumentListSyntax ArgumentList(IEnumerable<string> arguments)
-        => ArgumentList(arguments.Select(name => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(name))));
-    #endregion
+    #endregion    
 }

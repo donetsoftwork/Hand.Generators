@@ -50,7 +50,7 @@ public static partial class GenerateServices
     /// <param name="declaration"></param>
     /// <param name="modifiers"></param>
     /// <returns></returns>
-    public static TDeclarationSyntax Modify<TDeclarationSyntax>(this TDeclarationSyntax declaration, IEnumerable<SyntaxToken> modifiers)
+    public static TDeclarationSyntax Modify<TDeclarationSyntax>(this TDeclarationSyntax declaration, params IEnumerable<SyntaxToken> modifiers)
         where TDeclarationSyntax : MemberDeclarationSyntax
         => (TDeclarationSyntax)declaration.WithModifiers(declaration.Modifiers.AddRange(modifiers));
     /// <summary>
@@ -239,19 +239,35 @@ public static partial class GenerateServices
         => (TParameter)parameter.WithModifiers(parameter.Modifiers.Add(_out));
     #endregion
     /// <summary>
-    /// 
+    /// 是否为partial
     /// </summary>
     /// <param name="modifiers"></param>
     /// <returns></returns>
     public static bool IsPartial(this SyntaxTokenList modifiers)
+        => modifiers.Any(SyntaxKind.PartialKeyword);
+    /// <summary>
+    /// 是否为静态
+    /// </summary>
+    /// <param name="modifiers"></param>
+    /// <returns></returns>
+    public static bool IsStatic(this SyntaxTokenList modifiers)
+         => modifiers.Any(SyntaxKind.StaticKeyword);
+    /// <summary>
+    /// 是否包含类型
+    /// </summary>
+    /// <param name="modifiers"></param>
+    /// <param name="kinds"></param>
+    /// <returns></returns>
+    public static bool HasKinds(this SyntaxTokenList modifiers, params SyntaxKind[] kinds)
     {
-        foreach (var item in modifiers)
+        var state = true;
+        foreach (var kind in kinds)
         {
-            // 检查修饰符是否含partial
-            if ("partial" == item.ValueText)
+            if(modifiers.Any(kind)) 
                 return true;
+            else
+                state = false;
         }
-        return false;
+        return state;
     }
-
 }

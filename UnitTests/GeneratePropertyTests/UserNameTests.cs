@@ -6,7 +6,6 @@ using Hand.GenerateProperty;
 using Hand.Generators;
 using Hand.Models;
 using Hand.Transform;
-using Microsoft.CodeAnalysis;
 
 namespace GeneratePropertyTests;
 
@@ -45,11 +44,12 @@ namespace GeneratePropertyTests;
 [GenerateProperty]
 public partial record UserName : IEntityProperty<string>;
 ";
-        var service = SyntaxTreeScript.Create()
+        var service = SyntaxTreeScript.CreateDefault()
             .Reference<IEntityProperty<string>>()
             .Reference<GeneratePropertyAttribute>();
-        var result = service.Generate<PropertyGenerator>(source, out var diagnostics);
-        var syntaxTree = result.FirstOrDefault();
+        var result = service.Generate<PropertyGenerator>(source)
+            .GetRunResult();
+        var syntaxTree = result.GeneratedTrees.FirstOrDefault();
         Assert.NotNull(syntaxTree);
         var code = syntaxTree.GetText().ToString();
         Assert.Contains("UserName(string Original)", code);
@@ -67,12 +67,13 @@ namespace GeneratePropertyTests;
 [GenerateProperty]
 public partial record UserName : IEntityProperty<string>;
 ";
-        var generator = new ValuesGenerator<GeneratorAttributeSyntaxContext>("Hand.Entities.GeneratePropertyAttribute", new SyntaxFilter(), PassTransform.Instance, new SourceTextExecutor());
-        var service = SyntaxTreeScript.Create()
+        var generator = new ValuesGenerator<AttributeContext>("Hand.Entities.GeneratePropertyAttribute", new SyntaxFilter(), PassTransform.Instance, new SourceTextExecutor());
+        var service = SyntaxTreeScript.CreateDefault()
             .Reference<IEntityProperty<string>>()
             .Reference<GeneratePropertyAttribute>();
-        var result = service.Generate(generator, source, out var diagnostics);
-        var syntaxTree = result.FirstOrDefault();
+        var result = service.Generate(generator, source)
+            .GetRunResult();
+        var syntaxTree = result.GeneratedTrees.FirstOrDefault();
         Assert.NotNull(syntaxTree);
         var code = syntaxTree.GetText().ToString();
         Assert.Contains("UserName(string Original)", code);

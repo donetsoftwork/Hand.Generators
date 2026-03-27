@@ -21,11 +21,12 @@ public partial class UserAge(int? original) : IEntityProperty<int?>
     public int? Original { get; } = original;
 }
 ";
-        var service = SyntaxTreeScript.Create()
+        var service = SyntaxTreeScript.CreateDefault()
             .Reference<IEntityProperty<int?>>()
             .Reference<GeneratePropertyAttribute>();
-        var result = service.Generate<PropertyGenerator>(source, out var diagnostics);
-        var syntaxTree = result.FirstOrDefault();
+        var result = service.Generate<PropertyGenerator>(source)
+            .GetRunResult();
+        var syntaxTree = result.GeneratedTrees.FirstOrDefault();
         // 已经含属性或构造函数,不再生成
         Assert.NotNull(syntaxTree);
         var code = syntaxTree.GetText().ToString();

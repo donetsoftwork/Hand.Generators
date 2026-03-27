@@ -15,6 +15,14 @@ public class SymbolDictionaryCollect<TSymbol>(SymbolKind kind, Dictionary<string
 {
     private readonly Dictionary<string, TSymbol> _members = members;
 
+    /// <summary>
+    /// 字典收集器
+    /// </summary>
+    /// <param name="kind"></param>
+    public SymbolDictionaryCollect(SymbolKind kind)
+        : this(kind, []) 
+    {
+    }
     /// <inheritdoc />
     protected override bool AddCore(TSymbol member)
     {

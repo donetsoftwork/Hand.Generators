@@ -2,8 +2,9 @@
 using Hand.Transform;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Threading;
 
-namespace GenerateCoreTests.Hello;
+namespace Hello;
 
 public class HelloTransform : IGeneratorTransform<HelloSource>
 {

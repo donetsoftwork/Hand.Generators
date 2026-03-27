@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<LangVersion>Latest</LangVersion>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		<Version>0.1.0-alpha</Version>
+		<PackageId>Hello</PackageId>
+		<PackageOutputPath>D:\nuget</PackageOutputPath>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<NoWarn>$(NoWarn);NU5128</NoWarn>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</PackageReference>
+		<ProjectReference Include="..\Hand.GenerateCore\Hand.GenerateCore.csproj">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</ProjectReference>
+		<ProjectReference Include="..\Hand.Generators.EasySyntax\Hand.Generators.EasySyntax.csproj">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</ProjectReference>
+	</ItemGroup>
+	
+	<ItemGroup>
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+	</ItemGroup>
+
+</Project>

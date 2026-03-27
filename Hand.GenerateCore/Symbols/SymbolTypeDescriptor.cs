@@ -173,7 +173,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     #endregion
     #region Operator
     /// <summary>
-    /// 获取方法
+    /// 获取运算符重载
     /// </summary>
     /// <param name="name"></param>
     /// <param name="parameterTypes"></param>

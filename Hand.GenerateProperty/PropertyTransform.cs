@@ -1,3 +1,4 @@
+using Hand.Generators;
 using Hand.Symbols;
 using Hand.Transform;
 using Microsoft.CodeAnalysis;
@@ -13,7 +14,7 @@ namespace Hand.GenerateProperty;
 public class PropertyTransform : IGeneratorTransform<PropertySource>
 {
     /// <inheritdoc />
-    public PropertySource? Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellation)
+    public PropertySource? Transform(AttributeContext context, CancellationToken cancellation)
     {
 //#if DEBUG
 //        System.Diagnostics.Debugger.Launch();

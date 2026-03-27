@@ -37,11 +37,12 @@ namespace GeneratePropertyTests;
 [GenerateProperty]
 public partial class UserId : IEntityId;
 ";
-        var service = SyntaxTreeScript.Create()
+        var service = SyntaxTreeScript.CreateDefault()
             .Reference<IEntityId>()
             .Reference<GeneratePropertyAttribute>();
-        var result = service.Generate<PropertyGenerator>(source, out var diagnostics);
-        var syntaxTree = result.FirstOrDefault();
+        var result = service.Generate<PropertyGenerator>(source)
+            .GetRunResult();
+        var syntaxTree = result.GeneratedTrees.FirstOrDefault();
         Assert.NotNull(syntaxTree);
         var code = syntaxTree.GetText().ToString();
         Assert.Contains("Original", code);

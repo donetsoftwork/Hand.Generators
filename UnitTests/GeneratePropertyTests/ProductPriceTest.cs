@@ -29,11 +29,12 @@ namespace GeneratePropertyTests;
 [GenerateProperty(""Include: Constructor"")]
 public partial record struct ProductPrice : IEntityProperty<decimal>;
 ";
-        var service = SyntaxTreeScript.Create()
+        var service = SyntaxTreeScript.CreateDefault()
             .Reference<IEntityProperty<decimal>>()
             .Reference<GeneratePropertyAttribute>();
-        var result = service.Generate<PropertyGenerator>(source, out var diagnostics);
-        var syntaxTree = result.FirstOrDefault();
+        var result = service.Generate<PropertyGenerator>(source)
+            .GetRunResult();
+        var syntaxTree = result.GeneratedTrees.FirstOrDefault();
         Assert.NotNull(syntaxTree);
         var code = syntaxTree.GetText().ToString();
         Assert.Contains("Original", code);

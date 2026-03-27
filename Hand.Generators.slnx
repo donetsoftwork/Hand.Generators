@@ -4,12 +4,14 @@
   </Folder>
   <Folder Name="/docs/">
     <File Path="docs/notes.md" />
+    <File Path="docs/pack.md" />
     <File Path="docs/partial.md" />
     <File Path="docs/spirit.md" />
     <File Path="docs/tree.md" />
   </Folder>
   <Folder Name="/UnitTests/">
     <Project Path="UnitTests/EasySyntaxTests/EasySyntaxTests.csproj" />
+    <Project Path="UnitTests/GenerateCachedPropertyTests/GenerateCachedPropertyTests.csproj" />
     <Project Path="UnitTests/GenerateCoreTests/GenerateCoreTests.csproj" />
     <Project Path="UnitTests/GeneratePropertyTests/GeneratePropertyTests.csproj" />
     <Project Path="UnitTests/SyntaxScriptingTests/SyntaxScriptingTests.csproj" Id="68fc116d-9e18-48f9-902f-c0a9807a920f" />
@@ -17,13 +19,16 @@
   <Folder Name="/解决方案项/">
     <File Path=".gitattributes" />
     <File Path=".gitignore" />
+    <File Path="Hello/microsoft.sourcelink.github.nuspec" />
     <File Path="LICENSE.txt" />
     <File Path="package.props" />
     <File Path="readme.md" />
   </Folder>
+  <Project Path="Hand.GenerateCachedProperty/Hand.GenerateCachedProperty.csproj" />
   <Project Path="Hand.GenerateCore/Hand.GenerateCore.csproj" />
   <Project Path="Hand.GenerateProperty/Hand.GenerateProperty.csproj" />
   <Project Path="Hand.Generators.Attributes/Hand.Generators.Attributes.csproj" />
   <Project Path="Hand.Generators.EasySyntax/Hand.Generators.EasySyntax.csproj" Id="5d587150-259f-42dc-8385-047dffd8f7b1" />
   <Project Path="Hand.Generators.SyntaxScripting/Hand.Generators.SyntaxScripting.csproj" Id="59a10285-4520-427a-8299-8265784e8d50" />
+  <Project Path="Hello/Hello.csproj" Id="deb3a5d0-7796-4860-9e79-ba5f6d26a93d" />
 </Solution>

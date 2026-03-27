@@ -4,15 +4,11 @@ namespace Hand.Cache;
 /// 惰性属性
 /// </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
-public class GenerateLazyAttribute : Attribute
+public class GenerateLazyAttribute(string propertyName = "")
+    : Attribute
 {
-    private string _propertyName;
     /// <summary>
     /// 指定属性名
     /// </summary>
-    public string PropertyName 
-    { 
-        get => _propertyName;
-        set => _propertyName = value;
-    }
+    public string PropertyName { get; } = propertyName;
 }

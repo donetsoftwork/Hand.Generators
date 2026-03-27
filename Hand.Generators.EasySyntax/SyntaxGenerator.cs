@@ -2,8 +2,10 @@ using Hand.Builders;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Hand;
 
@@ -154,11 +156,12 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <returns></returns>
     public static ConstructorDeclarationSyntax ConstructorDeclaration(SyntaxToken typeName, params ParameterSyntax[] parameters)
         => SyntaxFactory.ConstructorDeclaration(default, default, typeName, ParameterList(parameters), default, default, default, default);
-        //SyntaxFactory.ConstructorDeclaration(typeName)
-        //.WithParameterList(ParameterList(parameters));
+    //SyntaxFactory.ConstructorDeclaration(typeName)
+    //.WithParameterList(ParameterList(parameters));
     #endregion
+    #region OperatorDeclaration
     /// <summary>
-    /// 
+    /// 运算符重载定义
     /// </summary>
     /// <param name="kind"></param>
     /// <param name="returnType"></param>
@@ -196,6 +199,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <returns></returns>
     public static OperatorDeclarationSyntax NotEqualOperatorDeclaration(ParameterSyntax a, ParameterSyntax b)
         => OperatorDeclaration(SyntaxKind.ExclamationEqualsToken, BoolType, a, b);
+    #endregion
     #region DeclareAccessor
     ///// <summary>
     ///// 定义处理器
@@ -264,6 +268,36 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
             _ => [.. items],
         };
     }
+    #endregion
+    #region ArgumentList
+    /// <summary>
+    /// 实参列表
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    public static ArgumentListSyntax ArgumentList(params IEnumerable<ArgumentSyntax> arguments)
+        => SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(arguments));
+    /// <summary>
+    /// 实参列表
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    public static ArgumentListSyntax ArgumentList(params IEnumerable<ExpressionSyntax> arguments)
+        => ArgumentList(arguments.Select(SyntaxFactory.Argument));
+    /// <summary>
+    /// 实参列表
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    public static ArgumentListSyntax ArgumentList(params IEnumerable<SyntaxToken> arguments)
+        => ArgumentList(arguments.Select(name => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(name))));
+    /// <summary>
+    /// 实参列表
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    public static ArgumentListSyntax ArgumentList(params IEnumerable<string> arguments)
+        => ArgumentList(arguments.Select(name => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(name))));
     #endregion
     #region PredefinedType
     /// <summary>
@@ -338,6 +372,42 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// var
     /// </summary>
     public static IdentifierNameSyntax VarType => SyntaxFactory.IdentifierName("var");
+
+    /// <summary>
+    /// Lock
+    /// </summary>
+    public static TypeSyntax LockType
+    {
+        get
+        {
+            if (_lazyFrameworkMajorVersion.Value >= 9)
+                return SyntaxFactory.IdentifierName("System.Threading.Lock");
+            return SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ObjectKeyword));
+        }
+    }
+    #endregion
+    #region FrameworkMajorVersion
+    private static readonly Lazy<int> _lazyFrameworkMajorVersion = new(GetFrameworkMajorVersion, true);
+    /// <summary>
+    /// .net主版本
+    /// </summary>
+    public static int FrameworkMajorVersion
+        => _lazyFrameworkMajorVersion.Value;
+    /// <summary>
+    /// 获取.net主版本
+    /// </summary>
+    /// <returns></returns>
+    private static int GetFrameworkMajorVersion()
+    {
+        var attribute = typeof(object).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+        if (attribute is null)
+            return 0;
+        var versionString = attribute.InformationalVersion;
+        int index = versionString.IndexOf('.');
+        if (index >= 0 && int.TryParse(versionString.Substring(0, index), out var majorVersion))
+            return majorVersion;
+        return 0;
+    }
     #endregion
     #region Generic
     /// <summary>
@@ -475,9 +545,9 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
         // (object obj)
         var parameter = ObjectType.Parameter("obj");
         var methodName = SyntaxFactory.Identifier(nameof(Equals));
-        var other = SyntaxFactory.Identifier("other");
+        var other = SyntaxFactory.IdentifierName("other");
         // obj is T other
-        var checkType = parameter.ToIdentifierName().IsType(type, other);
+        var checkType = parameter.ToIdentifierName().IsType(type, other.Identifier);
         // Equals(other)
         var checkEquals = methodName.ToIdentifierName().Invocation([other]);
         // public override bool Equals(object obj) =>

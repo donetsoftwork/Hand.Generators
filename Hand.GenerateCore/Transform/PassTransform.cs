@@ -1,4 +1,4 @@
-using Microsoft.CodeAnalysis;
+using Hand.Generators;
 using System.Threading;
 
 namespace Hand.Transform;
@@ -6,14 +6,14 @@ namespace Hand.Transform;
 /// <summary>
 /// 跳过转化
 /// </summary>
-public class PassTransform : IGeneratorTransform<GeneratorAttributeSyntaxContext>
+public class PassTransform : IGeneratorTransform<AttributeContext>
 {
     private PassTransform() { }
     /// <inheritdoc />
-    public GeneratorAttributeSyntaxContext Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellation)
+    public AttributeContext Transform(AttributeContext context, CancellationToken cancellation)
         => context;
     /// <summary>
     /// 单例
     /// </summary>
-    public static readonly IGeneratorTransform<GeneratorAttributeSyntaxContext> Instance = new PassTransform();
+    public static readonly IGeneratorTransform<AttributeContext> Instance = new PassTransform();
 }

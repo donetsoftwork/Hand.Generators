@@ -30,12 +30,12 @@ public readonly partial struct Birthday : IEntityProperty<DateOnly>
 {
 }
 ";
-        var service = SyntaxTreeScript.Create()
+        var service = SyntaxTreeScript.CreateDefault()
             .Reference<IEntityProperty<DateOnly>>()
             .Reference<GeneratePropertyAttribute>();
-        var result = service.Generate<PropertyGenerator>(source, out var diagnostics);
-        Assert.Empty(diagnostics);
-        var syntaxTree = result.FirstOrDefault();
+        var result = service.Generate<PropertyGenerator>(source)
+            .GetRunResult();
+        var syntaxTree = result.GeneratedTrees.FirstOrDefault();
         Assert.NotNull(syntaxTree);
         var code = syntaxTree.GetText().ToString();
         Assert.Contains("Original", code);

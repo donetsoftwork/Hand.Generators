@@ -49,8 +49,8 @@ partial class Program
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Text.RegularExpressions.Generator", "8.0.14.7010")]
     private static partial global::System.Text.RegularExpressions.Regex AbcOrDefGeneratedRegex()
         => global::System.Text.RegularExpressions.Generated.AbcOrDefGeneratedRegex_0.Instance;
+    // ...
 }
-// ...
 ~~~
 
 ## 三、partial范式的要素
@@ -71,19 +71,19 @@ interface ISyntaxFilter
     bool Match(SyntaxNode node, CancellationToken cancellation);
 }
 class SyntaxFilter(bool isPartial, params SyntaxKind[] kinds)
-    : ISyntaxFilter
+    : ISyntaxFilter;
 ~~~
 
 ### 3. GeneratorSource
->* GeneratorSource是转化源
+>* GeneratorSource是转化源,是Transform的预处理结果
 >* IGeneratorSource是转化源接口
 >* GenerateFileName是生成文件名属性
 >* Generate是生成代码方法
->* SyntaxGenerator是通过SyntaxTree生成代码的辅助类,来源与项目EasySyntax
+>* SyntaxGenerator是通过SyntaxTree生成代码的辅助类,是EasySyntax项目的功能
 >* [查看介绍EasySyntax的文章](https://www.cnblogs.com/xiangji/p/19688804)
 
 ~~~csharp
-public interface IGeneratorSource
+interface IGeneratorSource
 {
     string GenerateFileName { get; }
     SyntaxGenerator Generate();
@@ -113,7 +113,7 @@ class PassTransform : IGeneratorTransform<GeneratorAttributeSyntaxContext>
 
 ### 5. Executor
 >* IGeneratorExecutor是执行器接口
->* GeneratorExecutor是默认实现,一般可以执行使用
+>* GeneratorExecutor是默认实现,一般可以直接使用
 
 ~~~csharp
 interface IGeneratorExecutor<TSource>
@@ -157,11 +157,11 @@ class ValuesGenerator<TSource>(
 ### 1. HelloGenerator代码非常简单
 >* 含义是查找HelloGenerator标记
 >* 查找含partial修饰的类
->* s使用HelloTransform转化HelloSource
+>* 使用HelloTransform转化HelloSource
 >* 执行HelloSource生成代码
 
 ~~~csharp
-public class HelloGenerator()
+class HelloGenerator()
     : ValuesGenerator<HelloSource>(
     "GenerateCoreTests.Hello.HelloGeneratorAttribute",
     new SyntaxFilter(true, SyntaxKind.ClassDeclaration),
@@ -174,14 +174,14 @@ public class HelloGenerator()
 ### 2. HelloGeneratorAttribute非常简单
 ~~~csharp
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-public class HelloGeneratorAttribute : Attribute
+class HelloGeneratorAttribute : Attribute
 {
 }
 ~~~
 
 ### 3. HelloTransform非常简单
 ~~~csharp
-public class HelloTransform : IGeneratorTransform<HelloSource>
+class HelloTransform : IGeneratorTransform<HelloSource>
 {
     public HelloSource? Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellation)
     {
@@ -194,12 +194,12 @@ public class HelloTransform : IGeneratorTransform<HelloSource>
 
 ### 4. HelloSource是比较纯净的业务逻辑
 ~~~csharp
-public class HelloSource(ClassDeclarationSyntax type, INamedTypeSymbol symbol)
+class HelloSource(ClassDeclarationSyntax type, INamedTypeSymbol symbol)
     : IGeneratorSource
 {
     private readonly ClassDeclarationSyntax _type = type;
     private readonly INamedTypeSymbol _symbol = symbol;
-    public string GenerateFileName
+    string GenerateFileName
         => $"{_symbol.ToDisplayString()}.Hello.g.cs";
     public SyntaxGenerator Generate()
     {
@@ -257,9 +257,9 @@ partial class HelloTests
 >* 可以提取其中一种或多种符号
 
 ~~~csharp
-public static SymbolTypeDescriptor GetDescriptor(Compilation compilation, INamedTypeSymbol symbol)
+SymbolTypeDescriptor GetDescriptor(Compilation compilation, INamedTypeSymbol symbol)
 {
-    // 提取字段、属性、方法和运算符重载等信息
+    // 提取字段、属性、构造函数、方法和运算符重载等信息
     var builder = new SymbolTypeBuilder()
         .WithField()
         .WithProperty()
@@ -277,12 +277,70 @@ public static SymbolTypeDescriptor GetDescriptor(Compilation compilation, INamed
 >* 以下获取符号比直接分析成员简单且可读性好
 
 ~~~csharp
+/// <summary>
+/// 获取字段
+/// </summary>
 IFieldSymbol? GetField(string name);
+/// <summary>
+/// 获取属性
+/// </summary>
 IPropertySymbol? GetProperty(string name);
+/// <summary>
+/// 获取构造函数
+/// </summary>
+IMethodSymbol? GetConstructor(params INamedTypeSymbol[] parameterTypes)
+/// <summary>
+/// 获取方法
+/// </summary>
 IMethodSymbol? GetMethod(string name, bool isPartial, params INamedTypeSymbol[] parameterTypes);
+/// <summary>
+/// 获取方法
+/// </summary>
 IMethodSymbol? GetMethod(string name, params INamedTypeSymbol[] parameterTypes);
+/// <summary>
+/// 按返回类型获取方法
+/// </summary>
 IEnumerable<IMethodSymbol> GetMethodsByReturnType(INamedTypeSymbol returnType);
+/// <summary>
+/// 获取运算符重载
+/// </summary>
 IMethodSymbol? GetOperator(string name, params INamedTypeSymbol[] parameterTypes);
+/// <summary>
+/// 获取相等重载符
+/// </summary>
+IMethodSymbol? GetEqualOperator(INamedTypeSymbol otherType);
+/// <summary>
+/// 获取不等重载符
+/// </summary>
+IMethodSymbol? GetUnEqualOperator(INamedTypeSymbol otherType);
+/// <summary>
+/// 获取相加重载符
+/// </summary>
+IMethodSymbol? GetAddOperator(INamedTypeSymbol otherType);
+/// <summary>
+/// 获取相减重载符
+/// </summary>
+IMethodSymbol? GetSubtractOperator(INamedTypeSymbol otherType);
+/// <summary>
+/// 获取相乘重载符
+/// </summary>
+IMethodSymbol? GetMultiplyOperator(INamedTypeSymbol otherType);
+/// <summary>
+/// 获取相除重载符
+/// </summary>
+IMethodSymbol? GetDivideOperator(INamedTypeSymbol otherType);
+/// <summary>
+/// 获取求余重载符
+/// </summary>
+IMethodSymbol? GetModOperator(INamedTypeSymbol otherType);
+/// <summary>
+/// 获取逻辑与重载符
+/// </summary>
+IMethodSymbol? GetAndOperator(INamedTypeSymbol otherType);
+/// <summary>
+/// 获取逻辑或重载符
+/// </summary>
+IMethodSymbol? GetOrOperator(INamedTypeSymbol otherType);
 ~~~
 
 ### 2. SymbolAttributeHelper解析Attribute
@@ -290,27 +348,27 @@ IMethodSymbol? GetOperator(string name, params INamedTypeSymbol[] parameterTypes
 /// <summary>
 /// 获取标记
 /// </summary>
-public static IEnumerable<AttributeData> GetAttributesByType(IEnumerable<AttributeData> attributes, INamedTypeSymbol attributeType);
+IEnumerable<AttributeData> GetAttributesByType(IEnumerable<AttributeData> attributes, INamedTypeSymbol attributeType);
 /// <summary>
 /// 获取标记
 /// </summary>
-public static IEnumerable<AttributeData> GetAttributesByType(ISymbol symbol, INamedTypeSymbol attributeType);
+IEnumerable<AttributeData> GetAttributesByType(ISymbol symbol, INamedTypeSymbol attributeType);
 /// <summary>
 /// 获取标记参数值
 /// </summary>
-public static TValue? GetArgumentValue<TValue>(ISymbol symbol, INamedTypeSymbol? attributeType, string name);
+TValue? GetArgumentValue<TValue>(ISymbol symbol, INamedTypeSymbol? attributeType, string name);
 /// <summary>
 /// 获取标记参数值
 /// </summary>
-public static TValue? GetArgumentValue<TValue>(ISymbol symbol, INamedTypeSymbol? attributeType, int index);
+TValue? GetArgumentValue<TValue>(ISymbol symbol, INamedTypeSymbol? attributeType, int index);
 /// <summary>
 /// 获取标记参数值
 /// </summary>
-public static TValue? GetArgumentValue<TValue>(AttributeData attribute, string name);
+TValue? GetArgumentValue<TValue>(AttributeData attribute, string name);
 /// <summary>
 /// 获取标记参数值
 /// </summary>
-public static TValue? GetArgumentValue<TValue>(AttributeData attribute, int index);
+TValue? GetArgumentValue<TValue>(AttributeData attribute, int index);
 ~~~
 
 ## 六、SourceGenerator测试
@@ -319,7 +377,7 @@ public static TValue? GetArgumentValue<TValue>(AttributeData attribute, int inde
 ### 1. Debugger.Launch用于测试
 >* 在需要测试的代码前增加Debugger.Launch()
 >* vs生成代码会触发断点
->* 缺点是不能单元测试且多线程执行影响调试体验还容易导致vs奔溃
+>* 缺点是不能单元测试且多线程执行影响调试体验还容易导致vs崩溃
 
 ### 2. Microsoft.CodeAnalysis.Analyzer.Testing用于测试
 >* 优点是官方支持、支持单元测试
@@ -337,7 +395,7 @@ public static TValue? GetArgumentValue<TValue>(AttributeData attribute, int inde
 >* Diagnostics返回编译信息,一般为出错信息
 
 ~~~csharp
-var source = "public partial class Greeting;";
+var source = "partial class Greeting;";
 var service = SyntaxTreeScript.Create()
     .Using("System");
 var result = service.Generate<HelloGenerator>(source)
@@ -365,7 +423,7 @@ var service = SyntaxTreeScript.Create()
 >* 也就是说即使用Default也可能需要添加引用
 
 ~~~csharp
-var source = "public partial class Greeting;";
+var source = "partial class Greeting;";
 var result = SyntaxScripting.Default.Generate<HelloGenerator>(source)
     .GetRunResult();
 var tree = result.GeneratedTrees.FirstOrDefault();
@@ -379,7 +437,7 @@ Assert.Empty(diagnostics);
 >* 不同之处是非共享,每次调用CreateDefault都是新实例
 
 ~~~csharp
-var source = "public partial class Greeting;";
+var source = "partial class Greeting;";
 var result = SyntaxScripting.CreateDefault()
     .Generate<HelloGenerator>(source)
     .GetRunResult();
@@ -416,7 +474,7 @@ var code0 = @"
 namespace GenerateCoreTests.Hello;
 
 [HelloGenerator]
-public partial class HelloTests;
+partial class HelloTests;
 ";
 var compilation = SyntaxTreeScript.Default
     .Compile(code0);

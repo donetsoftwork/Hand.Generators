@@ -11,9 +11,13 @@ namespace Hand.GenerateProperty;
 [Generator(LanguageNames.CSharp)]
 public class PropertyGenerator()
     : ValuesGenerator<PropertySource>(
-        "Hand.Entities.GeneratePropertyAttribute", 
-        new SyntaxFilter(), 
-        PropertyTransform.Instance, 
+        Attribute,
+        new SyntaxFilter(),
+        PropertyTransform.Instance,
         new GeneratorExecutor<PropertySource>())
 {
+    /// <summary>
+    /// Attribute标记
+    /// </summary>
+    public const string Attribute = "Hand.Entities.GeneratePropertyAttribute";
 }

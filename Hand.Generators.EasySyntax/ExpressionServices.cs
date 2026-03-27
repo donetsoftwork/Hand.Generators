@@ -412,7 +412,7 @@ public static partial class GenerateServices
     /// <param name="arguments"></param>
     /// <returns></returns>
     public static ExpressionSyntax Invocation(this ExpressionSyntax method, params IEnumerable<ArgumentSyntax> arguments)
-        => SyntaxFactory.InvocationExpression(method, SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(arguments)));
+        => SyntaxFactory.InvocationExpression(method, SyntaxGenerator.ArgumentList(arguments));
     /// <summary>
     /// 调用方法
     /// </summary>
@@ -420,15 +420,7 @@ public static partial class GenerateServices
     /// <param name="arguments"></param>
     /// <returns></returns>
     public static ExpressionSyntax Invocation(this ExpressionSyntax method, IEnumerable<ExpressionSyntax> arguments)
-        => Invocation(method, arguments.Select(SyntaxFactory.Argument));
-    /// <summary>
-    /// 调用方法
-    /// </summary>
-    /// <param name="method"></param>
-    /// <param name="variables"></param>
-    /// <returns></returns>
-    public static ExpressionSyntax Invocation(this ExpressionSyntax method, IEnumerable<SyntaxToken> variables)
-        => Invocation(method, variables.Select(name => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(name))));
+        => SyntaxFactory.InvocationExpression(method, SyntaxGenerator.ArgumentList(arguments));
     /// <summary>
     /// 调用方法
     /// </summary>
@@ -436,7 +428,7 @@ public static partial class GenerateServices
     /// <param name="variables"></param>
     /// <returns></returns>
     public static ExpressionSyntax Invocation(this ExpressionSyntax method, IEnumerable<string> variables)
-        => Invocation(method, variables.Select(name => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(name))));
+        => SyntaxFactory.InvocationExpression(method, SyntaxGenerator.ArgumentList(variables));
     #endregion
     #region ConditionalInvocation
     /// <summary>
@@ -446,7 +438,16 @@ public static partial class GenerateServices
     /// <param name="methodName"></param>
     /// <returns></returns>
     public static ExpressionSyntax ConditionalInvocation(this ExpressionSyntax owner, SimpleNameSyntax methodName)
-        => ConditionalInvocation(owner, methodName, Enumerable.Empty<ArgumentSyntax>());
+        => ConditionalInvocation(owner, methodName, SyntaxFactory.ArgumentList());
+    /// <summary>
+    /// 条件调用方法
+    /// </summary>
+    /// <param name="owner"></param>
+    /// <param name="methodName"></param>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    public static ExpressionSyntax ConditionalInvocation(this ExpressionSyntax owner, SimpleNameSyntax methodName, ArgumentListSyntax arguments)
+        => SyntaxFactory.ConditionalAccessExpression(owner, SyntaxFactory.InvocationExpression(SyntaxFactory.MemberBindingExpression(methodName), arguments));
     /// <summary>
     /// 条件调用方法
     /// </summary>
@@ -455,7 +456,7 @@ public static partial class GenerateServices
     /// <param name="arguments"></param>
     /// <returns></returns>
     public static ExpressionSyntax ConditionalInvocation(this ExpressionSyntax owner, SimpleNameSyntax methodName, IEnumerable<ArgumentSyntax> arguments)
-        => SyntaxFactory.ConditionalAccessExpression(owner, SyntaxFactory.InvocationExpression(SyntaxFactory.MemberBindingExpression(methodName), SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(arguments))));
+        => ConditionalInvocation(owner, methodName, SyntaxGenerator.ArgumentList(arguments));
     /// <summary>
     /// 条件调用方法
     /// </summary>
@@ -464,16 +465,7 @@ public static partial class GenerateServices
     /// <param name="arguments"></param>
     /// <returns></returns>
     public static ExpressionSyntax ConditionalInvocation(this ExpressionSyntax owner, SimpleNameSyntax methodName, IEnumerable<ExpressionSyntax> arguments)
-        => ConditionalInvocation(owner, methodName, arguments.Select(SyntaxFactory.Argument));
-    /// <summary>
-    /// 条件调用方法
-    /// </summary>
-    /// <param name="owner"></param>
-    /// <param name="methodName"></param>
-    /// <param name="variables"></param>
-    /// <returns></returns>
-    public static ExpressionSyntax ConditionalInvocation(this ExpressionSyntax owner, SimpleNameSyntax methodName, IEnumerable<SyntaxToken> variables)
-        => ConditionalInvocation(owner, methodName, variables.Select(name => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(name))));
+        => ConditionalInvocation(owner, methodName, SyntaxGenerator.ArgumentList(arguments));
     /// <summary>
     /// 条件调用方法
     /// </summary>
@@ -482,7 +474,7 @@ public static partial class GenerateServices
     /// <param name="variables"></param>
     /// <returns></returns>
     public static ExpressionSyntax ConditionalInvocation(this ExpressionSyntax owner, SimpleNameSyntax methodName, IEnumerable<string> variables)
-        => ConditionalInvocation(owner, methodName, variables.Select(name => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(name))));
+        => ConditionalInvocation(owner, methodName, SyntaxGenerator.ArgumentList(variables));
     #endregion
     #region Statement
     /// <summary>
@@ -524,5 +516,29 @@ public static partial class GenerateServices
     /// <returns></returns>
     public static LabeledStatementSyntax Label(this ExpressionSyntax expression, string name)
        => SyntaxFactory.LabeledStatement(name, SyntaxFactory.ExpressionStatement(expression));
+    #endregion
+    #region GetAccessor
+    /// <summary>
+    /// 获取属性处理器
+    /// </summary>
+    /// <param name="property"></param>
+    /// <param name="kind"></param>
+    /// <returns></returns>
+    public static AccessorDeclarationSyntax? GetAccessor(this PropertyDeclarationSyntax property, SyntaxKind kind = SyntaxKind.GetAccessorDeclaration)
+        => property.AccessorList?.Accessors.FirstOrDefault(item => item.IsKind(kind));
+    /// <summary>
+    /// 获取属性写处理器
+    /// </summary>
+    /// <param name="property"></param>
+    /// <returns></returns>
+    public static AccessorDeclarationSyntax? GetSetAccessor(this PropertyDeclarationSyntax property)
+        => GetAccessor(property, SyntaxKind.SetAccessorDeclaration);
+    /// <summary>
+    /// 获取属性初始化处理器
+    /// </summary>
+    /// <param name="property"></param>
+    /// <returns></returns>
+    public static AccessorDeclarationSyntax? GetInitAccessor(this PropertyDeclarationSyntax property)
+        => GetAccessor(property, SyntaxKind.InitAccessorDeclaration);
     #endregion
 }

@@ -1,20 +1,19 @@
 using Hand.Rules;
-using System.Collections.Generic;
 
 namespace Hand.GenerateProperty;
 
 /// <summary>
 /// 生成实体属性规则
 /// </summary>
-/// <param name="rules"></param>
-public class PropertyRule(ICollection<string> rules)
+/// <param name="original"></param>
+public class PropertyRule(IRule original)
 {
     /// <summary>
     /// 生成实体属性规则
     /// </summary>
-    /// <param name="rules"></param>
-    public PropertyRule(string? rules)
-        : this(Parser.Parse(rules))
+    /// <param name="rule"></param>
+    public PropertyRule(string? rule)
+        : this(RuleParser.Default.Parse(rule))
     {
     }
     #region 配置
@@ -43,46 +42,42 @@ public class PropertyRule(ICollection<string> rules)
     /// 重载运算符
     /// </summary>
     private const string _operator = "Operator";
-    /// <summary>
-    /// 解析器
-    /// </summary>
-    public static readonly RuleParser Parser = new([_constructor, _field, _toString, _hashCode, _equals, _operator]);
     #endregion
-    private readonly ICollection<string> _rules = rules;
+    private readonly IRule _original = original;
     /// <summary>
-    /// 规则
+    /// 原始规则
     /// </summary>
-    public ICollection<string> Rules
-        => _rules;
+    public IRule Original
+        => _original;
     #endregion
     /// <summary>
     /// 构造函数
     /// </summary>
     public bool Constructor
-        => _rules.Contains(_constructor);
+        => _original.Contains(_constructor);
     /// <summary>
     /// 字段
     /// </summary>
     public bool Field
-        => _rules.Contains(_field);
+        => _original.Contains(_field);
     /// <summary>
     /// ToString
     /// </summary>
     public bool ToStringMethod
-        => _rules.Contains(_toString);
+        => _original.Contains(_toString);
     /// <summary>
     /// GetHashCode
     /// </summary>
     public bool GetHashCodeMethod
-         => _rules.Contains(_hashCode);
+         => _original.Contains(_hashCode);
     /// <summary>
     /// Equals
     /// </summary>
     public bool EqualsMethod
-        => _rules.Contains(_equals);
+        => _original.Contains(_equals);
     /// <summary>
     /// 重载运算符
     /// </summary>
     public bool Operator
-        => _rules.Contains(_operator);
+        => _original.Contains(_operator);
 }
