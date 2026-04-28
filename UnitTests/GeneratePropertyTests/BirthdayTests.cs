@@ -30,7 +30,7 @@ public readonly partial struct Birthday : IEntityProperty<DateOnly>
 {
 }
 ";
-        var service = SyntaxTreeScript.CreateDefault()
+        var service = SyntaxTreeDriver.CreateDefaultDriver()
             .Reference<IEntityProperty<DateOnly>>()
             .Reference<GeneratePropertyAttribute>();
         var result = service.Generate<PropertyGenerator>(source)

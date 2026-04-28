@@ -55,7 +55,7 @@ public class GenerateProvider
     /// <param name="transform"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public static IEnumerable<TSource> GetAttribute<TSource>((SemanticModel SemanticModel, SyntaxTree SyntaxTree) syntaxTree, string attributeName, ISyntaxFilter filter, IGeneratorTransform<TSource> transform, CancellationToken cancellationToken)
+    public static IEnumerable<TSource> GetAttribute<TSource>((SemanticModel SemanticModel, SyntaxTree SyntaxTree) syntaxTree, string attributeName, ISyntaxFilter filter, IGeneratorTransform<TSource> transform, CancellationToken cancellationToken = default)
     {
         var semanticModel = syntaxTree.SemanticModel;
         var type0 = semanticModel.Compilation.GetTypeByMetadataName(attributeName);
@@ -75,7 +75,7 @@ public class GenerateProvider
             if(targetSymbol is null)
                 continue;
             var attributes = MatchAttributes(targetNode, targetSymbol, attributeType);
-            var context = new AttributeContext(targetNode, targetSymbol, semanticModel, attributes);
+            var context = new AttributeContext(attribute, targetNode, targetSymbol, semanticModel, attributes);
             var source = transform.Transform(context, cancellationToken);
             if (source is null)
                 continue;
@@ -89,7 +89,7 @@ public class GenerateProvider
     /// <param name="attribute"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public static ISymbol? GetAttributeSymbol(SemanticModel semanticModel, AttributeSyntax attribute, CancellationToken cancellationToken)
+    public static ISymbol? GetAttributeSymbol(SemanticModel semanticModel, AttributeSyntax attribute, CancellationToken cancellationToken = default)
     {
         var info = semanticModel.GetSymbolInfo(attribute, cancellationToken);
         return info.Symbol ?? info.CandidateSymbols.FirstOrDefault();
@@ -115,7 +115,7 @@ public class GenerateProvider
             if (reference is null)
                 return;
             var attributeClass = attribute.AttributeClass;
-            if (attributeClass is null)
+            if (attributeClass is null || attributeClass.TypeKind == TypeKind.Error)
                 return;
             if(reference.SyntaxTree == targetSyntaxTree && SymbolTypeDescriptor.CheckEquals(attributeClass, attributeType))
                 result.Add(attribute);

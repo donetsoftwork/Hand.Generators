@@ -10,7 +10,7 @@ public class PassTransform : IGeneratorTransform<AttributeContext>
 {
     private PassTransform() { }
     /// <inheritdoc />
-    public AttributeContext Transform(AttributeContext context, CancellationToken cancellation)
+    public AttributeContext Transform(AttributeContext context, CancellationToken cancellation = default)
         => context;
     /// <summary>
     /// 单例

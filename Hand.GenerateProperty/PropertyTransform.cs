@@ -14,7 +14,7 @@ namespace Hand.GenerateProperty;
 public class PropertyTransform : IGeneratorTransform<PropertySource>
 {
     /// <inheritdoc />
-    public PropertySource? Transform(AttributeContext context, CancellationToken cancellation)
+    public PropertySource? Transform(AttributeContext context, CancellationToken cancellation = default)
     {
 //#if DEBUG
 //        System.Diagnostics.Debugger.Launch();
@@ -32,7 +32,7 @@ public class PropertyTransform : IGeneratorTransform<PropertySource>
         //#endif
         if (originalSymbol == null)
             return null;
-        var attributeType = compilation.GetTypeByMetadataName("Hand.Entities.GeneratePropertyAttribute");
+        var attributeType = compilation.GetTypeByMetadataName(PropertyGenerator.Attribute);
         if (attributeType is null)
             return null;
         var attribute = SymbolAttributeHelper.GetAttributesByType(context.Attributes, attributeType)

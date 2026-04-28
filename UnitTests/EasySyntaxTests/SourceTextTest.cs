@@ -126,30 +126,21 @@ class User
         string sourceText = userType.NormalizeWhitespace().ToFullString();
         Assert.NotNull(sourceText);
     }
-    private static SyntaxToken NewLineLiteral()
-    {
-        return SyntaxFactory.XmlTextNewLine(SyntaxFactory.TriviaList(), Environment.NewLine, Environment.NewLine, SyntaxFactory.TriviaList());
-    }
-    private static SyntaxToken LineStartLiteral()
-    {
-        return SyntaxFactory.XmlTextLiteral(SyntaxFactory.TriviaList(SyntaxFactory.DocumentationCommentExterior("///")), " ", " ", SyntaxFactory.TriviaList());
-    }
-    //private static XmlNodeSyntax NewLineAndLineStart()
-    //{
-    //    return SyntaxFactory.XmlText(NewLineLiteral(), LineStartLiteral());
-    //}
     [Fact]
     public void CompileClass()
     {
         string sourceText = @"
+namespace EasySyntaxTests;
 class User
 {
     public string Name { get; set; }
 }";
         SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var compilation = CSharpCompilation.Create("Tests", [syntaxTree]);
-        INamedTypeSymbol? userSymbol = compilation.GetTypeByMetadataName("User");
+        INamedTypeSymbol? userSymbol = compilation.GetTypeByMetadataName("EasySyntaxTests.User");
         Assert.NotNull(userSymbol);
+        var userType = userSymbol.ToSyntax();
+        Assert.NotNull(userType);
     }
     [Fact]
     public void CompileRecord()

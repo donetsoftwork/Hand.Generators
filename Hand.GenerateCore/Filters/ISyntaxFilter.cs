@@ -14,5 +14,5 @@ public interface ISyntaxFilter
     /// <param name="node"></param>
     /// <param name="cancellation"></param>
     /// <returns></returns>
-    bool Match(SyntaxNode node, CancellationToken cancellation);
+    bool Match(SyntaxNode node, CancellationToken cancellation = default);
 }

@@ -26,7 +26,7 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
     private readonly INamedTypeSymbol _symbol = symbol;
     private readonly bool _nullable = SymbolReflection.CheckNullable(symbol);
     private readonly INamedTypeSymbol _originalSymbol = originalSymbol;
-    private readonly TypeSyntax _originalType = SyntaxFactory.ParseTypeName(originalSymbol.ToDisplayString());
+    private readonly TypeSyntax _originalType = originalSymbol.ToSyntax();
     private readonly bool _originalNullable = SymbolReflection.CheckNullable(originalSymbol);
     private readonly PropertyRule _rule = rule;
     /// <summary>
@@ -46,7 +46,7 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
         => _rule;
     /// <inheritdoc />
     public string GenerateFileName
-        => $"{_symbol.ToDisplayString()}.GenerateProperty.g.cs";
+        => $"{_symbol.ToDisplayString()}.Property.g.cs";
     #endregion
     /// <inheritdoc />
     public SyntaxGenerator Generate()
@@ -305,15 +305,17 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
         if (originalNullCondition)
         {
             // var otherOriginal = other.Original
-            var otherOriginal = SyntaxFactory.VariableDeclarator("otherOriginal")
-                .WithInitializer(other.Access(original));
+            var otherOriginal = other.Access(original);
+            //var otherOriginal = SyntaxFactory.VariableDeclarator("otherOriginal")
+            //    .WithInitializer(other.Access(original));
             return methodBuilder
+                //.Declare(otherOriginal)
                 // if(Original is null)
                 .If(original.IsNull())
                 // {
                 .Block()
                 // if(otherOriginal is null)
-                .If(otherOriginal.ToIdentifierName().IsNull())
+                .If(otherOriginal.IsNull())
                 // reurn true;
                 .ReturnTrue()
                 // reurn fase;
@@ -321,7 +323,7 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
                 // }
                 .End()
                 // reurn Original.Equals(otherOriginal);
-                .Return(original.Access("Equals").Invocation([otherOriginal.ToIdentifierName()]));
+                .Return(original.Access("Equals").Invocation([otherOriginal]));
         }
         else
         {

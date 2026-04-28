@@ -103,5 +103,18 @@ public class ParseTypeNameTests
             .AddRankSpecifiers(SyntaxFactory.ArrayRankSpecifier());
         Assert.Equal(arrayType0.ToFullString(), arrayType.ToFullString());
     }
+    [Fact]
+    public void Global()
+    {
+        var ns = SyntaxFactory.ParseName("global::System.Collections");
+        var @global = SyntaxFactory.IdentifierName("global");
+        //var n = SyntaxFactory.NameColon(@global, SyntaxFactory.Token(SyntaxKind.ColonColonToken));
 
+        var name = SyntaxFactory.Identifier("Name");
+        Assert.Equal("Name", name.ValueText);
+        //var ns = SyntaxFactory.Identifier("global::System.Text");
+        //Assert.Equal("System.Text", ns.);
+
+        //SyntaxNode node = SyntaxFactory.ParseName("System.Text");
+    }
 }

@@ -5,7 +5,7 @@
 >* 添加using
 
 ~~~csharp
-var service = SyntaxTreeScript.Create()
+var service = SyntaxTreeDriver.CreateDriver()
     .Using("System");
 ~~~
 
@@ -13,27 +13,50 @@ var service = SyntaxTreeScript.Create()
 >* 添加引用
 
 ~~~csharp
-var service = SyntaxTreeScript.Create()
+var service = SyntaxTreeDriver.CreateDriver()
     .Reference<DateTime>();
 ~~~
 
-### 3. Default
+### 3. DefaultDriver
 >* 默认实例,静态共享
 >* 默认using System
 >* 默认引用CurrentDomain的程序集
 
 ~~~csharp
-var service = SyntaxTreeScript.Default;
+var service = SyntaxTreeDriver.DefaultDriver;
 Assert.Single(service.Usings);
 Assert.NotEmpty(service.References);
 ~~~
 
-### 4. CreateDefault
+### 4. ScriptDriver
+>* 默认脚本实例,静态共享
+>* 配置SourceCodeKind.Script,支持脚本代码
 >* 默认using System
 >* 默认引用CurrentDomain的程序集
 
 ~~~csharp
-var service = SyntaxTreeScript.CreateDefault();
+var service = SyntaxTreeDriver.ScriptDriver;
+Assert.Single(service.Usings);
+Assert.NotEmpty(service.References);
+~~~
+
+### 5. CreateDefaultDriver
+>* 默认using System
+>* 默认引用CurrentDomain的程序集
+
+~~~csharp
+var service = SyntaxTreeDriver.CreateDefaultDriver();
+Assert.Single(service.Usings);
+Assert.NotEmpty(service.References);
+~~~
+
+### 6. CreateScriptDriver
+>* 默认using System
+>* 配置SourceCodeKind.Script,支持脚本代码
+>* 默认引用CurrentDomain的程序集
+
+~~~csharp
+var service = SyntaxTreeDriver.CreateScriptDriver();
 Assert.Single(service.Usings);
 Assert.NotEmpty(service.References);
 ~~~
@@ -43,7 +66,7 @@ Assert.NotEmpty(service.References);
 
 ~~~csharp
 var source = "public record UserCreateTime(DateTime Original);";
-var service = SyntaxTreeScript.Create()
+var service = SyntaxTreeDriver.CreateDriver()
     .Using("System");
 var tree = service.Parse(source);
 ~~~
@@ -53,20 +76,39 @@ var tree = service.Parse(source);
 
 ~~~csharp
 var source = "public record UserCreateTime(DateTime Original);";
-var service = SyntaxTreeScript.Create()
+var service = SyntaxTreeDriver.CreateDriver()
     .Using("System");
 var compilation = service.Compile(source);
 var type = compilation.GetTypeByMetadataName("UserCreateTime");
 ~~~
 
-## 四、Generate
+## 四、ScriptCompile
+>* 编译脚本
+
+~~~csharp
+var compilation = SyntaxTreeDriver.ScriptDriver.ScriptCompile("1+2");
+var type = compilation.GetTypeByMetadataName("Script");
+~~~
+
+## 五、CreateScript
+>* 创建脚本实例,通过ExecuteAsync执行获取结果
+>* 类似Microsoft.CodeAnalysis.CSharp.Scripting,但更轻量级
+
+~~~csharp
+var script = SyntaxTreeDriver.ScriptDriver
+    .CreateScript<int>("2+3");
+var result = await script.ExecuteAsync();
+Assert.Equal(5, result);
+~~~
+
+## 六、Generate
 >* Generate返回GeneratorDriver,再通过GetRunResult可以获取生成结果
 >* GeneratedTrees为本次生成的表达式树,如果为空表示没有生成成功
 >* Diagnostics返回编译信息,一般为出错信息
 
 ~~~csharp
 var source = "public partial class Greeting;";
-var service = SyntaxTreeScript.Create()
+var service = SyntaxTreeDriver.CreateDriver()
     .Using("System");
 var result = service.Generate<HelloGenerator>(source)
     .GetRunResult();

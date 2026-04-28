@@ -1,4 +1,5 @@
 using Hand.Sources;
+using Hand.Words;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -8,14 +9,21 @@ namespace Hand.GenerateCachedProperty;
 /// <summary>
 /// 构造延迟缓存源对象
 /// </summary>
-public abstract class GenerateLazySource(TypeDeclarationSyntax type, INamedTypeSymbol typeSymbol, string propertyName, INamedTypeSymbol propertySymbol, bool isStatic, string valueName, string stateName, string lockName)
+public abstract class GenerateLazySource(TypeDeclarationSyntax type, INamedTypeSymbol typeSymbol, string propertyName, INamedTypeSymbol propertySymbol, bool isStatic, string fieldName, string stateName, string lockName)
     : IGeneratorSource
 {
     /// <summary>
     /// 构造延迟缓存源对象
     /// </summary>
+    private GenerateLazySource(TypeDeclarationSyntax type, INamedTypeSymbol typeSymbol, string propertyName, string fieldName, INamedTypeSymbol propertySymbol, bool isStatic)
+        : this(type, typeSymbol, propertyName, propertySymbol, isStatic, fieldName, fieldName + "State", fieldName + "Lock")
+    {
+    }
+    /// <summary>
+    /// 构造延迟缓存源对象
+    /// </summary>
     public GenerateLazySource(TypeDeclarationSyntax type, INamedTypeSymbol typeSymbol, string propertyName, INamedTypeSymbol propertySymbol, bool isStatic)
-        : this(type, typeSymbol, propertyName, propertySymbol, isStatic, "_value" + propertyName, "_state" + propertyName, "_lock" + propertyName)
+        : this(type, typeSymbol, propertyName, UnderWordRule.UnderLower(propertyName), propertySymbol, isStatic)
     {
     }
     #region 配置
@@ -23,13 +31,13 @@ public abstract class GenerateLazySource(TypeDeclarationSyntax type, INamedTypeS
     private readonly INamedTypeSymbol _typeSymbol = typeSymbol;
     private readonly bool _isStatic = isStatic;
     private readonly string _propertyName = propertyName;
-    private readonly string _valueName = valueName;
+    private readonly string _fieldName = fieldName;
     private readonly string _stateName = stateName;
     private readonly string _lockName = lockName;
-    private readonly IdentifierNameSyntax _value = SyntaxFactory.IdentifierName(valueName);
+    private readonly IdentifierNameSyntax _value = SyntaxFactory.IdentifierName(fieldName);
     private readonly IdentifierNameSyntax _state = SyntaxFactory.IdentifierName(stateName);
     private readonly IdentifierNameSyntax _lock = SyntaxFactory.IdentifierName(lockName);
-    private readonly TypeSyntax _propertyType = SyntaxFactory.ParseTypeName(propertySymbol.ToDisplayString());
+    private readonly TypeSyntax _propertyType = propertySymbol.ToSyntax();
     /// <summary>
     /// 类型
     /// </summary>
@@ -42,7 +50,7 @@ public abstract class GenerateLazySource(TypeDeclarationSyntax type, INamedTypeS
         => _typeSymbol;
     /// <inheritdoc />
     public string GenerateFileName
-        => $"{_typeSymbol.ToDisplayString()}.GenerateLazy{_propertyName}.g.cs";
+        => $"{_typeSymbol.ToDisplayString()}.Lazy{_propertyName}.g.cs";
     /// <summary>
     /// 属性名
     /// </summary>
@@ -52,7 +60,7 @@ public abstract class GenerateLazySource(TypeDeclarationSyntax type, INamedTypeS
     /// 值对象名
     /// </summary>
     public string ValueName 
-        => _valueName;
+        => _fieldName;
     /// <summary>
     /// 状态名
     /// </summary>

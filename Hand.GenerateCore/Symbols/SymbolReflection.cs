@@ -8,15 +8,6 @@ namespace Hand.Symbols;
 /// </summary>
 public static class SymbolReflection
 {
-    #region IsNullable
-    /// <summary>
-    /// 是否可空类型
-    /// </summary>
-    /// <param name="type"></param>
-    /// <returns></returns>
-    public static bool IsNullable(INamedTypeSymbol type)
-        => IsGenericType(type, SpecialType.System_Nullable_T);
-    #endregion
     #region IsGenericType
     /// <summary>
     /// 是否泛型定义
@@ -26,14 +17,6 @@ public static class SymbolReflection
     /// <returns></returns>
     public static bool IsGenericType(INamedTypeSymbol type, INamedTypeSymbol definitionType)
         => type.IsGenericType && SymbolTypeDescriptor.CheckEquals(definitionType, type.ConstructedFrom);
-    /// <summary>
-    /// 是否泛型定义
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="genericType"></param>
-    /// <returns></returns>
-    public static bool IsGenericType(INamedTypeSymbol type, SpecialType genericType)
-        => type.IsGenericType && type.ConstructedFrom.SpecialType == genericType;
     #endregion
     #region HasGenericType
     /// <summary>
@@ -49,23 +32,6 @@ public static class SymbolReflection
         foreach (var subType in type.Interfaces)
         {
             if (IsGenericType(subType, definitionType))
-                return true;
-        }
-        return false;
-    }
-    /// <summary>
-    /// 判断是否包含泛型定义
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="genericType"></param>
-    /// <returns></returns>
-    public static bool HasGenericType(INamedTypeSymbol type, SpecialType genericType)
-    {
-        if (IsGenericType(type, genericType))
-            return true;
-        foreach (var subType in type.Interfaces)
-        {
-            if (IsGenericType(subType, genericType))
                 return true;
         }
         return false;
@@ -93,24 +59,52 @@ public static class SymbolReflection
         }
     }
     /// <summary>
-    /// 获取泛型闭合接口
+    /// 获取成员
+    /// </summary>
+    /// <typeparam name="TMember"></typeparam>
+    /// <param name="owner"></param>
+    /// <param name="kind"></param>
+    /// <returns></returns>
+    public static IEnumerable<TMember> GetMembers<TMember>(INamespaceOrTypeSymbol owner, SymbolKind kind)
+         where TMember : ISymbol
+    {
+        foreach (var item in owner.GetMembers())
+        {
+            // 忽略编译器自动生成的成员
+            if (item.IsImplicitlyDeclared)
+                continue;
+            if (item.Kind == kind && item is TMember member)
+                yield return member;
+        }
+    }
+    /// <summary>
+    /// 获取属性
     /// </summary>
     /// <param name="type"></param>
-    /// <param name="genericType"></param>
     /// <returns></returns>
-    public static IEnumerable<INamedTypeSymbol> GetGenericCloseInterfaces(INamedTypeSymbol type, SpecialType genericType)
+    public static IEnumerable<IPropertySymbol> GetProperties(ITypeSymbol type)
+        => GetMembers<IPropertySymbol>(type, SymbolKind.Property);
+    /// <summary>
+    /// 获取字段
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    public static IEnumerable<IFieldSymbol> GetFields(ITypeSymbol type)
+        => GetMembers<IFieldSymbol>(type, SymbolKind.Field);
+    /// <summary>
+    /// 获取枚举字段
+    /// </summary>
+    /// <param name="enumType"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static IFieldSymbol? GetEnumField(ITypeSymbol enumType, object value)
     {
-        if (IsGenericType(type, genericType))
+        foreach (var field in GetFields(enumType))
         {
-            yield return type;
-            yield break;
+            if (field.IsStatic && field.HasConstantValue && Equals(field.ConstantValue, value))
+                return field;
         }
-        var interfaces = type.Interfaces;
-        foreach (var item in interfaces)
-        {
-            if (IsGenericType(item, genericType))
-                yield return item;
-        }
+        return null;
     }
     #endregion
     /// <summary>

@@ -24,7 +24,7 @@
 ~~~csharp
 interface ISyntaxFilter
 {
-    bool Match(SyntaxNode node, CancellationToken cancellation);
+    bool Match(SyntaxNode node, CancellationToken cancellation = default);
 }
 class SyntaxFilter(bool isPartial, params SyntaxKind[] kinds)
     : ISyntaxFilter

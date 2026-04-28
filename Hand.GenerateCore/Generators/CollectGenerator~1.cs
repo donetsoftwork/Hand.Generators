@@ -2,6 +2,7 @@ using Hand.Executors;
 using Hand.Filters;
 using Hand.Transform;
 using Microsoft.CodeAnalysis;
+using System;
 using System.Collections.Immutable;
 
 namespace Hand.Generators;
@@ -29,6 +30,23 @@ public class CollectGenerator<TSource>(string attributeName, ISyntaxFilter filte
     protected override void Initialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<TSource> provider)
     {
         // 注册输出逻辑
-        context.RegisterSourceOutput(provider.Collect(), _executor.Execute);
+        context.RegisterSourceOutput(provider.Collect(), Execute);
+    }
+    /// <summary>
+    /// 统一异常处理
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="source"></param>
+    private void Execute(SourceProductionContext context, ImmutableArray<TSource> source)
+    {
+        try
+        {
+            _executor.Execute(context, source);
+        }
+        catch (Exception ex)
+        {
+            var descriptor = new DiagnosticDescriptor("HAND004", "CollectGenerator Error", $"An error occurred in the CollectGenerator: {ex.Message}", "CollectGenerator", DiagnosticSeverity.Error, true);
+            context.ReportDiagnostic(Diagnostic.Create(descriptor, Location.None));
+        }
     }
 }

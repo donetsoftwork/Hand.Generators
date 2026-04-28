@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace Hand;
 
@@ -50,8 +51,10 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// 添加Using
     /// </summary>
     /// <param name="usings"></param>
-    public void Using(params UsingDirectiveSyntax[] usings)
+    public void Using(params IReadOnlyCollection<UsingDirectiveSyntax> usings)
     {
+        if(usings.Count == 0)
+            return;
         var delta = Plus(_usings, usings);
         if (delta.Count == 0)
             return;
@@ -61,15 +64,14 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// 添加Using
     /// </summary>
     /// <param name="names"></param>
-    public void Using(params NameSyntax[] names)
+    public void Using(params IReadOnlyCollection<string> names)
     {
-        int count = names.Length;
-        if (count == 0)
+        if (names.Count == 0)
             return;
-        var list = new UsingDirectiveSyntax[count];
-        for (int i = 0; i < count; i++)
-            list[i] = SyntaxFactory.UsingDirective(names[i]);
-        Using(list);
+        var delta = Plus(_usings, names);
+        if (delta.Count == 0)
+            return;
+        _usings.AddRange(delta);
     }
     /// <summary>
     /// 添加参数
@@ -372,7 +374,10 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// var
     /// </summary>
     public static IdentifierNameSyntax VarType => SyntaxFactory.IdentifierName("var");
-
+    /// <summary>
+    /// IDisposable
+    /// </summary>
+    public static IdentifierNameSyntax IDisposableType => SyntaxFactory.IdentifierName("IDisposable");
     /// <summary>
     /// Lock
     /// </summary>
@@ -380,8 +385,8 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     {
         get
         {
-            if (_lazyFrameworkMajorVersion.Value >= 9)
-                return SyntaxFactory.IdentifierName("System.Threading.Lock");
+            //if (_lazyFrameworkMajorVersion.Value >= 9)
+            //    return SyntaxFactory.IdentifierName("System.Threading.Lock");
             return SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ObjectKeyword));
         }
     }
@@ -416,6 +421,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="name"></param>
     /// <param name="argumentTypes"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GenericNameSyntax Generic(SyntaxToken name, params TypeSyntax[] argumentTypes)
         => SyntaxFactory.GenericName(name, SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(argumentTypes)));
     /// <summary>
@@ -424,6 +430,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="name"></param>
     /// <param name="argumentTypes"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GenericNameSyntax Generic(string name, params TypeSyntax[] argumentTypes)
         => Generic(SyntaxFactory.Identifier(name), argumentTypes);
     #endregion
@@ -449,10 +456,19 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     public static LiteralExpressionSyntax ThisLiteral => SyntaxFactory.LiteralExpression(SyntaxKind.ThisExpression);
     /// <summary>
+    /// bool字面量
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LiteralExpressionSyntax Literal(bool value)
+        => value ? TrueLiteral : FalseLiteral;
+    /// <summary>
     /// int字面量
     /// </summary>
     /// <param name="value"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LiteralExpressionSyntax Literal(int value)
         => SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
     /// <summary>
@@ -460,6 +476,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="value"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LiteralExpressionSyntax Literal(uint value)
         => SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
     /// <summary>
@@ -467,6 +484,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="value"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LiteralExpressionSyntax Literal(long value)
         => SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
     /// <summary>
@@ -474,6 +492,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="value"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LiteralExpressionSyntax Literal(ulong value)
         => SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
     /// <summary>
@@ -481,6 +500,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="value"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LiteralExpressionSyntax Literal(float value)
         => SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
     /// <summary>
@@ -488,6 +508,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="value"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LiteralExpressionSyntax Literal(double value)
         => SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
     /// <summary>
@@ -495,6 +516,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="value"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LiteralExpressionSyntax Literal(decimal value)
         => SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
     /// <summary>
@@ -502,6 +524,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="value"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LiteralExpressionSyntax Literal(string value)
         => SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(value));
     /// <summary>
@@ -509,9 +532,25 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="value"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LiteralExpressionSyntax Literal(char value)
         => SyntaxFactory.LiteralExpression(SyntaxKind.CharacterLiteralExpression, SyntaxFactory.Literal(value));
     #endregion
+    /// <summary>
+    /// 集合表达式
+    /// </summary>
+    /// <param name="items"></param>
+    /// <returns></returns>
+    public static CollectionExpressionSyntax Collection(params ExpressionSyntax[] items)
+    {
+        var count = items.Length;
+        if (count == 0)
+            return SyntaxFactory.CollectionExpression();
+        var list = new CollectionElementSyntax[count];
+        for (var i = 0; i < count; i++)
+            list[i] = SyntaxFactory.ExpressionElement(items[i]);
+        return SyntaxFactory.CollectionExpression(SyntaxFactory.SeparatedList(list));
+    }
     #region Interpolation
     /// <summary>
     /// 开始构造插值表达式
@@ -519,12 +558,14 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="start">String/VerbatimString/SingleLineRawString/MultiLineRawString</param>
     /// <param name="end">String/MultiLineRawString</param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static InterpolationBuilder Interpolation(SyntaxKind start, SyntaxKind end)
         => new(start, end);
     /// <summary>
     /// 开始构造插值表达式
     /// </summary>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static InterpolationBuilder Interpolation()
         => new(SyntaxKind.InterpolatedStringStartToken, SyntaxKind.InterpolatedStringEndToken);
     #endregion
@@ -533,6 +574,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="message"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ThrowExpressionSyntax Throw(string message)
         => SyntaxFactory.IdentifierName("Exception")
         .Throw([Literal(message)]);
@@ -556,7 +598,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
             .Public()
             .Override()
             .ToBuilder()
-            .Return(checkType.And(checkEquals));
+            .Return(checkType.LogicalAnd(checkEquals));
     }
     /// <summary>
     /// 生成判等运算符重载
@@ -626,6 +668,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="usings"></param>
     /// <param name="root"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static CompilationUnitSyntax BuildUnit(List<UsingDirectiveSyntax> usings, MemberDeclarationSyntax root)
     {
         return SyntaxFactory.CompilationUnit()
@@ -680,6 +723,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="parameters"></param>
     /// <param name="members"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static CompilationUnitSyntax Build(List<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, ParameterSyntax[] parameters, MemberDeclarationSyntax[] members)
         => BuildUnit(usings, CheckType(type, parameters, members));
     /// <summary>
@@ -691,12 +735,14 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="parameters"></param>
     /// <param name="members"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static CompilationUnitSyntax Build(BaseNamespaceDeclarationSyntax ns, List<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, ParameterSyntax[] parameters, MemberDeclarationSyntax[] members)
         => BuildUnit(usings, ns.AddMembers(CheckType(type, parameters, members)));
     /// <summary>
     /// 构造语法树
     /// </summary>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public virtual CompilationUnitSyntax Build()
         => Build(_usings, _type, [.. _parameters], [.. _members]);
     #endregion
@@ -737,6 +783,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="type"></param>
     /// <param name="members"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static SyntaxGenerator Create(TypeDeclarationSyntax type, params MemberDeclarationSyntax[] members)
         => new([], type, [.. members]);
     /// <summary>
@@ -746,6 +793,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="type"></param>
     /// <param name="members"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static NamespaceBuilder Create(BaseNamespaceDeclarationSyntax ns, TypeDeclarationSyntax type, params MemberDeclarationSyntax[] members)
         => new(ns, [], type, [.. members]);
     /// <summary>
@@ -755,6 +803,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="type"></param>
     /// <param name="members"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static NamespaceBuilder Create(NameSyntax ns, TypeDeclarationSyntax type, params MemberDeclarationSyntax[] members)
         => new(SyntaxFactory.NamespaceDeclaration(ns), [], type, [.. members]);
     /// <summary>
@@ -764,6 +813,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="type"></param>
     /// <param name="members"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static NamespaceBuilder Create(string ns, TypeDeclarationSyntax type, params MemberDeclarationSyntax[] members)
         => new(SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(ns)), [], type, [.. members]);
     /// <summary>
@@ -785,6 +835,27 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
                 continue;
             keys.Add(key);
             list.Add(item);
+        }
+        return list;
+    }
+    /// <summary>
+    /// 追加引用
+    /// </summary>
+    /// <param name="list0">原引用</param>
+    /// <param name="delta">引用增量</param>
+    /// <returns></returns>
+    public static IReadOnlyCollection<UsingDirectiveSyntax> Plus(IEnumerable<UsingDirectiveSyntax> list0, params IReadOnlyCollection<string> delta)
+    {
+        var keys = new HashSet<string>(list0
+            .Select(item => item.ToFullString())
+            .Distinct());
+        var list = new List<UsingDirectiveSyntax>(delta.Count);
+        foreach (var item in delta)
+        {
+            if (keys.Contains(item))
+                continue;
+            keys.Add(item);
+            list.Add(SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName(item)));
         }
         return list;
     }

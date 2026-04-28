@@ -29,7 +29,7 @@ public class SyntaxFilter(bool isPartial, params SyntaxKind[] kinds)
     {
     }
     /// <inheritdoc />
-    public bool Match(SyntaxNode node, CancellationToken cancellation)
+    public bool Match(SyntaxNode node, CancellationToken cancellation = default)
     {
         if (cancellation.IsCancellationRequested)
             return false;

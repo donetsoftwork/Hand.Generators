@@ -23,7 +23,7 @@ public partial class PropertyTests
     public static DateTime Now { get; } = DateTime.Now;
 }
 ";
-        var service = SyntaxTreeScript.CreateDefault()
+        var service = SyntaxTreeDriver.CreateDefaultDriver()
             .Reference<GenerateLazyAttribute>();
         var result = service.Generate<GenerateLazyGenerator>(source)
             .GetRunResult();
@@ -46,7 +46,7 @@ public partial class PropertyTests
     public DateTime Now { get; } = DateTime.Now;
 }
 ";
-        var service = SyntaxTreeScript.CreateDefault()
+        var service = SyntaxTreeDriver.CreateDefaultDriver()
             .Reference<GenerateLazyAttribute>();
         var result = service.Generate<GenerateLazyGenerator>(source)
             .GetRunResult();

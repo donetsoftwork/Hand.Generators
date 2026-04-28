@@ -27,8 +27,8 @@ namespace Hand.Models
         public void IsGenericType()
         {
             // 解析代码为语法树
-            var syntaxTree = SyntaxTreeScript.Default.Parse(_code);
-            var compilation = SyntaxTreeScript.Default.Compile(syntaxTree);
+            var syntaxTree = SyntaxTreeDriver.DefaultDriver.Parse(_code);
+            var compilation = SyntaxTreeDriver.DefaultDriver.Compile(syntaxTree);
             var definitionType = GetDeclaredTypeSymbol(compilation, syntaxTree);
             Assert.NotNull(definitionType);
             Assert.True(definitionType.IsGenericType);
@@ -43,22 +43,35 @@ namespace Hand.Models
             var intListType = listType.Construct(intType);
             Assert.NotNull(intListType);
             Assert.True(SymbolReflection.IsGenericType(intListType, listType));
-            Assert.True(SymbolReflection.IsGenericType(intListType, SpecialType.System_Collections_Generic_IList_T));
+            Assert.True(intListType.IsGenericType(SpecialType.System_Collections_Generic_IList_T));
         }
         [Fact]
-        public void IsNullable()
+        public void IsNullable_true()
         {
-            var syntaxTree = SyntaxTreeScript.Default.Parse("int?");
-            var compilation = SyntaxTreeScript.Default.Compile(syntaxTree);
-            var definitionType = GetNullableTypeSymbol(compilation, syntaxTree);
+            var driver = SyntaxTreeDriver.CreateDriver()
+                .Reference<int>();
+            var syntaxTree = driver.Parse("int?");
+            var compilation = driver.Compile(syntaxTree);
+            var definitionType = GetNamedTypeSymbol(compilation, syntaxTree);
             Assert.NotNull(definitionType);
-            Assert.True(SymbolReflection.IsNullable(definitionType));
+            Assert.True(definitionType.IsNullable());
+        }
+        [Fact]
+        public void IsNullable_false()
+        {
+            var driver = SyntaxTreeDriver.CreateDriver()
+                .Reference<int>();
+            var syntaxTree = driver.Parse("int");
+            var compilation = driver.Compile(syntaxTree);
+            var definitionType = GetNamedTypeSymbol(compilation, syntaxTree);
+            Assert.NotNull(definitionType);
+            Assert.False(definitionType.IsNullable());
         }
         [Fact]
         public void HasGenericType()
         {
-            var syntaxTree = SyntaxTreeScript.Default.Parse(_code);
-            var compilation = SyntaxTreeScript.Default.Compile(syntaxTree);
+            var syntaxTree = SyntaxTreeDriver.DefaultDriver.Parse(_code);
+            var compilation = SyntaxTreeDriver.DefaultDriver.Compile(syntaxTree);
             var listType = compilation.GetTypeByMetadataName("System.Collections.Generic.List`1");
             Assert.NotNull(listType);
             var intType = compilation.GetSpecialType(SpecialType.System_Int32);
@@ -70,8 +83,8 @@ namespace Hand.Models
         [Fact]
         public void GetGenericCloseInterfaces()
         {
-            var syntaxTree = SyntaxTreeScript.Default.Parse(_code);
-            var compilation = SyntaxTreeScript.Default.Compile(syntaxTree);
+            var syntaxTree = SyntaxTreeDriver.DefaultDriver.Parse(_code);
+            var compilation = SyntaxTreeDriver.DefaultDriver.Compile(syntaxTree);
             var listType = compilation.GetTypeByMetadataName("System.Collections.Generic.List`1");
             Assert.NotNull(listType);
             var intType = compilation.GetSpecialType(SpecialType.System_Int32);
@@ -81,7 +94,7 @@ namespace Hand.Models
             var enumerable = SymbolReflection.GetGenericCloseInterfaces(intListType, enumerableType)
                 .FirstOrDefault();
             Assert.NotNull(enumerable);
-            var collection = SymbolReflection.GetGenericCloseInterfaces(intListType, SpecialType.System_Collections_Generic_ICollection_T)
+            var collection = intListType.GetGenericCloseInterfaces(SpecialType.System_Collections_Generic_ICollection_T)
                 .FirstOrDefault();
             Assert.NotNull(collection);
         }
@@ -101,7 +114,7 @@ namespace Hand.Models
             Assert.NotNull(symbol);
             return symbol;
         }
-        public static INamedTypeSymbol? GetNullableTypeSymbol(Compilation compilation, SyntaxTree syntaxTree)
+        public static INamedTypeSymbol? GetNamedTypeSymbol(Compilation compilation, SyntaxTree syntaxTree)
         {
             //var diagnostics = compilation.GetDiagnostics();
             //foreach (var diagnostic in diagnostics)
@@ -109,7 +122,7 @@ namespace Hand.Models
             //    Console.WriteLine(diagnostic.ToString());
             //}
             var semanticModel = compilation.GetSemanticModel(syntaxTree, ignoreAccessibility: false);
-            var type = GetSyntax<NullableTypeSyntax>(semanticModel);
+            var type = GetSyntax<TypeSyntax>(semanticModel);
             Assert.NotNull(type);
             var symbol = semanticModel.GetSymbolInfo(type);
             return symbol.Symbol as INamedTypeSymbol;

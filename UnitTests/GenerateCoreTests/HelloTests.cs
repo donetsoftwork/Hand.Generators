@@ -18,7 +18,7 @@ namespace GenerateCoreTests.Hello;
 public partial class HelloTests;
 ";
         var generator = new HelloGenerator();
-        var result = SyntaxTreeScript.Default
+        var result = SyntaxTreeDriver.DefaultDriver
             .Generate(generator, code0)
             .GetRunResult();
         var syntaxTree = result.GeneratedTrees.FirstOrDefault();
@@ -40,7 +40,7 @@ namespace GenerateCoreTests.Hello;
 [HelloGenerator]
 public partial class HelloTests;
 ";
-        var compilation = SyntaxTreeScript.Default
+        var compilation = SyntaxTreeDriver.DefaultDriver
             .Compile(code0);
         var syntaxTree = compilation.SyntaxTrees.FirstOrDefault();
         Assert.NotNull(syntaxTree);

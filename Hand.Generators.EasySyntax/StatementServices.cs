@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Hand;
 
@@ -31,6 +32,7 @@ public static partial class GenerateServices
     /// <param name="collect"></param>
     /// <param name="expression"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TCollect Add<TCollect>(this TCollect collect, ExpressionSyntax expression)
         where TCollect : StatementCollect
         => collect.Add(SyntaxFactory.ExpressionStatement(expression));
@@ -42,6 +44,7 @@ public static partial class GenerateServices
     /// <param name="collect"></param>
     /// <param name="variable"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TCollect Declare<TCollect>(this TCollect collect, VariableDeclarationSyntax variable)
         where TCollect : StatementCollect
         => collect.Add(SyntaxFactory.LocalDeclarationStatement(variable));
@@ -53,6 +56,7 @@ public static partial class GenerateServices
     /// <param name="variableType"></param>
     /// <param name="variableName"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TCollect Declare<TCollect>(this TCollect collect, TypeSyntax variableType, SyntaxToken variableName)
         where TCollect : StatementCollect
         => collect.Add(SyntaxFactory.LocalDeclarationStatement(variableType.Variable(variableName)));
@@ -64,6 +68,7 @@ public static partial class GenerateServices
     /// <param name="variableType"></param>
     /// <param name="variableName"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TCollect Declare<TCollect>(this TCollect collect, TypeSyntax variableType, IdentifierNameSyntax variableName)
         where TCollect : StatementCollect
         => collect.Add(SyntaxFactory.LocalDeclarationStatement(variableType.Variable(variableName.Identifier)));
@@ -76,6 +81,7 @@ public static partial class GenerateServices
     /// <param name="collect"></param>
     /// <param name="labelName"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TCollect Goto<TCollect>(this TCollect collect, SyntaxToken labelName)
         where TCollect : StatementCollect
         => collect.Add(SyntaxFactory.GotoStatement(SyntaxKind.GotoStatement, SyntaxFactory.IdentifierName(labelName)));
@@ -86,6 +92,7 @@ public static partial class GenerateServices
     /// <param name="collect"></param>
     /// <param name="labelName"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TCollect Goto<TCollect>(this TCollect collect, string labelName)
         where TCollect : StatementCollect
         => collect.Add(SyntaxFactory.GotoStatement(SyntaxKind.GotoStatement, SyntaxFactory.IdentifierName(labelName)));
@@ -96,6 +103,7 @@ public static partial class GenerateServices
     /// <typeparam name="TCollect"></typeparam>
     /// <param name="collect"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TCollect Break<TCollect>(this TCollect collect)
         where TCollect : StatementCollect
         => collect.Add(SyntaxFactory.BreakStatement());
@@ -105,6 +113,7 @@ public static partial class GenerateServices
     /// <typeparam name="TCollect"></typeparam>
     /// <param name="collect"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TCollect Continue<TCollect>(this TCollect collect)
         where TCollect : StatementCollect
         => collect.Add(SyntaxFactory.ContinueStatement());
@@ -114,6 +123,7 @@ public static partial class GenerateServices
     /// <typeparam name="TParent"></typeparam>
     /// <param name="builder"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static BlockBuilder<TParent, StatementBuilder<TParent>> Block<TParent>(this StatementBuilder<TParent> builder)
         => new(builder);
     /// <summary>
@@ -123,6 +133,7 @@ public static partial class GenerateServices
     /// <param name="builder"></param>
     /// <param name="condition"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IfBuilder<TParent, StatementBuilder<TParent>> If<TParent>(this StatementBuilder<TParent> builder, ExpressionSyntax condition)
         => new(builder, condition);
     /// <summary>
@@ -132,6 +143,7 @@ public static partial class GenerateServices
     /// <param name="builder"></param>
     /// <param name="governing"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static SwitchBuilder<TParent, StatementBuilder<TParent>> Switch<TParent>(this StatementBuilder<TParent> builder, ExpressionSyntax governing)
         => new(builder, governing);
     /// <summary>
@@ -140,6 +152,7 @@ public static partial class GenerateServices
     /// <typeparam name="TParent"></typeparam>
     /// <param name="builder"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TParent End<TParent>(this StatementBuilder<TParent> builder)
         => builder.BuildCore();
     #region ForEach
@@ -152,6 +165,7 @@ public static partial class GenerateServices
     /// <param name="item"></param>
     /// <param name="collection"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ForEachBuilder<TParent, StatementBuilder<TParent>> ForEach<TParent>(this StatementBuilder<TParent> builder, TypeSyntax itemType, SyntaxToken item, ExpressionSyntax collection)
         => new(builder, itemType, item, collection);
     /// <summary>
@@ -162,6 +176,7 @@ public static partial class GenerateServices
     /// <param name="item"></param>
     /// <param name="collection"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ForEachBuilder<TParent, StatementBuilder<TParent>> ForEach<TParent>(this StatementBuilder<TParent> builder, SyntaxToken item, ExpressionSyntax collection)
         => new(builder, SyntaxGenerator.VarType, item, collection);
     /// <summary>
@@ -171,6 +186,7 @@ public static partial class GenerateServices
     /// <param name="builder"></param>
     /// <param name="collection"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ForEachBuilder<TParent, StatementBuilder<TParent>> ForEach<TParent>(this StatementBuilder<TParent> builder, ExpressionSyntax collection)
         => new(builder, SyntaxGenerator.VarType, SyntaxFactory.Identifier("item"), collection);
     #endregion
@@ -184,6 +200,7 @@ public static partial class GenerateServices
     /// <param name="condition"></param>
     /// <param name="incrementors"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ForBuilder<TParent, StatementBuilder<TParent>> For<TParent>(this StatementBuilder<TParent> builder, VariableDeclarationSyntax declaration, ExpressionSyntax condition, List<ExpressionSyntax> incrementors)
         => new(builder, declaration, condition, incrementors);
     /// <summary>
@@ -195,6 +212,7 @@ public static partial class GenerateServices
     /// <param name="condition"></param>
     /// <param name="incrementor"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ForBuilder<TParent, StatementBuilder<TParent>> For<TParent>(this StatementBuilder<TParent> builder, VariableDeclarationSyntax declaration, ExpressionSyntax condition, ExpressionSyntax incrementor)
         => new(builder, declaration, condition, [incrementor]);
     /// <summary>
@@ -223,6 +241,7 @@ public static partial class GenerateServices
     /// <param name="index"></param>
     /// <param name="limit"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ForBuilder<TParent, StatementBuilder<TParent>> For<TParent>(this StatementBuilder<TParent> builder, SyntaxToken index, ExpressionSyntax limit)
         => For(builder, index.ToIdentifierName(), limit);
     /// <summary>
@@ -233,6 +252,7 @@ public static partial class GenerateServices
     /// <param name="index"></param>
     /// <param name="limit"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ForBuilder<TParent, StatementBuilder<TParent>> For<TParent>(this StatementBuilder<TParent> builder, string index, ExpressionSyntax limit)
         => For(builder, SyntaxFactory.IdentifierName(index), limit);
     #endregion
@@ -243,6 +263,7 @@ public static partial class GenerateServices
     /// <param name="builder"></param>
     /// <param name="condition"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static WhileBuilder<TParent, StatementBuilder<TParent>> While<TParent>(this StatementBuilder<TParent> builder, ExpressionSyntax condition)
         => new(builder, condition);
     /// <summary>
@@ -252,6 +273,7 @@ public static partial class GenerateServices
     /// <param name="builder"></param>
     /// <param name="condition"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static DoBuilder<TParent, StatementBuilder<TParent>> Do<TParent>(this StatementBuilder<TParent> builder, ExpressionSyntax condition)
         => new(builder, condition);
     /// <summary>
@@ -261,6 +283,7 @@ public static partial class GenerateServices
     /// <param name="builder"></param>
     /// <param name="expression"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LockBuilder<TParent, StatementBuilder<TParent>> Lock<TParent>(this StatementBuilder<TParent> builder, ExpressionSyntax expression)
         => new(builder, expression);
     /// <summary>
@@ -269,6 +292,7 @@ public static partial class GenerateServices
     /// <typeparam name="TParent"></typeparam>
     /// <param name="builder"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TryBuilder<TParent, StatementBuilder<TParent>> Try<TParent>(this StatementBuilder<TParent> builder)
         => new(builder);
     #region Return
@@ -289,6 +313,8 @@ public static partial class GenerateServices
     /// </summary>
     /// <param name="builder"></param>
     /// <param name="variable"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TParent Return<TParent>(this StatementBuilder<TParent> builder, SyntaxToken variable)
         => Return(builder, SyntaxFactory.IdentifierName(variable));
     #endregion
@@ -298,6 +324,7 @@ public static partial class GenerateServices
     /// <typeparam name="TParent"></typeparam>
     /// <param name="builder"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TParent ReturnTrue<TParent>(this StatementBuilder<TParent> builder)
         => builder.Return(SyntaxGenerator.TrueLiteral);
     /// <summary>
@@ -306,6 +333,7 @@ public static partial class GenerateServices
     /// <typeparam name="TParent"></typeparam>
     /// <param name="builder"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TParent ReturnFalse<TParent>(this StatementBuilder<TParent> builder)
         => builder.Return(SyntaxGenerator.FalseLiteral);
     /// <summary>

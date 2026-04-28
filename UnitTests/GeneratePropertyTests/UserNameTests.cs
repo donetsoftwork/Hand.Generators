@@ -44,7 +44,7 @@ namespace GeneratePropertyTests;
 [GenerateProperty]
 public partial record UserName : IEntityProperty<string>;
 ";
-        var service = SyntaxTreeScript.CreateDefault()
+        var service = SyntaxTreeDriver.CreateDefaultDriver()
             .Reference<IEntityProperty<string>>()
             .Reference<GeneratePropertyAttribute>();
         var result = service.Generate<PropertyGenerator>(source)
@@ -68,7 +68,7 @@ namespace GeneratePropertyTests;
 public partial record UserName : IEntityProperty<string>;
 ";
         var generator = new ValuesGenerator<AttributeContext>("Hand.Entities.GeneratePropertyAttribute", new SyntaxFilter(), PassTransform.Instance, new SourceTextExecutor());
-        var service = SyntaxTreeScript.CreateDefault()
+        var service = SyntaxTreeDriver.CreateDefaultDriver()
             .Reference<IEntityProperty<string>>()
             .Reference<GeneratePropertyAttribute>();
         var result = service.Generate(generator, source)

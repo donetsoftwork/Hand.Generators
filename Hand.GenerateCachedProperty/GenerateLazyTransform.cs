@@ -17,7 +17,7 @@ namespace Hand.GenerateCachedProperty;
 public class GenerateLazyTransform : IGeneratorTransform<GenerateLazySource>
 {
     /// <inheritdoc />
-    public GenerateLazySource? Transform(AttributeContext context, CancellationToken cancellation)
+    public GenerateLazySource? Transform(AttributeContext context, CancellationToken cancellation = default)
     {
         if (cancellation.IsCancellationRequested)
             return null;
@@ -75,18 +75,6 @@ public class GenerateLazyTransform : IGeneratorTransform<GenerateLazySource>
         if (descriptor.GetField(source.LockName) is not null)
             return false;
         return true;
-    }
-    /// <summary>
-    /// 获取属性
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="propertyName"></param>
-    /// <returns></returns>
-    public static IPropertySymbol? GetProperty(INamedTypeSymbol type, string propertyName)
-    {
-        return new SymbolCollect<IPropertySymbol>(SymbolKind.Property)
-                .Select(type.GetMembers())
-                .FirstOrDefault(item => item.Name == propertyName);
     }
     /// <summary>
     /// 从Attribute配置中获取属性名

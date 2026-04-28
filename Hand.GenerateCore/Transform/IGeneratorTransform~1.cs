@@ -15,5 +15,5 @@ public interface IGeneratorTransform<TSource>
     /// <param name="context"></param>
     /// <param name="cancellation"></param>
     /// <returns></returns>
-    TSource? Transform(AttributeContext context, CancellationToken cancellation);
+    TSource? Transform(AttributeContext context, CancellationToken cancellation = default);
 }

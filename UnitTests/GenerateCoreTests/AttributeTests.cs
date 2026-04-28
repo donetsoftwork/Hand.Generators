@@ -21,7 +21,7 @@ public class MyClass;
 [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
 public class MyAttribute : Attribute;
 ";
-        var compilation = SyntaxTreeScript.Default.Compile(sourceCode);
+        var compilation = SyntaxTreeDriver.DefaultDriver.Compile(sourceCode);
         var type1 = compilation.GetTypeByMetadataName("MyAttribute");
         Assert.Null(type1);
         var type2 = compilation.GetTypeByMetadataName("ExampleNamespace.MyAttribute");
@@ -51,5 +51,40 @@ public class MyAttribute : Attribute;
             Assert.NotNull(attributeClass);
             Assert.Equal(reference.SyntaxTree, targetSyntaxTree);
         }
+    }
+    [Fact]
+    public async Task AttributeData()
+    {
+        string sourceCode = @"
+[MyAttribute2(1)]
+public class MyClass2;
+[AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+public class MyAttribute2(int val) : Attribute
+{
+    public int Val { get; } = val;
+}
+";
+        var driver = SyntaxTreeDriver.ScriptDriver;
+        var compilation = driver.ScriptCompile(driver.Parse(sourceCode));
+        var syntaxTree = compilation.SyntaxTrees.FirstOrDefault();
+        Assert.NotNull(syntaxTree);
+        var attribute = syntaxTree.GetRoot().DescendantNodes().OfType<AttributeSyntax>().FirstOrDefault();
+        Assert.NotNull(attribute);
+        //var expression = attribute.CreateToUnit();
+        //Assert.NotNull(expression);
+        //var script = driver.CreateScript<object>(expression.SyntaxTree, previous: compilation);
+        //var result = await script.ExecuteAsync();
+        //Assert.NotNull(result);
+    }
+    [Fact]
+    public void Script()
+    {
+        var code = @"return new object();";
+        var tree = SyntaxFactory.ParseSyntaxTree(code, CSharpParseOptions.Default.WithKind(SourceCodeKind.Script));
+        Assert.NotNull(tree);
+        var expression = SyntaxGenerator.ObjectType.New().ToUnit();
+        var tree2 = expression.SyntaxTree;
+        tree2 = tree2.WithRootAndOptions(tree2.GetRoot(), CSharpParseOptions.Default.WithKind(SourceCodeKind.Script));
+        Assert.NotNull(tree2);
     }
 }

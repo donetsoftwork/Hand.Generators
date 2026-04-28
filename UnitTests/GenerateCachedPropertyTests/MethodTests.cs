@@ -32,7 +32,7 @@ public partial class MethodTests
     }
 }
 ";
-        var service = SyntaxTreeScript.CreateDefault()
+        var service = SyntaxTreeDriver.CreateDefaultDriver()
             .Reference<GenerateLazyAttribute>();
         var result = service.Generate<GenerateLazyGenerator>(source)
             .GetRunResult();

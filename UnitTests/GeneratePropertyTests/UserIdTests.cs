@@ -37,7 +37,7 @@ namespace GeneratePropertyTests;
 [GenerateProperty]
 public partial class UserId : IEntityId;
 ";
-        var service = SyntaxTreeScript.CreateDefault()
+        var service = SyntaxTreeDriver.CreateDefaultDriver()
             .Reference<IEntityId>()
             .Reference<GeneratePropertyAttribute>();
         var result = service.Generate<PropertyGenerator>(source)

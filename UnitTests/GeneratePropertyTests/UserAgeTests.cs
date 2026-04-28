@@ -21,7 +21,7 @@ public partial class UserAge(int? original) : IEntityProperty<int?>
     public int? Original { get; } = original;
 }
 ";
-        var service = SyntaxTreeScript.CreateDefault()
+        var service = SyntaxTreeDriver.CreateDefaultDriver()
             .Reference<IEntityProperty<int?>>()
             .Reference<GeneratePropertyAttribute>();
         var result = service.Generate<PropertyGenerator>(source)
@@ -37,8 +37,8 @@ public partial class UserAge(int? original) : IEntityProperty<int?>
 
 
 
-//[GenerateProperty("Exclude: Operator")]
-//public partial class UserAge(int? original) : IEntityProperty<int?>
-//{
-//    public int? Original { get; } = original;
-//}
+[GenerateProperty("Exclude: Operator")]
+public partial class UserAge(int? original) : IEntityProperty<int?>
+{
+    public int? Original { get; } = original;
+}

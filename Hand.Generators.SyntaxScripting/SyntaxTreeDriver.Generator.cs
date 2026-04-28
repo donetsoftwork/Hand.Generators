@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace Hand;
 
-public partial class SyntaxTreeScript
+public partial class SyntaxTreeDriver
 {
     #region Generate
     /// <summary>
@@ -32,35 +32,32 @@ public partial class SyntaxTreeScript
     public GeneratorDriver Generate(ISourceGenerator generator, string source)
     {
         var compilation = Compile(source);
-        return CreateDriver(generator)
+        return CreateGeneratorDriver(generator)
             .RunGenerators(compilation);
-        //var runResult = driver.GetRunResult();
-        //diagnostics = runResult.Diagnostics;
-        //return runResult.GeneratedTrees;
     }
     #endregion
-    #region CreateDriver
+    #region CreateGeneratorDriver
     /// <summary>
     /// 构造执行器驱动
     /// </summary>
     /// <typeparam name="TGenerator"></typeparam>
     /// <returns></returns>
-    public CSharpGeneratorDriver CreateDriver<TGenerator>()
+    public CSharpGeneratorDriver CreateGeneratorDriver<TGenerator>()
         where TGenerator : IIncrementalGenerator, new()
-        => CreateDriver(new TGenerator());
+        => CreateGeneratorDriver(new TGenerator());
     /// <summary>
     /// 构造执行器驱动
     /// </summary>
     /// <param name="generator"></param>
     /// <returns></returns>
-    public CSharpGeneratorDriver CreateDriver(IIncrementalGenerator generator)
-         => CreateDriver(generator.AsSourceGenerator());
+    public CSharpGeneratorDriver CreateGeneratorDriver(IIncrementalGenerator generator)
+         => CreateGeneratorDriver(generator.AsSourceGenerator());
     /// <summary>
     /// 构造执行器驱动
     /// </summary>
     /// <param name="generator"></param>
     /// <returns></returns>
-    public CSharpGeneratorDriver CreateDriver(ISourceGenerator generator)
+    public CSharpGeneratorDriver CreateGeneratorDriver(ISourceGenerator generator)
     {
         // 参看: https://www.thinktecture.com/en/net/roslyn-source-generators-analyzers-code-fixes-testing/
         var driverOptions = new GeneratorDriverOptions(IncrementalGeneratorOutputKind.None, true, _path);

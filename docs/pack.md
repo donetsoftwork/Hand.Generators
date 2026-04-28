@@ -214,7 +214,7 @@ namespace GenerateCachedPropertyTests;
 
 public partial class MethodTests
 {
-    [GenerateLazy(""LazyTime"")]
+    [GenerateLazy("LazyTime")]
     public DateTime CreateTime()
     {
         return DateTime.Now;
@@ -252,7 +252,7 @@ partial class MethodTests
 ~~~
 
  
-### 7. 按方法生成属性的Case
+### 7. 按属性生成属性的Case
 #### 7.1 原始代码
 ~~~csharp
 using Hand;
@@ -261,7 +261,7 @@ namespace GenerateCachedPropertyTests;
 
 public partial class PropertyTests
 {
-    [GenerateLazy(""LazyTime"")]
+    [GenerateLazy("LazyTime")]
     public static DateTime Now { get; } = DateTime.Now;
 }
 ~~~
@@ -301,7 +301,7 @@ partial class PropertyTests
 ### 1. 开发容易打包难
 >* 特别是包含依赖项的生成器打包更难
 >* 首先分享一篇[博客园扑克子博主的经验](https://www.cnblogs.com/pokersang/p/17975868)
->* 非常感谢这个博主,再此基础上笔者摸索出更好的方法
+>* 非常感谢这个博主,在此基础上笔者摸索出更好的方法
 >* partial范式依赖EasySyntax和GenerateCore还有Microsoft.CodeAnalysis.CSharp的5.0版本
 >* 如果不打包这些依赖会导致生成器无法正常工作
 >* 打包方式不对又会导致生成器及依赖项目的dll会出现被调用项目的生成目录
@@ -310,11 +310,11 @@ partial class PropertyTests
 ### 2. 还是自动生成属性项目为例
 >* TargetFramework最好设置为netstandard2.0
 >* EnforceExtendedAnalyzerRules最好设置为true
->* IncludeBuildOutput设置为fase,这是避免生成器本身输出到生成目录
+>* IncludeBuildOutput设置为fase,这是避免生成器本身输出到lib目录
 >* 引用的IncludeAssets设置为compile和analyzers,compile是为了生成器本身编译,analyzers是为了能用于执行生成器时调用
 >* PrivateAssets为compile是为了排除生成器的依赖项目参与调用生成器项目的编译,因为它是本项目私有不继续传递,会被排除
 >* 最后None配置到analyzers/dotnet/cs就是生成器目录专用
->* 另外NoWarn配置为NU5128,是避免排除警告信息,由于生成器值需要analyzers文件夹,没有lib文件夹导致警告是误报
+>* 另外NoWarn配置为NU5128,是排除警告信息,由于生成器只需要analyzers文件夹,没有lib文件夹导致警告是误报
 
 ~~~xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -355,7 +355,7 @@ partial class PropertyTests
 >* TargetFramework最好设置为netstandard2.0
 >* EnforceExtendedAnalyzerRules最好设置为true
 >* None也配置到analyzers/dotnet/cs是为了生成器调用
->* 这样nuget里面有两份dll,lib的可以直接引用,analyzers里面的生成器
+>* 这样nuget里面有两份dll,lib的可以直接引用,analyzers里面的生成器专用
 
 ~~~xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -372,6 +372,7 @@ partial class PropertyTests
 	</ItemGroup>
 </Project>
 ~~~
+
 
 ### 4. 脚本的方法
 >* 安装时执行install.ps1
@@ -432,7 +433,7 @@ foreach($analyzersPath in $analyzersPaths)
 
 ### 四、总结
 #### 1. 打包方法1
->* 需要的文件文件都通过PackagePath输出到analyzers
+>* 需要的文件都通过PackagePath输出到analyzers
 >* 问题是nuget包会增大,丢失了项目的依赖关系
 
 #### 2. 打包方法2
@@ -446,7 +447,7 @@ foreach($analyzersPath in $analyzersPaths)
 
 #### 4.笔者推荐方法2
 >* 大家喜欢哪种方法呢
->* 有的时候可能需要不同方法配置使用
+>* 有的时候可能需要不同方法配合使用
 
 
 源码托管地址: https://github.com/donetsoftwork/Hand.Generators ，欢迎大家直接查看源码。

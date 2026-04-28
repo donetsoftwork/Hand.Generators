@@ -38,8 +38,8 @@ namespace Hand.Models
         public void GetAttributesByType()
         {
             // 解析代码为语法树
-            var syntaxTree = SyntaxTreeScript.Default.Parse(_code);
-            var compilation = SyntaxTreeScript.Default.Compile(syntaxTree);
+            var syntaxTree = SyntaxTreeDriver.DefaultDriver.Parse(_code);
+            var compilation = SyntaxTreeDriver.DefaultDriver.Compile(syntaxTree);
             var symbol = GetTypeSymbol(compilation, syntaxTree);
             Assert.NotNull(symbol);
             var attributeSymbol = compilation.GetTypeByMetadataName("Hand.Models.IndexAttribute");
@@ -51,8 +51,8 @@ namespace Hand.Models
         public void GetArgumentValueByIndex()
         {
             // 解析代码为语法树
-            var syntaxTree = SyntaxTreeScript.Default.Parse(_code);
-            var compilation = SyntaxTreeScript.Default.Compile(syntaxTree);
+            var syntaxTree = SyntaxTreeDriver.DefaultDriver.Parse(_code);
+            var compilation = SyntaxTreeDriver.DefaultDriver.Compile(syntaxTree);
             var symbol = GetTypeSymbol(compilation, syntaxTree);
             Assert.NotNull(symbol);
             var attributeSymbol = compilation.GetTypeByMetadataName("Hand.Models.IndexAttribute");
@@ -66,8 +66,8 @@ namespace Hand.Models
         public void GetArgumentValueByName()
         {
             // 解析代码为语法树
-            var syntaxTree = SyntaxTreeScript.Default.Parse(_code);
-            var compilation = SyntaxTreeScript.Default.Compile(syntaxTree);
+            var syntaxTree = SyntaxTreeDriver.DefaultDriver.Parse(_code);
+            var compilation = SyntaxTreeDriver.DefaultDriver.Compile(syntaxTree);
             var symbol = GetMethodSymbol(compilation, syntaxTree);
             Assert.NotNull(symbol);
             var attributeSymbol = compilation.GetTypeByMetadataName("Hand.Models.NamedAttribute");

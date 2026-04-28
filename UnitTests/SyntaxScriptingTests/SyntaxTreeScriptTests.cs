@@ -1,72 +1,48 @@
 ﻿using Hand;
-using Microsoft.CodeAnalysis;
-using System.Collections.Immutable;
 
 namespace SyntaxScriptingTests;
 
 public class SyntaxTreeScriptTests
 {
     [Fact]
-    public void Using()
+    public async Task ExecuteAsync()
     {
-        var service = SyntaxTreeScript.Create()
-            .Using("System");
-        Assert.Single(service.Usings);
+        var result = await SyntaxTreeDriver.ScriptDriver.ExecuteAsync<int>("2+3");
+        Assert.Equal(5, result);
     }
     [Fact]
-    public void Reference()
+    public async Task ScriptExecuteAsync()
     {
-        var service = SyntaxTreeScript.Create()
-            .Reference<DateTime>();
-        Assert.Single(service.References);
+        var script = SyntaxTreeDriver.ScriptDriver
+            .CreateScript<int>("2+3");
+        var result = await script.ExecuteAsync();
+        Assert.Equal(5, result);
     }
     [Fact]
-    public void CreateDefault()
+    public async Task GlobalsAsync()
     {
-        var service = SyntaxTreeScript.CreateDefault();
-        Assert.Single(service.Usings);
-        Assert.NotEmpty(service.References);
-    }
-    [Fact]
-    public void Default()
-    {
-        var service = SyntaxTreeScript.Default;
-        Assert.Single(service.Usings);
-        Assert.NotEmpty(service.References);
-    }
-    [Fact]
-    public void Parse()
-    {
-        var source = "public record UserCreateTime(DateTime Original);";
-        var service = SyntaxTreeScript.Create()
-            .Using("System");
-        var tree = service.Parse(source);
+        var source = "x+y";
+        var driver = SyntaxTreeDriver.ScriptDriver;
+        var tree = driver.Parse(source);
         Assert.NotNull(tree);
+        var result = await driver.ExecuteAsync<int>(tree, globals: new Globals() { x = 2, y = 3 });
+        Assert.Equal(5, result);
     }
     [Fact]
-    public void Compile()
+    public async Task ScriptGlobalsAsync()
     {
-        var source = "public record UserCreateTime(DateTime Original);";
-        var service = SyntaxTreeScript.Create()
-            .Using("System");
-        var compilation = service.Compile(source);
-        var type = compilation.GetTypeByMetadataName("UserCreateTime");
-        Assert.NotNull(type);
+        var source = "return x+y;";
+        var driver = SyntaxTreeDriver.DefaultDriver;
+        var tree = driver.Parse(source);
+        var script = driver.CreateScript<int>(tree, globalsType: typeof(Globals));
+        var result = await script.ExecuteAsync(globals: new Globals() { x = 2, y = 3 });
+        Assert.Equal(5, result);
     }
-    [Fact]
-    public void Generate()
-    {
-        var source = "public partial class Greeting;";
-        var service = SyntaxTreeScript.Create()
-            .Using("System");
-        var result = service.Generate<HelloGenerator>(source)
-            .GetRunResult();
-        var tree = result.GeneratedTrees.FirstOrDefault();
-        Assert.NotNull(tree);
-        var diagnostics = result.Diagnostics;
-        Assert.Empty(diagnostics);
-        var @code = tree.ToString();
-        Assert.NotEmpty(@code);
-    }
-    
+
+}
+
+public class Globals
+{
+    public int x { get; set; }
+    public int y { get; set; }
 }

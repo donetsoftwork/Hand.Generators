@@ -2,6 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Hand;
 
@@ -40,6 +41,7 @@ public static partial class GenerateServices
     /// <param name="declaration"></param>
     /// <param name="modifier"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TDeclarationSyntax Modify<TDeclarationSyntax>(this TDeclarationSyntax declaration, SyntaxToken modifier)
         where TDeclarationSyntax : MemberDeclarationSyntax
         => (TDeclarationSyntax)declaration.WithModifiers(declaration.Modifiers.Add(modifier));
@@ -50,6 +52,7 @@ public static partial class GenerateServices
     /// <param name="declaration"></param>
     /// <param name="modifiers"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TDeclarationSyntax Modify<TDeclarationSyntax>(this TDeclarationSyntax declaration, params IEnumerable<SyntaxToken> modifiers)
         where TDeclarationSyntax : MemberDeclarationSyntax
         => (TDeclarationSyntax)declaration.WithModifiers(declaration.Modifiers.AddRange(modifiers));
@@ -60,6 +63,7 @@ public static partial class GenerateServices
     /// <param name="declaration"></param>
     /// <param name="kind"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TDeclarationSyntax Modify<TDeclarationSyntax>(this TDeclarationSyntax declaration, SyntaxKind kind)
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(SyntaxFactory.Token(kind));
@@ -69,6 +73,7 @@ public static partial class GenerateServices
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TDeclarationSyntax Public<TDeclarationSyntax>(this TDeclarationSyntax declaration)
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_public);
@@ -78,6 +83,7 @@ public static partial class GenerateServices
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TDeclarationSyntax Private<TDeclarationSyntax>(this TDeclarationSyntax declaration)
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_private);
@@ -87,6 +93,7 @@ public static partial class GenerateServices
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TDeclarationSyntax Protected<TDeclarationSyntax>(this TDeclarationSyntax declaration)
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_protected);
@@ -96,6 +103,7 @@ public static partial class GenerateServices
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TDeclarationSyntax Internal<TDeclarationSyntax>(this TDeclarationSyntax declaration)
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_internal);
@@ -105,6 +113,7 @@ public static partial class GenerateServices
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TDeclarationSyntax Partial<TDeclarationSyntax>(this TDeclarationSyntax declaration)
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_partial);
@@ -114,6 +123,7 @@ public static partial class GenerateServices
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TDeclarationSyntax Abstract<TDeclarationSyntax>(this TDeclarationSyntax declaration)
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_abstract);
@@ -123,6 +133,7 @@ public static partial class GenerateServices
     /// <typeparam name="TMethod"></typeparam>
     /// <param name="method"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TMethod Virtual<TMethod>(this TMethod method)
         where TMethod : BaseMethodDeclarationSyntax
         => method.Modify(_virtual);
@@ -132,6 +143,7 @@ public static partial class GenerateServices
     /// <typeparam name="TMethod"></typeparam>
     /// <param name="method"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TMethod Override<TMethod>(this TMethod method)
         where TMethod : BaseMethodDeclarationSyntax
         => method.Modify(_override);
@@ -141,6 +153,7 @@ public static partial class GenerateServices
     /// <typeparam name="TMethod"></typeparam>
     /// <param name="method"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TMethod Async<TMethod>(this TMethod method)
         where TMethod : BaseMethodDeclarationSyntax
         => method.Modify(_async);
@@ -150,6 +163,7 @@ public static partial class GenerateServices
     /// <typeparam name="TMethod"></typeparam>
     /// <param name="method"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TMethod Extern<TMethod>(this TMethod method)
         where TMethod : BaseMethodDeclarationSyntax
         => method.Modify(_extern);
@@ -159,6 +173,7 @@ public static partial class GenerateServices
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TDeclarationSyntax New<TDeclarationSyntax>(this TDeclarationSyntax declaration)
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_new‌);
@@ -168,6 +183,7 @@ public static partial class GenerateServices
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TDeclarationSyntax Sealed<TDeclarationSyntax>(this TDeclarationSyntax declaration)
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_sealed‌);
@@ -177,6 +193,7 @@ public static partial class GenerateServices
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TDeclarationSyntax Static<TDeclarationSyntax>(this TDeclarationSyntax declaration)
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_static);
@@ -185,6 +202,7 @@ public static partial class GenerateServices
     /// </summary>
     /// <param name="field"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FieldDeclarationSyntax ReadOnly(this FieldDeclarationSyntax field)
         => field.Modify(_readonly);
     /// <summary>
@@ -192,6 +210,7 @@ public static partial class GenerateServices
     /// </summary>
     /// <param name="field"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FieldDeclarationSyntax Volatile(this FieldDeclarationSyntax field)
         => field.Modify(_volatile);
     /// <summary>
@@ -199,6 +218,7 @@ public static partial class GenerateServices
     /// </summary>
     /// <param name="field"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FieldDeclarationSyntax Const(this FieldDeclarationSyntax field)
         => field.Modify(_const);
     /// <summary>
@@ -207,6 +227,7 @@ public static partial class GenerateServices
     /// <typeparam name="TParameter"></typeparam>
     /// <param name="parameter"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TParameter Params<TParameter>(this TParameter parameter)
         where TParameter : BaseParameterSyntax
         => (TParameter)parameter.WithModifiers(parameter.Modifiers.Add(_params));
@@ -216,6 +237,7 @@ public static partial class GenerateServices
     /// <typeparam name="TParameter"></typeparam>
     /// <param name="parameter"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TParameter In<TParameter>(this TParameter parameter)
         where TParameter : BaseParameterSyntax
         => (TParameter)parameter.WithModifiers(parameter.Modifiers.Add(_in));
@@ -225,6 +247,7 @@ public static partial class GenerateServices
     /// <typeparam name="TParameter"></typeparam>
     /// <param name="parameter"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TParameter Ref<TParameter>(this TParameter parameter)
         where TParameter : BaseParameterSyntax
         => (TParameter)parameter.WithModifiers(parameter.Modifiers.Add(_ref));
@@ -234,6 +257,7 @@ public static partial class GenerateServices
     /// <typeparam name="TParameter"></typeparam>
     /// <param name="parameter"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TParameter Out<TParameter>(this TParameter parameter)
         where TParameter : BaseParameterSyntax
         => (TParameter)parameter.WithModifiers(parameter.Modifiers.Add(_out));
@@ -243,6 +267,7 @@ public static partial class GenerateServices
     /// </summary>
     /// <param name="modifiers"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsPartial(this SyntaxTokenList modifiers)
         => modifiers.Any(SyntaxKind.PartialKeyword);
     /// <summary>
@@ -250,6 +275,7 @@ public static partial class GenerateServices
     /// </summary>
     /// <param name="modifiers"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsStatic(this SyntaxTokenList modifiers)
          => modifiers.Any(SyntaxKind.StaticKeyword);
     /// <summary>

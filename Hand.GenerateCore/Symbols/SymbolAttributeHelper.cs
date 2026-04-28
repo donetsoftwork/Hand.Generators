@@ -1,6 +1,5 @@
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 
 namespace Hand.Symbols;
@@ -36,6 +35,7 @@ public static class SymbolAttributeHelper
     /// <returns></returns>
     public static IEnumerable<AttributeData> GetAttributesByType(ISymbol symbol, INamedTypeSymbol attributeType)
         => GetAttributesByType(symbol.GetAttributes(), attributeType);
+    #region GetArgumentValue
     /// <summary>
     /// 获取标记参数值
     /// </summary>
@@ -92,6 +92,7 @@ public static class SymbolAttributeHelper
         }
         return default;
     }
+
     /// <summary>
     /// 获取标记参数值
     /// </summary>
@@ -104,8 +105,76 @@ public static class SymbolAttributeHelper
         var arguments = attribute.ConstructorArguments;
         if (arguments.Length <= index)
             return default;
-        if (arguments[index].Value is TValue value)
-            return value;
-        return default;
+        return arguments[index].GetValue<TValue?>();
     }
+    #endregion
+    #region GetArgumentValues
+    /// <summary>
+    /// 获取标记参数值
+    /// </summary>
+    /// <typeparam name="TValue"></typeparam>
+    /// <param name="symbol"></param>
+    /// <param name="attributeType"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public static IEnumerable<TValue> GetArgumentValues<TValue>(ISymbol symbol, INamedTypeSymbol? attributeType, string name)
+    {
+        if (attributeType is null)
+            return [];
+        var attribute = GetAttributesByType(symbol, attributeType)
+            .FirstOrDefault();
+        if (attribute is null)
+            return [];
+        return GetArgumentValues<TValue>(attribute, name);
+    }
+    /// <summary>
+    /// 获取标记参数值
+    /// </summary>
+    /// <typeparam name="TValue"></typeparam>
+    /// <param name="symbol"></param>
+    /// <param name="attributeType"></param>
+    /// <param name="index"></param>
+    /// <returns></returns>
+    public static IEnumerable<TValue> GetArgumentValues<TValue>(ISymbol symbol, INamedTypeSymbol? attributeType, int index)
+    {
+        if (attributeType is null)
+            return [];
+        var attribute = GetAttributesByType(symbol, attributeType)
+            .FirstOrDefault();
+        if (attribute is null)
+            return [];
+        return GetArgumentValues<TValue>(attribute, index);
+    }
+    /// <summary>
+    /// 获取标记参数值
+    /// </summary>
+    /// <typeparam name="TValue"></typeparam>
+    /// <param name="attribute"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public static IEnumerable<TValue> GetArgumentValues<TValue>(AttributeData attribute, string name)
+    {
+        foreach (var item in attribute.NamedArguments)
+        {
+            if (item.Key == name)
+                return item.Value.GetValues<TValue>();
+        }
+        return [];
+    }
+    /// <summary>
+    /// 获取标记参数值
+    /// </summary>
+    /// <typeparam name="TValue"></typeparam>
+    /// <param name="attribute"></param>
+    /// <param name="index"></param>
+    /// <returns></returns>
+    public static IEnumerable<TValue> GetArgumentValues<TValue>(AttributeData attribute, int index)
+    {
+        var arguments = attribute.ConstructorArguments;
+        if (arguments.Length <= index)
+            return [];
+
+        return arguments[index].GetValues<TValue>();
+    }
+    #endregion
 }

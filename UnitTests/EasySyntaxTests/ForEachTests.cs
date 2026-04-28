@@ -1,8 +1,6 @@
 using Hand;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Newtonsoft.Json.Linq;
 using static Hand.SyntaxGenerator;
 
 namespace EasySyntaxTests;

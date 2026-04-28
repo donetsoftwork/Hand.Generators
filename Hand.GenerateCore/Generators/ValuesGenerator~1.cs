@@ -2,6 +2,7 @@ using Hand.Executors;
 using Hand.Filters;
 using Hand.Transform;
 using Microsoft.CodeAnalysis;
+using System;
 
 namespace Hand.Generators;
 
@@ -28,6 +29,23 @@ public class ValuesGenerator<TSource>(string attributeName, ISyntaxFilter filter
     protected override void Initialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<TSource> provider)
     {
         // 注册输出逻辑
-        context.RegisterSourceOutput(provider, _executor.Execute);
+        context.RegisterSourceOutput(provider, Execute);
+    }
+    /// <summary>
+    /// 统一异常处理
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="source"></param>
+    private void Execute(SourceProductionContext context, TSource source)
+    {
+        try
+        {
+            _executor.Execute(context, source);
+        }
+        catch (Exception ex)
+        {
+            var descriptor = new DiagnosticDescriptor("HAND002", "ValuesGenerator Error", $"An error occurred in the ValuesGenerator: {ex.Message}", "ValuesGenerator", DiagnosticSeverity.Error, true);
+            context.ReportDiagnostic(Diagnostic.Create(descriptor, Location.None));
+        }
     }
 }

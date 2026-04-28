@@ -29,7 +29,7 @@ namespace GeneratePropertyTests;
 [GenerateProperty(""Include: Constructor"")]
 public partial record struct ProductPrice : IEntityProperty<decimal>;
 ";
-        var service = SyntaxTreeScript.CreateDefault()
+        var service = SyntaxTreeDriver.CreateDefaultDriver()
             .Reference<IEntityProperty<decimal>>()
             .Reference<GeneratePropertyAttribute>();
         var result = service.Generate<PropertyGenerator>(source)

@@ -1,4 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Immutable;
 
 namespace Hand.Generators;
@@ -6,12 +8,17 @@ namespace Hand.Generators;
 /// <summary>
 /// 特性上下文
 /// </summary>
+/// <param name="attribute"></param>
 /// <param name="targetNode"></param>
 /// <param name="targetSymbol"></param>
 /// <param name="semanticmodel"></param>
 /// <param name="attributes"></param>
-public readonly struct AttributeContext(SyntaxNode targetNode, ISymbol targetSymbol, SemanticModel semanticmodel, ImmutableArray<AttributeData> attributes)
+public readonly struct AttributeContext(AttributeSyntax attribute, SyntaxNode targetNode, ISymbol targetSymbol, SemanticModel semanticmodel, ImmutableArray<AttributeData> attributes)
 {
+    /// <summary>
+    /// 特性
+    /// </summary>
+    public AttributeSyntax Attribute { get; } = attribute;
     /// <summary>
     /// 所属节点
     /// </summary>

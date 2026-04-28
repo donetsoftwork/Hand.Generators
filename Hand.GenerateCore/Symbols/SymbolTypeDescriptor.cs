@@ -37,13 +37,13 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <summary>
     /// 字段
     /// </summary>
-    public IEnumerable<IFieldSymbol> Fields
-        => _fields.Values;
+    public IDictionary<string, IFieldSymbol> Fields
+        => _fields;
     /// <summary>
     /// 属性
     /// </summary>
-    public IEnumerable<IPropertySymbol> Properties
-        => _properties.Values;
+    public IDictionary<string, IPropertySymbol> Properties
+        => _properties;
     /// <summary>
     /// 方法
     /// </summary>
