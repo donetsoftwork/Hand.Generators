@@ -7,7 +7,7 @@ namespace Hand.Builders;
 /// <typeparam name="TParent"></typeparam>
 /// <param name="parent"></param>
 public class BlockBuilder<TGrandpa, TParent>(TParent parent)
-    : ScopeBuilder<TGrandpa, TParent>(parent)
+    : ScopeBuilder<TGrandpa, TParent>(parent, [])
     where TParent : StatementBuilder<TGrandpa>
 {
     /// <inheritdoc />

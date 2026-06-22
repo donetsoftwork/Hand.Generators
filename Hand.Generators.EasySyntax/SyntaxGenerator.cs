@@ -15,8 +15,11 @@ namespace Hand;
 /// </summary>
 /// <param name="usings">引用</param>
 /// <param name="type">类</param>
-/// <param name="members">类成员</param>
-public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, List<MemberDeclarationSyntax> members)
+/// <param name="constructors">构造函数</param>
+/// <param name="fields">字段</param>
+/// <param name="properties">属性</param>
+/// <param name="methods">方法</param>
+public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, List<ConstructorDeclarationSyntax> constructors, List<FieldDeclarationSyntax> fields, List<PropertyDeclarationSyntax> properties, List<MethodDeclarationSyntax> methods)
 {
     #region 配置
     /// <summary>
@@ -28,23 +31,48 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     protected readonly TypeDeclarationSyntax _type = type;
     /// <summary>
+    /// 基类
+    /// </summary>
+    protected readonly List<BaseTypeSyntax> _baseTypes = [];
+    /// <summary>
     /// 参数
     /// </summary>
     protected readonly List<ParameterSyntax> _parameters = [];
     /// <summary>
+    /// 构造函数
+    /// </summary>
+    protected readonly List<ConstructorDeclarationSyntax> _constructors = constructors;
+    /// <summary>
+    /// 字段
+    /// </summary>
+    protected readonly List<FieldDeclarationSyntax> _fields = fields;
+    /// <summary>
+    /// 属性
+    /// </summary>
+    protected readonly List<PropertyDeclarationSyntax> _properties = properties;
+    /// <summary>
+    /// 方法
+    /// </summary>
+    protected readonly List<MethodDeclarationSyntax> _methods = methods;
+    /// <summary>
     /// 成员
     /// </summary>
-    protected readonly List<MemberDeclarationSyntax> _members = members;
+    protected readonly List<MemberDeclarationSyntax> _others = [];
     /// <summary>
     /// 类型
     /// </summary>
     public TypeDeclarationSyntax Type
         => _type;
     /// <summary>
+    /// 参数
+    /// </summary>
+    public IEnumerable<ParameterSyntax> Parameters
+        => _parameters;
+    /// <summary>
     /// 成员
     /// </summary>
-    public List<MemberDeclarationSyntax> Members
-        => _members;
+    public IEnumerable<MemberDeclarationSyntax> Members
+        => _fields.Concat<MemberDeclarationSyntax>(_properties).Concat(_methods).Concat(_others);
     #endregion
     #region Using
     /// <summary>
@@ -74,23 +102,67 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
         _usings.AddRange(delta);
     }
     /// <summary>
-    /// 添加参数
+    /// 增加基类
+    /// </summary>
+    /// <param name="baseType"></param>
+    public void AddBaseType(BaseTypeSyntax baseType)
+        => _baseTypes.Add(baseType);
+    /// <summary>
+    /// 增加参数
     /// </summary>
     /// <param name="parameter"></param>
     public void AddParameter(ParameterSyntax parameter)
         => _parameters.Add(parameter);
     /// <summary>
+    /// 增加参数
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="name"></param>
+    public void Parameter(TypeSyntax type, SyntaxToken name)
+        => _parameters.Add(type.Parameter(name));
+    /// <summary>
+    /// 增加参数
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="name"></param>
+    public void Parameter(TypeSyntax type, string name)
+        => _parameters.Add(type.Parameter(name));
+    /// <summary>
+    /// 添加构造函数
+    /// </summary>
+    /// <param name="constructor"></param>
+    public void AddConstructor(ConstructorDeclarationSyntax constructor)
+        => _constructors.Add(constructor);
+    /// <summary>
+    /// 添加字段
+    /// </summary>
+    /// <param name="field"></param>
+    public void AddField(FieldDeclarationSyntax field)
+        => _fields.Add(field);
+    /// <summary>
+    /// 添加属性
+    /// </summary>
+    /// <param name="property"></param>
+    public void AddProperty(PropertyDeclarationSyntax property)
+        => _properties.Add(property);
+    /// <summary>
+    /// 添加方法
+    /// </summary>
+    /// <param name="method"></param>
+    public void AddMethod(MethodDeclarationSyntax method)
+        => _methods.Add(method);
+    /// <summary>
     /// 增加成员
     /// </summary>
     /// <param name="member"></param>
-    public void AddMember(MemberDeclarationSyntax member)
-        => _members.Add(member);
+    public void AddOther(MemberDeclarationSyntax member)
+        => _others.Add(member);
     /// <summary>
     /// 增加成员
     /// </summary>
     /// <param name="members"></param>
-    public void AddMembers(params MemberDeclarationSyntax[] members)
-        => _members.AddRange(members);
+    public void AddOthers(params MemberDeclarationSyntax[] members)
+        => _others.AddRange(members);
     #endregion
     #region Declare
     /// <summary>
@@ -98,6 +170,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static NamespaceDeclarationSyntax NamespaceDeclaration(string name)
         => SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(name));
     /// <summary>
@@ -105,6 +178,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FileScopedNamespaceDeclarationSyntax FileScopedNamespaceDeclaration(string name)
         => SyntaxFactory.FileScopedNamespaceDeclaration(SyntaxFactory.IdentifierName(name));
     #region RecordDeclaration
@@ -113,6 +187,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="recordName"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static RecordDeclarationSyntax RecordDeclaration(SyntaxToken recordName)
         => SyntaxFactory.RecordDeclaration(SyntaxFactory.Token(SyntaxKind.RecordKeyword), recordName);
     /// <summary>
@@ -120,6 +195,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="recordName"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static RecordDeclarationSyntax RecordDeclaration(string recordName)
         => SyntaxFactory.RecordDeclaration(SyntaxFactory.Token(SyntaxKind.RecordKeyword), recordName);
     #endregion
@@ -129,15 +205,15 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="recordName"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static RecordDeclarationSyntax RecordStructDeclaration(SyntaxToken recordName)
         => SyntaxFactory.RecordDeclaration(SyntaxKind.RecordStructDeclaration, default, default, SyntaxFactory.Token(SyntaxKind.RecordKeyword), SyntaxFactory.Token(SyntaxKind.StructKeyword), recordName, default, default, default, default, default, default, default, default);
-        //SyntaxFactory.RecordDeclaration(SyntaxKind.RecordStructDeclaration, SyntaxFactory.Token(SyntaxKind.RecordKeyword), recordName)
-        //    .WithClassOrStructKeyword(SyntaxFactory.Token(SyntaxKind.StructKeyword));
     /// <summary>
     /// 定义记录结构体
     /// </summary>
     /// <param name="recordName"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static RecordDeclarationSyntax RecordStructDeclaration(string recordName)
         => RecordStructDeclaration(SyntaxFactory.Identifier(recordName));
     #endregion
@@ -148,6 +224,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="typeName"></param>
     /// <param name="parameters"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ConstructorDeclarationSyntax ConstructorDeclaration(string typeName, params ParameterSyntax[] parameters)
         => ConstructorDeclaration(SyntaxFactory.Identifier(typeName), parameters);
     /// <summary>
@@ -156,11 +233,30 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="typeName"></param>
     /// <param name="parameters"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ConstructorDeclarationSyntax ConstructorDeclaration(SyntaxToken typeName, params ParameterSyntax[] parameters)
         => SyntaxFactory.ConstructorDeclaration(default, default, typeName, ParameterList(parameters), default, default, default, default);
-    //SyntaxFactory.ConstructorDeclaration(typeName)
-    //.WithParameterList(ParameterList(parameters));
     #endregion
+    #region PrimaryConstructorBaseType
+    /// <summary>
+    /// 主构造基类
+    /// </summary>
+    /// <param name="baseType"></param>
+    /// <param name="baseArguments"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static PrimaryConstructorBaseTypeSyntax PrimaryConstructorBaseType(TypeSyntax baseType, params ExpressionSyntax[] baseArguments)
+        => SyntaxFactory.PrimaryConstructorBaseType(baseType, ArgumentList(baseArguments));
+    /// <summary>
+    /// 主构造基类
+    /// </summary>
+    /// <param name="baseType"></param>
+    /// <param name="baseArguments"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static PrimaryConstructorBaseTypeSyntax PrimaryConstructorBaseType(string baseType, params ExpressionSyntax[] baseArguments)
+        => SyntaxFactory.PrimaryConstructorBaseType(SyntaxFactory.IdentifierName(baseType), ArgumentList(baseArguments));
+    #endregion    
     #region OperatorDeclaration
     /// <summary>
     /// 运算符重载定义
@@ -169,6 +265,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="returnType"></param>
     /// <param name="parameters"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OperatorDeclarationSyntax OperatorDeclaration(SyntaxKind kind, TypeSyntax returnType, params ParameterSyntax[] parameters)
         => SyntaxFactory.OperatorDeclaration(default, SyntaxFactory.TokenList(GenerateServices._public, GenerateServices._static), returnType, default, SyntaxFactory.Token(SyntaxKind.OperatorKeyword), default, SyntaxFactory.Token(kind), ParameterList(parameters), default, default, default);
     /// <summary>
@@ -176,6 +273,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="type"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OperatorDeclarationSyntax EqualOperatorDeclaration(TypeSyntax type)
         => EqualOperatorDeclaration(type.Parameter("a"), type.Parameter("b"));
     /// <summary>
@@ -184,6 +282,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OperatorDeclarationSyntax EqualOperatorDeclaration(ParameterSyntax a, ParameterSyntax b)
         => OperatorDeclaration(SyntaxKind.EqualsEqualsToken, BoolType, a, b);
     /// <summary>
@@ -191,6 +290,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="type"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OperatorDeclarationSyntax NotEqualOperatorDeclaration(TypeSyntax type)
         => NotEqualOperatorDeclaration(type.Parameter("a"), type.Parameter("b"));
     /// <summary>
@@ -199,41 +299,60 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OperatorDeclarationSyntax NotEqualOperatorDeclaration(ParameterSyntax a, ParameterSyntax b)
         => OperatorDeclaration(SyntaxKind.ExclamationEqualsToken, BoolType, a, b);
     #endregion
     #region DeclareAccessor
-    ///// <summary>
-    ///// 定义处理器
-    ///// </summary>
-    ///// <param name="kind"></param>
-    ///// <returns></returns>
-    //public static AccessorDeclarationSyntax AccessorDeclaration(SyntaxKind kind)
-    //    => SyntaxFactory.AccessorDeclaration(kind);
     /// <summary>
     /// 属性Get处理器
     /// </summary>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AccessorDeclarationSyntax PropertyGetDeclaration()
         => SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration);
     /// <summary>
     /// 属性Get处理器
     /// </summary>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AccessorDeclarationSyntax PropertyGetDeclaration(ExpressionSyntax expression)
+        => SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration, default, default, SyntaxFactory.Token(SyntaxKind.GetKeyword), default, ExpressionBody(expression), SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+    /// <summary>
+    /// 属性Set处理器
+    /// </summary>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AccessorDeclarationSyntax PropertySetDeclaration()
         => SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration);
+    /// <summary>
+    /// 属性Set处理器
+    /// </summary>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AccessorDeclarationSyntax PropertySetDeclaration(ExpressionSyntax expression)
+        => SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration, default, default, SyntaxFactory.Token(SyntaxKind.SetKeyword), default, ExpressionBody(expression), SyntaxFactory.Token(SyntaxKind.SemicolonToken));
     /// <summary>
     /// 属性Init处理器
     /// </summary>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AccessorDeclarationSyntax PropertyInitDeclaration()
         => SyntaxFactory.AccessorDeclaration(SyntaxKind.InitAccessorDeclaration);
+    /// <summary>
+    /// 属性Init处理器
+    /// </summary>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AccessorDeclarationSyntax PropertyInitDeclaration(ExpressionSyntax expression)
+        => SyntaxFactory.AccessorDeclaration(SyntaxKind.InitAccessorDeclaration, default, default, SyntaxFactory.Token(SyntaxKind.InitKeyword), default, ExpressionBody(expression), SyntaxFactory.Token(SyntaxKind.SemicolonToken));
     #endregion
     /// <summary>
     /// 参数列表
     /// </summary>
     /// <param name="parameters"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ParameterListSyntax ParameterList(params IEnumerable<ParameterSyntax> parameters)
         => SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(parameters));
     #endregion
@@ -277,6 +396,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="arguments"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ArgumentListSyntax ArgumentList(params IEnumerable<ArgumentSyntax> arguments)
         => SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(arguments));
     /// <summary>
@@ -284,6 +404,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="arguments"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ArgumentListSyntax ArgumentList(params IEnumerable<ExpressionSyntax> arguments)
         => ArgumentList(arguments.Select(SyntaxFactory.Argument));
     /// <summary>
@@ -291,6 +412,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="arguments"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ArgumentListSyntax ArgumentList(params IEnumerable<SyntaxToken> arguments)
         => ArgumentList(arguments.Select(name => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(name))));
     /// <summary>
@@ -298,6 +420,7 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="arguments"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ArgumentListSyntax ArgumentList(params IEnumerable<string> arguments)
         => ArgumentList(arguments.Select(name => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(name))));
     #endregion
@@ -390,6 +513,20 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
             return SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ObjectKeyword));
         }
     }
+    /// <summary>
+    /// List~1
+    /// </summary>
+    /// <param name="elementType"></param>
+    /// <returns></returns>
+    public static TypeSyntax ListType(TypeSyntax elementType)
+        => SyntaxFactory.GenericName(SyntaxFactory.Identifier("System.Collections.Generic.List"), SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(elementType)));
+    /// <summary>
+    /// IEnumerable~1
+    /// </summary>
+    /// <param name="elementType"></param>
+    /// <returns></returns>
+    public static TypeSyntax IEnumerableType(TypeSyntax elementType)
+        => SyntaxFactory.GenericName(SyntaxFactory.Identifier("System.Collections.Generic.IEnumerable"), SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(elementType)));
     #endregion
     #region FrameworkMajorVersion
     private static readonly Lazy<int> _lazyFrameworkMajorVersion = new(GetFrameworkMajorVersion, true);
@@ -409,11 +546,15 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
             return 0;
         var versionString = attribute.InformationalVersion;
         int index = versionString.IndexOf('.');
+#if NET7_0_OR_GREATER
+        if (index >= 0 && int.TryParse(versionString.AsSpan(0, index), out var majorVersion))
+#else
         if (index >= 0 && int.TryParse(versionString.Substring(0, index), out var majorVersion))
+#endif
             return majorVersion;
         return 0;
     }
-    #endregion
+#endregion
     #region Generic
     /// <summary>
     /// 泛型
@@ -535,22 +676,349 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LiteralExpressionSyntax Literal(char value)
         => SyntaxFactory.LiteralExpression(SyntaxKind.CharacterLiteralExpression, SyntaxFactory.Literal(value));
+    /// <summary>
+    /// 基础类型转化为字面量表达式
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    public static LiteralExpressionSyntax Literal(SpecialType type, object value)
+    {        
+        return type switch
+        {
+            SpecialType.System_Boolean => Literal((bool)value),
+            SpecialType.System_Int16 => Literal((short)value),
+            SpecialType.System_UInt16 => Literal((ushort)value),
+            SpecialType.System_Int32 => Literal((int)value),
+            SpecialType.System_UInt32 => Literal((uint)value),
+            SpecialType.System_Int64 => Literal((long)value),
+            SpecialType.System_UInt64 => Literal((ulong)value),
+            SpecialType.System_String => Literal((string)value),
+            SpecialType.System_Char => Literal((char)value),
+            SpecialType.System_Decimal => Literal((decimal)value),
+            SpecialType.System_Double => Literal((double)value),
+            SpecialType.System_Single => Literal((float)value),
+            _ => throw new ArgumentException("字面量类型不支持"),
+        };
+    }
     #endregion
+    #region Collection
     /// <summary>
     /// 集合表达式
     /// </summary>
     /// <param name="items"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static CollectionExpressionSyntax Collection(params ExpressionSyntax[] items)
+        => SyntaxFactory.CollectionExpression(SyntaxFactory.SeparatedList(Array.ConvertAll<ExpressionSyntax, CollectionElementSyntax>(items, static item => SyntaxFactory.ExpressionElement(item))));
+    #endregion
+    /// <summary>
+    /// 元组表达式
+    /// </summary>
+    /// <param name="items"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TupleExpressionSyntax Tuple(params ExpressionSyntax[] items)
+        => SyntaxFactory.TupleExpression(SyntaxFactory.SeparatedList(Array.ConvertAll(items, static item => SyntaxFactory.Argument(item))));
+    /// <summary>
+    /// Null模式
+    /// </summary>
+    public static ConstantPatternSyntax NullPattern
+        => SyntaxFactory.ConstantPattern(SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression));
+    /// <summary>
+    /// NotNull模式
+    /// </summary>
+    public static UnaryPatternSyntax NotNullPattern
+        => SyntaxFactory.UnaryPattern(NullPattern);
+    #region RelationalPatternSyntax
+    #region GreaterThanPattern
+    /// <summary>
+    /// >
+    /// </summary>
+    /// <param name="number"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RelationalPatternSyntax GreaterThanPattern(int number)
+        => GreaterThanPattern(Literal(number));
+    /// <summary>
+    /// >
+    /// </summary>
+    /// <param name="number"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RelationalPatternSyntax GreaterThanPattern(ExpressionSyntax number)
+        => SyntaxFactory.RelationalPattern(SyntaxFactory.Token(SyntaxKind.GreaterThanToken), number);
+    #endregion
+    #region GreaterOrEqualPattern
+    /// <summary>
+    /// >=
+    /// </summary>
+    /// <param name="number"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RelationalPatternSyntax GreaterOrEqualPattern(int number)
+        => GreaterOrEqualPattern(Literal(number));
+    /// <summary>
+    /// >=
+    /// </summary>
+    /// <param name="number"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RelationalPatternSyntax GreaterOrEqualPattern(ExpressionSyntax number)
+        => SyntaxFactory.RelationalPattern(SyntaxFactory.Token(SyntaxKind.GreaterThanEqualsToken), number);
+    #endregion
+    #region LessThanPattern
+    /// <summary>
+    /// >
+    /// </summary>
+    /// <param name="number"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RelationalPatternSyntax LessThanPattern(int number)
+        => LessThanPattern(Literal(number));
+    /// <summary>
+    /// >
+    /// </summary>
+    /// <param name="number"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RelationalPatternSyntax LessThanPattern(ExpressionSyntax number)
+        => SyntaxFactory.RelationalPattern(SyntaxFactory.Token(SyntaxKind.LessThanToken), number);
+    #endregion
+    #region LessOrEqualPattern
+    /// <summary>
+    /// >
+    /// </summary>
+    /// <param name="number"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RelationalPatternSyntax LessOrEqualPattern(int number)
+        => LessOrEqualPattern(Literal(number));
+    /// <summary>
+    /// >=
+    /// </summary>
+    /// <param name="number"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RelationalPatternSyntax LessOrEqualPattern(ExpressionSyntax number)
+        => SyntaxFactory.RelationalPattern(SyntaxFactory.Token(SyntaxKind.LessThanEqualsToken), number);
+    #endregion
+    #region EqualPattern
+    /// <summary>
+    /// !=
+    /// </summary>
+    /// <param name="number"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RelationalPatternSyntax EqualPattern(int number)
+        => EqualPattern(Literal(number));
+    /// <summary>
+    /// ==
+    /// </summary>
+    /// <param name="number"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RelationalPatternSyntax EqualPattern(ExpressionSyntax number)
+        => SyntaxFactory.RelationalPattern(SyntaxFactory.Token(SyntaxKind.EqualsEqualsToken), number);
+    #endregion
+    #region NotEqualPattern
+    /// <summary>
+    /// ==
+    /// </summary>
+    /// <param name="number"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RelationalPatternSyntax NotEqualPattern(int number)
+        => NotEqualPattern(Literal(number));
+    /// <summary>
+    /// !=
+    /// </summary>
+    /// <param name="number"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RelationalPatternSyntax NotEqualPattern(ExpressionSyntax number)
+        => SyntaxFactory.RelationalPattern(SyntaxFactory.Token(SyntaxKind.ExclamationEqualsToken), number);
+    #endregion
+    #endregion
+    #region VarPattern
+    /// <summary>
+    /// var模式
+    /// </summary>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static VarPatternSyntax VarPattern()
+        => SyntaxFactory.VarPattern(SyntaxFactory.DiscardDesignation());
+    /// <summary>
+    /// var模式
+    /// </summary>
+    /// <param name="variableName"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static VarPatternSyntax VarPattern(SyntaxToken variableName)
+        => SyntaxFactory.VarPattern(SyntaxFactory.SingleVariableDesignation(variableName));
+    /// <summary>
+    /// var模式
+    /// </summary>
+    /// <param name="variableName"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static VarPatternSyntax VarPattern(string variableName)
+        => SyntaxFactory.VarPattern(SyntaxFactory.SingleVariableDesignation(SyntaxFactory.Identifier(variableName)));
+    #endregion
+    #region VarParenthesizedPattern
+    /// <summary>
+    /// var括号模式
+    /// </summary>
+    /// <param name="variables"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static VarPatternSyntax VarParenthesizedPattern(params IEnumerable<SingleVariableDesignationSyntax> variables)
+        => SyntaxFactory.VarPattern(SyntaxFactory.ParenthesizedVariableDesignation(SyntaxFactory.SeparatedList<VariableDesignationSyntax>(variables)));
+    /// <summary>
+    /// var括号模式
+    /// </summary>
+    /// <param name="variables"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static VarPatternSyntax VarParenthesizedPattern(params IEnumerable<SyntaxToken> variables)
+        => VarParenthesizedPattern(variables.Select(static name => SyntaxFactory.SingleVariableDesignation(name)));
+    /// <summary>
+    /// var括号模式
+    /// </summary>
+    /// <param name="variables"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static VarPatternSyntax VarParenthesizedPattern(params IEnumerable<string> variables)
+        => VarParenthesizedPattern(variables.Select(static name => SyntaxFactory.Identifier(name)));
+    #endregion
+    /// <summary>
+    /// or模式
+    /// </summary>
+    /// <param name="items"></param>
+    /// <returns></returns>
+    public static PatternSyntax OrPattern(params ExpressionSyntax[] items)
     {
         var count = items.Length;
         if (count == 0)
-            return SyntaxFactory.CollectionExpression();
-        var list = new CollectionElementSyntax[count];
-        for (var i = 0; i < count; i++)
-            list[i] = SyntaxFactory.ExpressionElement(items[i]);
-        return SyntaxFactory.CollectionExpression(SyntaxFactory.SeparatedList(list));
+            throw new ArgumentOutOfRangeException(nameof(items));
+        PatternSyntax pattern = SyntaxFactory.ConstantPattern(items[0]);
+        for (var i = 1; i < count; i++)
+            pattern = pattern.Or(SyntaxFactory.ConstantPattern(items[i]));
+        return pattern;
     }
+    /// <summary>
+    /// and模式
+    /// </summary>
+    /// <param name="items"></param>
+    /// <returns></returns>
+    public static PatternSyntax AndPattern(params ExpressionSyntax[] items)
+    {
+        var count = items.Length;
+        if (count == 0)
+            throw new ArgumentOutOfRangeException(nameof(items));
+        PatternSyntax pattern = SyntaxFactory.ConstantPattern(items[0]);
+        for (var i = 1; i < count; i++)
+            pattern = pattern.And(SyntaxFactory.ConstantPattern(items[i]));
+        return pattern;
+    }    
+    /// <summary>
+    /// 初始化
+    /// </summary>
+    /// <param name="items"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static InitializerExpressionSyntax Initializer(params IEnumerable<AssignmentExpressionSyntax> items)
+        => SyntaxFactory.InitializerExpression(SyntaxKind.ObjectInitializerExpression, SyntaxFactory.SeparatedList<ExpressionSyntax>(items));
+    /// <summary>
+    /// 表达式方法体
+    /// </summary>
+    /// <param name="expression"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ArrowExpressionClauseSyntax ExpressionBody(ExpressionSyntax expression)
+        => SyntaxFactory.ArrowExpressionClause(SyntaxFactory.Token(SyntaxKind.EqualsGreaterThanToken), expression);
+    #region New
+    /// <summary>
+    /// 初始化
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <param name="initializer"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ImplicitObjectCreationExpressionSyntax New(IEnumerable<ArgumentSyntax> arguments, InitializerExpressionSyntax? initializer = null)
+        => SyntaxFactory.ImplicitObjectCreationExpression(ArgumentList(arguments), initializer);
+    /// <summary>
+    /// 初始化
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <param name="initializer"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ImplicitObjectCreationExpressionSyntax New(IEnumerable<ExpressionSyntax> arguments, InitializerExpressionSyntax? initializer = null)
+        => SyntaxFactory.ImplicitObjectCreationExpression(ArgumentList(arguments), initializer);
+    /// <summary>
+    /// 初始化
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <param name="initializer"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ImplicitObjectCreationExpressionSyntax New(IEnumerable<SyntaxToken> arguments, InitializerExpressionSyntax? initializer = null)
+        => SyntaxFactory.ImplicitObjectCreationExpression(ArgumentList(arguments), initializer);
+    /// <summary>
+    /// 初始化
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <param name="items"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ImplicitObjectCreationExpressionSyntax New(IEnumerable<SyntaxToken> arguments, IEnumerable<AssignmentExpressionSyntax> items)
+        => SyntaxFactory.ImplicitObjectCreationExpression(ArgumentList(arguments), Initializer(items));
+    /// <summary>
+    /// 初始化
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <param name="initializer"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ImplicitObjectCreationExpressionSyntax New(IEnumerable<string> arguments, InitializerExpressionSyntax? initializer = null)
+        => SyntaxFactory.ImplicitObjectCreationExpression(ArgumentList(arguments), initializer);
+    /// <summary>
+    /// 初始化
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <param name="items"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ImplicitObjectCreationExpressionSyntax New(IEnumerable<string> arguments, IEnumerable<AssignmentExpressionSyntax> items)
+        => SyntaxFactory.ImplicitObjectCreationExpression(ArgumentList(arguments), Initializer(items));
+    /// <summary>
+    /// 初始化
+    /// </summary>
+    /// <param name="initializer"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ImplicitObjectCreationExpressionSyntax New(InitializerExpressionSyntax? initializer = null)
+        => SyntaxFactory.ImplicitObjectCreationExpression(SyntaxFactory.ArgumentList(), initializer);
+    /// <summary>
+    /// 初始化
+    /// </summary>
+    /// <param name="items"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ImplicitObjectCreationExpressionSyntax New(IEnumerable<AssignmentExpressionSyntax> items)
+        => SyntaxFactory.ImplicitObjectCreationExpression(SyntaxFactory.ArgumentList(), Initializer(items));
+    /// <summary>
+    /// 初始化
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <param name="items"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ImplicitObjectCreationExpressionSyntax New(IEnumerable<ExpressionSyntax> arguments, IEnumerable<AssignmentExpressionSyntax> items)
+        => SyntaxFactory.ImplicitObjectCreationExpression(ArgumentList(arguments), Initializer(items));
+    #endregion
     #region Interpolation
     /// <summary>
     /// 开始构造插值表达式
@@ -569,6 +1037,20 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     public static InterpolationBuilder Interpolation()
         => new(SyntaxKind.InterpolatedStringStartToken, SyntaxKind.InterpolatedStringEndToken);
     #endregion
+    /// <summary>
+    /// try
+    /// </summary>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TryBuilder Try()
+        => new();
+    /// <summary>
+    /// Scope
+    /// </summary>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ScopeBuilder Scope()
+        => new([]);
     /// <summary>
     /// 抛出异常
     /// </summary>
@@ -690,12 +1172,22 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
         return CheckMembers(type, members);
     }
     /// <summary>
+    /// 处理基类
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="baseTypes"></param>
+    /// <returns></returns>
+    public static TypeDeclarationSyntax CheckBaseTypes(TypeDeclarationSyntax type, BaseTypeSyntax[] baseTypes)
+    {
+        return baseTypes.Length == 0 ? type:(TypeDeclarationSyntax)type.AddBaseListTypes(baseTypes);
+    }
+    /// <summary>
     /// 处理成员
     /// </summary>
     /// <param name="type"></param>
     /// <param name="members"></param>
     /// <returns></returns>
-    public static TypeDeclarationSyntax CheckMembers(TypeDeclarationSyntax type,  MemberDeclarationSyntax[] members)
+    private static TypeDeclarationSyntax CheckMembers(TypeDeclarationSyntax type,  MemberDeclarationSyntax[] members)
     {
         if (members.Length > 0)
         {
@@ -713,6 +1205,12 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
                 return type.AddMembers(members);
             }
         }
+        if(type.Members.Count == 0 && !type.SemicolonToken.IsKind(SyntaxKind.SemicolonToken))
+        {
+            // 如果没有成员且没有分号结尾
+            // 增加分号结尾
+            return type.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+        }
         return type;
     }
     /// <summary>
@@ -720,31 +1218,33 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
     /// </summary>
     /// <param name="usings"></param>
     /// <param name="type"></param>
+    /// <param name="baseTypes"></param>
     /// <param name="parameters"></param>
     /// <param name="members"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static CompilationUnitSyntax Build(List<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, ParameterSyntax[] parameters, MemberDeclarationSyntax[] members)
-        => BuildUnit(usings, CheckType(type, parameters, members));
+    public static CompilationUnitSyntax Build(List<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, BaseTypeSyntax[] baseTypes, ParameterSyntax[] parameters, MemberDeclarationSyntax[] members)
+        => BuildUnit(usings, CheckType(CheckBaseTypes(type, baseTypes), parameters, members));
     /// <summary>
     /// 构造语法树
     /// </summary>
     /// <param name="ns"></param>
     /// <param name="usings"></param>
     /// <param name="type"></param>
+    /// <param name="baseTypes"></param>
     /// <param name="parameters"></param>
     /// <param name="members"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static CompilationUnitSyntax Build(BaseNamespaceDeclarationSyntax ns, List<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, ParameterSyntax[] parameters, MemberDeclarationSyntax[] members)
-        => BuildUnit(usings, ns.AddMembers(CheckType(type, parameters, members)));
+    public static CompilationUnitSyntax Build(BaseNamespaceDeclarationSyntax ns, List<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, BaseTypeSyntax[] baseTypes, ParameterSyntax[] parameters, MemberDeclarationSyntax[] members)
+        => BuildUnit(usings, ns.AddMembers(CheckType(CheckBaseTypes(type, baseTypes), parameters, members)));
     /// <summary>
     /// 构造语法树
     /// </summary>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public virtual CompilationUnitSyntax Build()
-        => Build(_usings, _type, [.. _parameters], [.. _members]);
+        => Build(_usings, _type, [.. _baseTypes], [.. _parameters], [.. _constructors, .. _fields, .. _properties, .. _methods, .. _others]);
     #endregion
     /// <summary>
     /// 复制类生成构造器
@@ -769,53 +1269,80 @@ public class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationS
 
         var parent = type.Parent;
         if (parent is null)
-            return new SyntaxGenerator([], typeNew, []);
+            return new SyntaxGenerator([], typeNew, [], [], [], []);
         else if(parent is BaseNamespaceDeclarationSyntax ns)
             // 清空成员并注释
-            return new NamespaceBuilder(ns.WithMembers(SyntaxFactory.List<MemberDeclarationSyntax>()).WithLeadingTrivia(SyntaxFactory.TriviaList()), [], typeNew, []);
+            return new NamespaceBuilder(ns.WithMembers(SyntaxFactory.List<MemberDeclarationSyntax>()).WithLeadingTrivia(SyntaxFactory.TriviaList()), [], typeNew, [], [], [], []);
         else if (parent is CompilationUnitSyntax cu)
-            return new SyntaxGenerator([.. cu.Usings], typeNew, []);
-        return new SyntaxGenerator([], typeNew, []); 
+            return new SyntaxGenerator([.. cu.Usings], typeNew, [], [], [], []);
+        return new SyntaxGenerator([], typeNew, [], [], [], []); 
     }
+    #region Create
     /// <summary>
     /// 生成构造器
     /// </summary>
-    /// <param name="type"></param>
-    /// <param name="members"></param>
+    /// <param name="type">类</param>
+    /// <param name="constructors">构造函数</param>
+    /// <param name="fields">字段</param>
+    /// <param name="properties">属性</param>
+    /// <param name="methods">方法</param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static SyntaxGenerator Create(TypeDeclarationSyntax type, params MemberDeclarationSyntax[] members)
-        => new([], type, [.. members]);
+    public static SyntaxGenerator Create(TypeDeclarationSyntax type, List<ConstructorDeclarationSyntax> constructors, List<FieldDeclarationSyntax> fields, List<PropertyDeclarationSyntax> properties, List<MethodDeclarationSyntax> methods)
+        => new([], type, constructors, fields, properties, methods);
     /// <summary>
     /// 生成构造器
     /// </summary>
-    /// <param name="ns"></param>
-    /// <param name="type"></param>
-    /// <param name="members"></param>
+    /// <param name="type">类</param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static NamespaceBuilder Create(BaseNamespaceDeclarationSyntax ns, TypeDeclarationSyntax type, params MemberDeclarationSyntax[] members)
-        => new(ns, [], type, [.. members]);
-    /// <summary>
-    /// 生成构造器
-    /// </summary>
-    /// <param name="ns"></param>
-    /// <param name="type"></param>
-    /// <param name="members"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static NamespaceBuilder Create(NameSyntax ns, TypeDeclarationSyntax type, params MemberDeclarationSyntax[] members)
-        => new(SyntaxFactory.NamespaceDeclaration(ns), [], type, [.. members]);
+    public static SyntaxGenerator Create(TypeDeclarationSyntax type)
+        => new([], type, [], [], [], []);
     /// <summary>
     /// 生成构造器
     /// </summary>
     /// <param name="ns"></param>
-    /// <param name="type"></param>
-    /// <param name="members"></param>
+    /// <param name="type">类</param>
+    /// <param name="constructors">构造函数</param>
+    /// <param name="fields">字段</param>
+    /// <param name="properties">属性</param>
+    /// <param name="methods">方法</param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static NamespaceBuilder Create(string ns, TypeDeclarationSyntax type, params MemberDeclarationSyntax[] members)
-        => new(SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(ns)), [], type, [.. members]);
+    public static NamespaceBuilder Create(BaseNamespaceDeclarationSyntax ns, TypeDeclarationSyntax type, List<ConstructorDeclarationSyntax> constructors, List<FieldDeclarationSyntax> fields, List<PropertyDeclarationSyntax> properties, List<MethodDeclarationSyntax> methods)
+        => new(ns, [], type, constructors, fields, properties, methods);
+    /// <summary>
+    /// 生成构造器
+    /// </summary>
+    /// <param name="ns"></param>
+    /// <param name="type">类</param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static NamespaceBuilder Create(BaseNamespaceDeclarationSyntax ns, TypeDeclarationSyntax type)
+        => new(ns, [], type, [], [], [], []);
+    /// <summary>
+    /// 生成构造器
+    /// </summary>
+    /// <param name="ns"></param>
+    /// <param name="type">类</param>
+    /// <param name="constructors">构造函数</param>
+    /// <param name="fields">字段</param>
+    /// <param name="properties">属性</param>
+    /// <param name="methods">方法</param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static NamespaceBuilder Create(string ns, TypeDeclarationSyntax type, List<ConstructorDeclarationSyntax> constructors, List<FieldDeclarationSyntax> fields, List<PropertyDeclarationSyntax> properties, List<MethodDeclarationSyntax> methods)
+        => new(SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(ns)), [], type, constructors, fields, properties, methods);
+    /// <summary>
+    /// 生成构造器
+    /// </summary>
+    /// <param name="ns"></param>
+    /// <param name="type">类</param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static NamespaceBuilder Create(string ns, TypeDeclarationSyntax type)
+        => new(SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(ns)), [], type, [], [], [], []);
+    #endregion
     /// <summary>
     /// 追加引用
     /// </summary>

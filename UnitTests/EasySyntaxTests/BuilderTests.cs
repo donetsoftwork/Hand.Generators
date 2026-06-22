@@ -17,16 +17,16 @@ public class BuilderTests
         var field = SyntaxGenerator.IntType.Field(_original.Identifier)
             .Private()
             .ReadOnly();
-        var property = SyntaxGenerator.IntType.GetOnlyProperty("Original", _original)
+        var property = SyntaxGenerator.IntType.Property("Original", _original)
             .Public();
 
         var constructor = type.Constructor(SyntaxGenerator.IntType.Parameter(original.Identifier))
             .Public()
             .ToBuilder()
-            .Add(_original.Assign(original))
+            .AddPatter(_original.Assign(original))
             .End();
 
-        var builder = SyntaxGenerator.Create("Models", type, constructor, field, property);
+        var builder = SyntaxGenerator.Create("Models", type, [constructor], [field], [property], []);
         var result = builder.Build();
         Assert.NotEmpty(result.ToFullString());
     }
@@ -38,13 +38,13 @@ public class BuilderTests
         var field = SyntaxGenerator.IntType.Field(_original.Identifier, original)
             .Private()
             .ReadOnly();
-        var property = SyntaxGenerator.IntType.GetOnlyProperty("Original", _original)
+        var property = SyntaxGenerator.IntType.Property("Original", _original)
             .Public();
         var type = SyntaxFactory.ClassDeclaration("UserId")
             .Public()
             .Partial()
             .AddParameterListParameters(SyntaxGenerator.IntType.Parameter(original.Identifier));
-        var builder = SyntaxGenerator.Create("Models", type, field, property);
+        var builder = SyntaxGenerator.Create("Models", type, [], [field], [property], []);
         var result = builder.Build();
         Assert.NotEmpty(result.ToFullString());        
     }
@@ -52,13 +52,14 @@ public class BuilderTests
     public void ListParameterForProperty()
     {
         var original = SyntaxFactory.IdentifierName("original");
-        var property = SyntaxGenerator.IntType.GetOnlyProperty("Original", original)
+        var property = SyntaxGenerator.IntType.Property("Original", original)
             .Public();
         var type = SyntaxFactory.ClassDeclaration("UserId")
             .Public()
             .Partial()
             .AddParameterListParameters(SyntaxGenerator.IntType.Parameter(original.Identifier));
-        var builder = SyntaxGenerator.Create("Models", type, property);
+        var builder = SyntaxGenerator.Create("Models", type);
+        builder.AddProperty(property);
         var result = builder.Build();
         Assert.NotEmpty(result.ToFullString());
     }

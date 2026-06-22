@@ -1,5 +1,6 @@
 ﻿using Hand.Sources;
 using Microsoft.CodeAnalysis;
+using System.Text;
 
 namespace Hand.Executors;
 
@@ -20,9 +21,8 @@ public class GeneratorExecutor<TSource> : IGeneratorExecutor<TSource>
         //        System.Diagnostics.Debugger.Launch();
         //#endif
         var builder = source.Generate();
-        var code = builder.Build()
-            .WithGenerated()
-            .ToFullString();
-        context.AddSource(source.GenerateFileName, code);
+        var compilationUnit = builder.Build()
+            .WithGenerated();
+        context.AddSource(source.GenerateFileName, compilationUnit.GetText(Encoding.UTF8));
     }
 }

@@ -6,4 +6,5 @@ namespace Hand.Mapping;
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
 public class GenerateConvertAttribute : Attribute
 {
+
 }

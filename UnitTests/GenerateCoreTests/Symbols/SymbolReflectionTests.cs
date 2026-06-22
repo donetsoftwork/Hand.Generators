@@ -9,19 +9,18 @@ namespace GenerateCoreTests.Symbols
     public class SymbolReflectionTests
     {
         static readonly string _code = @"
-namespace Hand.Models
+namespace Hand.Models;
+
+public interface IEntityProperty<TProperty>
 {
-    public interface IEntityProperty<TProperty>
-    {
-        TProperty Original { get; }
-    }
-    public class EntityProperty<TProperty>(TProperty original) : IEntityProperty<TProperty>
-    {
-        public TProperty Original { get; } = original;
-    }
-    public class UserId(int id) : EntityProperty<int>(id);
+    TProperty Original { get; }
 }
-        ";
+public class EntityProperty<TProperty>(TProperty original) : IEntityProperty<TProperty>
+{
+    TProperty _original = original;
+    public TProperty Original => _original;
+}
+public class UserId(int id) : EntityProperty<int>(id);";
 
         [Fact]
         public void IsGenericType()
@@ -36,14 +35,27 @@ namespace Hand.Models
             // Construct 是 INamedTypeSymbol 的标准泛型构造方法
             var type = definitionType.Construct(intType);
             Assert.NotNull(type);
-            Assert.True(SymbolReflection.IsGenericType(type, definitionType));
+            Assert.True(type.IsGenericType(definitionType));
 
             var listType = compilation.GetSpecialType(SpecialType.System_Collections_Generic_IList_T);
             Assert.NotNull(listType);
             var intListType = listType.Construct(intType);
             Assert.NotNull(intListType);
-            Assert.True(SymbolReflection.IsGenericType(intListType, listType));
+            Assert.True(intListType.IsGenericType(listType));
             Assert.True(intListType.IsGenericType(SpecialType.System_Collections_Generic_IList_T));
+        }
+        [Fact]
+        public void DeclaringSyntaxReferences()
+        {
+            // 解析代码为语法树
+            var syntaxTree = SyntaxTreeDriver.DefaultDriver.Parse(_code);
+            var compilation = SyntaxTreeDriver.DefaultDriver.Compile(syntaxTree);
+            var definitionType = GetDeclaredTypeSymbol(compilation, syntaxTree);
+            Assert.NotNull(definitionType);
+            var reference = definitionType.DeclaringSyntaxReferences.FirstOrDefault();
+            Assert.NotNull(reference);
+            var node = reference.GetSyntax();
+            Assert.True(node is TypeDeclarationSyntax);
         }
         [Fact]
         public void IsNullable_true()
@@ -78,7 +90,7 @@ namespace Hand.Models
             var intListType = listType.Construct(intType);
             Assert.NotNull(intListType);
             var enumerableType = compilation.GetSpecialType(SpecialType.System_Collections_Generic_IEnumerable_T);
-            Assert.True(SymbolReflection.HasGenericType(intListType, enumerableType));
+            Assert.True(intListType.HasGenericType(enumerableType));
         }
         [Fact]
         public void GetGenericCloseInterfaces()
@@ -91,12 +103,31 @@ namespace Hand.Models
             var intListType = listType.Construct(intType);
             Assert.NotNull(intListType);
             var enumerableType = compilation.GetSpecialType(SpecialType.System_Collections_Generic_IEnumerable_T);
-            var enumerable = SymbolReflection.GetGenericCloseInterfaces(intListType, enumerableType)
+            var enumerable = intListType.GetGenericCloseInterfaces(enumerableType)
                 .FirstOrDefault();
             Assert.NotNull(enumerable);
             var collection = intListType.GetGenericCloseInterfaces(SpecialType.System_Collections_Generic_ICollection_T)
                 .FirstOrDefault();
             Assert.NotNull(collection);
+        }
+        [Fact]
+        public void DeclaredAccessibility()
+        {
+            var compilation = SyntaxTreeDriver.DefaultDriver.Compile(_code);
+            var type = compilation.GetSymbol("Hand.Models.EntityProperty`1");
+            Assert.NotNull(type);
+            var _original = type.GetMembers("_original")
+                .FirstOrDefault();
+            Assert.NotNull(_original);
+            Assert.Equal(Accessibility.Private, _original.DeclaredAccessibility);
+            var Original = type.GetMembers("Original")
+                .FirstOrDefault();
+            Assert.NotNull(Original);
+            Assert.Equal(Accessibility.Public, Original.DeclaredAccessibility);
+
+            var baseType = type.BaseType;
+            Assert.NotNull(baseType);
+            Assert.True(baseType.IsObject());
         }
 
 

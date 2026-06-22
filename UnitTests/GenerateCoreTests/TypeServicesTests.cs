@@ -22,6 +22,31 @@ public class TypeServicesTests
         Assert.NotNull(syntax);
         Assert.Equal(typeName, syntax.ToFullString());
     }
+    [Fact]
+    public void IsPrimitiveType()
+    {
+        Assert.False(SpecialType.System_Void.IsPrimitiveType());
+        Assert.True(SpecialType.System_Boolean.IsPrimitiveType());
+        Assert.True(SpecialType.System_String.IsPrimitiveType());        
+        Assert.False(SpecialType.System_IntPtr.IsPrimitiveType());
+        Assert.False(SpecialType.System_DateTime.IsPrimitiveType());
+    }
+    [Fact]
+    public void IsIntegralType()
+    {
+        Assert.False(SpecialType.System_Boolean.IsIntegralType());
+        Assert.True(SpecialType.System_SByte.IsIntegralType());
+        Assert.True(SpecialType.System_UInt64.IsIntegralType());
+        Assert.False(SpecialType.System_Decimal.IsIntegralType());
+    }
+    [Fact]
+    public void IsNumericType()
+    {
+        Assert.False(SpecialType.System_Boolean.IsNumericType());
+        Assert.True(SpecialType.System_SByte.IsNumericType());
+        Assert.True(SpecialType.System_Double.IsNumericType());
+        Assert.False(SpecialType.System_String.IsNumericType());
+    }
 
     public static INamedTypeSymbol? GetNamedTypeSymbol(Compilation compilation, SyntaxTree syntaxTree)
     {

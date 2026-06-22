@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Xml.Linq;
 
 namespace Hand;
 
@@ -99,7 +100,15 @@ public static partial class GenerateServices
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static QualifiedNameSyntax Qualified(this SimpleNameSyntax name, string prefix)
         => SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName(prefix), name);
-    #endregion    
+    #endregion
+    /// <summary>
+    /// 转化为独立的标记列表
+    /// </summary>
+    /// <param name="attribute"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AttributeListSyntax ToSingletonList(this AttributeSyntax attribute)
+        => SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(attribute));
     ///// <summary>
     ///// 包装表达式
     ///// </summary>

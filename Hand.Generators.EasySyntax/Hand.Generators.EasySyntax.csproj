@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<RootNamespace>Hand</RootNamespace>
 		<PackageId>Hand.Generators.EasySyntax</PackageId>
-		<Version>$(VersionBase).3</Version>
+		<Version>$(VersionBase).0</Version>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<LangVersion>Latest</LangVersion>
 		<PackageReadmeFile>readme.md</PackageReadmeFile>

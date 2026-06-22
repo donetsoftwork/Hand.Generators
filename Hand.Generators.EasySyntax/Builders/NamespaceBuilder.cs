@@ -8,10 +8,13 @@ namespace Hand.Builders;
 /// </summary>
 /// <param name="ns"></param>
 /// <param name="usings"></param>
-/// <param name="type"></param>
-/// <param name="members"></param>
-public class NamespaceBuilder(BaseNamespaceDeclarationSyntax ns, List<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, List<MemberDeclarationSyntax> members)
-    : SyntaxGenerator(usings, type,  members)
+/// <param name="type">类</param>
+/// <param name="constructors">构造函数</param>
+/// <param name="fields">字段</param>
+/// <param name="properties">属性</param>
+/// <param name="methods">方法</param>
+public class NamespaceBuilder(BaseNamespaceDeclarationSyntax ns, List<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, List<ConstructorDeclarationSyntax> constructors, List<FieldDeclarationSyntax> fields, List<PropertyDeclarationSyntax> properties, List<MethodDeclarationSyntax> methods)
+    : SyntaxGenerator(usings, type, constructors, fields, properties, methods)
 {
     #region 配置
     private readonly BaseNamespaceDeclarationSyntax _ns = ns;
@@ -26,5 +29,5 @@ public class NamespaceBuilder(BaseNamespaceDeclarationSyntax ns, List<UsingDirec
     /// </summary>
     /// <returns></returns>
     public override CompilationUnitSyntax Build()
-        => Build(_ns, _usings, _type, [.. _parameters], [.. _members]);
+        => Build(_ns, _usings, _type, [.. _baseTypes], [.. _parameters], [.. _constructors, .. _fields, .. _properties, .. _methods, .. _others]);
 }

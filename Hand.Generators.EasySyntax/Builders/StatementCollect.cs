@@ -7,13 +7,14 @@ namespace Hand.Builders;
 /// <summary>
 /// 语句收集器
 /// </summary>
-public abstract class StatementCollect
+/// <param name="statements"></param>
+public abstract class StatementCollect(List<StatementSyntax> statements)
 {
     #region 配置
     /// <summary>
     /// 语句
     /// </summary>
-    protected readonly List<StatementSyntax> _statements = [];
+    internal readonly List<StatementSyntax> _statements = statements;
     #endregion
     /// <summary>
     /// 添加

@@ -32,6 +32,7 @@ public static partial class GenerateServices
     internal static readonly SyntaxToken _in = SyntaxFactory.Token(SyntaxKind.InKeyword);
     internal static readonly SyntaxToken _ref = SyntaxFactory.Token(SyntaxKind.RefKeyword);
     internal static readonly SyntaxToken _out = SyntaxFactory.Token(SyntaxKind.OutKeyword);
+    internal static readonly SyntaxToken _this = SyntaxFactory.Token(SyntaxKind.ThisKeyword);
     #endregion
     #region Modifiers
     /// <summary>
@@ -261,6 +262,16 @@ public static partial class GenerateServices
     public static TParameter Out<TParameter>(this TParameter parameter)
         where TParameter : BaseParameterSyntax
         => (TParameter)parameter.WithModifiers(parameter.Modifiers.Add(_out));
+    /// <summary>
+    /// this修饰符
+    /// </summary>
+    /// <typeparam name="TParameter"></typeparam>
+    /// <param name="parameter"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TParameter This<TParameter>(this TParameter parameter)
+        where TParameter : BaseParameterSyntax
+        => (TParameter)parameter.WithModifiers(parameter.Modifiers.Add(_this));
     #endregion
     /// <summary>
     /// 是否为partial

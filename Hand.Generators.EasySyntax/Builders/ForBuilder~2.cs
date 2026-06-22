@@ -1,28 +1,25 @@
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Generic;
 
 namespace Hand.Builders;
 
 /// <summary>
-/// 
+/// for
 /// </summary>
 /// <typeparam name="TGrandpa"></typeparam>
 /// <typeparam name="TParent"></typeparam>
 /// <param name="parent"></param>
-/// <param name="declaration"></param>
-/// <param name="condition"></param>
-/// <param name="incrementors"></param>
-public class ForBuilder<TGrandpa, TParent>(TParent parent, VariableDeclarationSyntax declaration, ExpressionSyntax condition, List<ExpressionSyntax> incrementors)
-    : BlockBuilder<TGrandpa, TParent>(parent)
+/// <param name="original"></param>
+public class ForBuilder<TGrandpa, TParent>(TParent parent, ForBuilder original)
+    : ScopeBuilder<TGrandpa, TParent>(parent, original._statements)
     where TParent : StatementBuilder<TGrandpa>
 {
     #region 配置
-    private readonly VariableDeclarationSyntax _declaration = declaration;
-    private readonly List<VariableDeclaratorSyntax> _variables = [];
-    private readonly List<ExpressionSyntax> _initializers = [];
-    private readonly ExpressionSyntax _condition = condition;
-    private readonly List<ExpressionSyntax> _incrementors = incrementors;
+    private readonly ForBuilder _original = original;
+    /// <summary>
+    /// 原始for
+    /// </summary>
+    public ForBuilder Original
+        => _original;
     #endregion
     #region Add
     /// <summary>
@@ -32,7 +29,7 @@ public class ForBuilder<TGrandpa, TParent>(TParent parent, VariableDeclarationSy
     /// <returns></returns>
     public ForBuilder<TGrandpa, TParent> AddVariable(VariableDeclaratorSyntax variable)
     {
-        _variables.Add(variable);
+        _original.AddVariable(variable);
         return this;
     }
     /// <summary>
@@ -42,7 +39,7 @@ public class ForBuilder<TGrandpa, TParent>(TParent parent, VariableDeclarationSy
     /// <returns></returns>
     public ForBuilder<TGrandpa, TParent> AddInitializer(ExpressionSyntax initializer)
     {
-        _initializers.Add(initializer);
+        _original.AddInitializer(initializer);
         return this;
     }
     /// <summary>
@@ -52,21 +49,14 @@ public class ForBuilder<TGrandpa, TParent>(TParent parent, VariableDeclarationSy
     /// <returns></returns>
     public ForBuilder<TGrandpa, TParent> AddIncrementor(ExpressionSyntax incrementor)
     {
-        _initializers.Add(incrementor);
+        _original.AddIncrementor(incrementor);
         return this;
     }
     #endregion
     /// <inheritdoc />
     protected internal override TParent BuildCore()
     {
-        var statement = SyntaxFactory.ForStatement(
-            _declaration.AddVariables([.. _variables]),
-            SyntaxFactory.SeparatedList(_initializers),
-            _condition,
-            SyntaxFactory.SeparatedList(_incrementors),
-            Block(_statements)
-            );
-        _parent.AddCore(statement);
+        _parent.AddCore(_original.Build());
         return _parent;
     }
 }

@@ -32,6 +32,24 @@ public static partial class GenerateServices
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PropertyDeclarationSyntax WithInitializer(this PropertyDeclarationSyntax property, ExpressionSyntax value)
         => property.WithInitializer(SyntaxFactory.EqualsValueClause(value));
+    /// <summary>
+    /// 调用构造函数
+    /// </summary>
+    /// <param name="constructor"></param>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ConstructorDeclarationSyntax WithInitializer(this ConstructorDeclarationSyntax constructor, params ExpressionSyntax[] arguments)
+        => constructor.WithInitializer(SyntaxFactory.ConstructorInitializer(SyntaxKind.ThisConstructorInitializer, SyntaxGenerator.ArgumentList(arguments)));
+    /// <summary>
+    /// 调用基类构造函数
+    /// </summary>
+    /// <param name="constructor"></param>
+    /// <param name="baseArguments"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ConstructorDeclarationSyntax WithBaseInitializer(this ConstructorDeclarationSyntax constructor, params ExpressionSyntax[] baseArguments)
+        => constructor.WithInitializer(SyntaxFactory.ConstructorInitializer(SyntaxKind.BaseConstructorInitializer, SyntaxGenerator.ArgumentList(baseArguments)));
     #endregion
     /// <summary>
     /// 增加分号
@@ -46,31 +64,85 @@ public static partial class GenerateServices
             return (TDeclaration)(CSharpSyntaxNode)type.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
         else if (declaration is AccessorDeclarationSyntax accessor)
             return (TDeclaration)(CSharpSyntaxNode)accessor.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
-        else if (declaration is MethodDeclarationSyntax method)
-            return (TDeclaration)(CSharpSyntaxNode)method.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
-        //else if (declaration is BaseMethodDeclarationSyntax method)
+        //else if (declaration is MethodDeclarationSyntax method)
         //    return (TDeclaration)(CSharpSyntaxNode)method.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+        //else if (declaration is OperatorDeclarationSyntax operatorDeclaration)
+        //    return (TDeclaration)(CSharpSyntaxNode)operatorDeclaration.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+        else if (declaration is BaseMethodDeclarationSyntax method)
+            return (TDeclaration)(CSharpSyntaxNode)method.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
         //else if (declaration is EventFieldDeclarationSyntax eventField)
         //    return (TDeclaration)(CSharpSyntaxNode)eventField.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
         //else if (declaration is FieldDeclarationSyntax field)
         //    return (TDeclaration)(CSharpSyntaxNode)field.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
-        //else if (declaration is PropertyDeclarationSyntax property)
+        else if (declaration is BaseFieldDeclarationSyntax field)
+            return (TDeclaration)(CSharpSyntaxNode)field.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+        else if (declaration is PropertyDeclarationSyntax property)
+            return (TDeclaration)(CSharpSyntaxNode)property.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+        else if (declaration is IndexerDeclarationSyntax indexer)
+            return (TDeclaration)(CSharpSyntaxNode)indexer.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+        //else if (declaration is BasePropertyDeclarationSyntax property)
         //    return (TDeclaration)(CSharpSyntaxNode)property.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
-        //else if (declaration is IndexerDeclarationSyntax indexer)
-        //    return (TDeclaration)(CSharpSyntaxNode)indexer.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
-        //else if (declaration is OperatorDeclarationSyntax operatorDeclaration)
-        //    return (TDeclaration)(CSharpSyntaxNode)operatorDeclaration.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
 
         return declaration;
     }
+    #region AddBaseTypes
+    /// <summary>
+    /// 添加基类
+    /// </summary>
+    /// <typeparam name="TDeclaration"></typeparam>
+    /// <param name="declaration"></param>
+    /// <param name="baseTypes"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TDeclaration AddBaseTypes<TDeclaration>(this TDeclaration declaration, params TypeSyntax[] baseTypes)
+        where TDeclaration : BaseTypeDeclarationSyntax
+        => (TDeclaration)declaration.AddBaseListTypes(System.Array.ConvertAll(baseTypes, static baseType => SyntaxFactory.SimpleBaseType(baseType)));
+    /// <summary>
+    /// 添加基类
+    /// </summary>
+    /// <typeparam name="TDeclaration"></typeparam>
+    /// <param name="declaration"></param>
+    /// <param name="baseTypes"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TDeclaration AddBaseTypes<TDeclaration>(this TDeclaration declaration, params string[] baseTypes)
+        where TDeclaration : BaseTypeDeclarationSyntax
+        => (TDeclaration)declaration.AddBaseListTypes(System.Array.ConvertAll(baseTypes, static baseType => SyntaxFactory.SimpleBaseType(SyntaxFactory.IdentifierName(baseType))));
+    #endregion
+    #region AddPrimaryConstructorBaseType
+    /// <summary>
+    /// 添加主构造基类
+    /// </summary>
+    /// <typeparam name="TDeclaration"></typeparam>
+    /// <param name="declaration"></param>
+    /// <param name="baseType"></param>
+    /// <param name="baseArguments"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TDeclaration AddPrimaryConstructorBaseType<TDeclaration>(this TDeclaration declaration, string baseType, params ExpressionSyntax[] baseArguments)
+        where TDeclaration : BaseTypeDeclarationSyntax
+        => (TDeclaration)declaration.AddBaseListTypes(SyntaxGenerator.PrimaryConstructorBaseType(baseType, baseArguments));
+    /// <summary>
+    /// 添加主构造基类
+    /// </summary>
+    /// <typeparam name="TDeclaration"></typeparam>
+    /// <param name="declaration"></param>
+    /// <param name="baseType"></param>
+    /// <param name="baseArguments"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TDeclaration AddPrimaryConstructorBaseType<TDeclaration>(this TDeclaration declaration, TypeSyntax baseType, params ExpressionSyntax[] baseArguments)
+        where TDeclaration : BaseTypeDeclarationSyntax
+        => (TDeclaration)declaration.AddBaseListTypes(SyntaxGenerator.PrimaryConstructorBaseType(baseType, baseArguments));
+    #endregion
     /// <summary>
     /// 增加auto-generated注释
     /// </summary>
-    /// <param name="node"></param>
+    /// <param name="unit"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static SyntaxNode WithGenerated(this SyntaxNode node)
-        => node.WithLeadingTrivia(SyntaxFactory.TriviaList(SyntaxFactory.Comment("// <auto-generated/>\r\n")));
+    public static CompilationUnitSyntax WithGenerated(this CompilationUnitSyntax unit)
+        => unit.WithLeadingTrivia(SyntaxFactory.TriviaList(SyntaxFactory.Comment("// <auto-generated/>\r\n")));
     #region ToBuilder
     /// <summary>
     /// 转化为代码构造器
@@ -89,6 +161,28 @@ public static partial class GenerateServices
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AccessorBodyBuilder ToBuilder(this AccessorDeclarationSyntax accessor)
         => new(accessor);
+    #endregion
+    #region WithExpressionBody
+    /// <summary>
+    /// 方法增加表达式
+    /// </summary>
+    /// <typeparam name="TMethod"></typeparam>
+    /// <param name="method"></param>
+    /// <param name="expression"></param>
+    /// <returns></returns>
+    public static TMethod WithExpressionBody<TMethod>(this TMethod method, ExpressionSyntax expression)
+        where TMethod : BaseMethodDeclarationSyntax
+        => (TMethod)method.WithExpressionBody(SyntaxGenerator.ExpressionBody(expression))
+        .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+    /// <summary>
+    /// 访问器增加表达式
+    /// </summary>
+    /// <param name="accessor"></param>
+    /// <param name="expression"></param>
+    /// <returns></returns>
+    public static AccessorDeclarationSyntax WithExpressionBody(this AccessorDeclarationSyntax accessor, ExpressionSyntax expression)
+        => accessor.WithExpressionBody(SyntaxGenerator.ExpressionBody(expression))
+        .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
     #endregion
     #region AddParameter
     /// <summary>

@@ -6,13 +6,16 @@
     <File Path="docs/notes.md" />
     <File Path="docs/pack.md" />
     <File Path="docs/partial.md" />
+    <File Path="docs/pattern.md" />
     <File Path="docs/projection.md" />
     <File Path="docs/spirit.md" />
+    <File Path="docs/styles.md" />
     <File Path="docs/tree.md" />
   </Folder>
   <Folder Name="/UnitTests/">
     <Project Path="UnitTests/EasySyntaxTests/EasySyntaxTests.csproj" />
     <Project Path="UnitTests/GenerateCachedPropertyTests/GenerateCachedPropertyTests.csproj" />
+    <Project Path="UnitTests/GenerateConvertTests/GenerateConvertTests.csproj" Id="178af3f5-b51a-45ea-9845-adc0d8d72c91" />
     <Project Path="UnitTests/GenerateCoreTests/GenerateCoreTests.csproj" />
     <Project Path="UnitTests/GeneratePocoTests/GeneratePocoTests.csproj" />
     <Project Path="UnitTests/GeneratePropertyTests/GeneratePropertyTests.csproj" />
@@ -26,6 +29,7 @@
     <File Path="readme.md" />
   </Folder>
   <Project Path="Hand.GenerateCachedProperty/Hand.GenerateCachedProperty.csproj" />
+  <Project Path="Hand.GenerateConvert/Hand.GenerateConvert.csproj" Id="8671143f-c012-4918-93da-80f6e3a6d65e" />
   <Project Path="Hand.GenerateCore/Hand.GenerateCore.csproj" />
   <Project Path="Hand.GeneratePoco/Hand.GeneratePoco.csproj" Id="53da44b9-eec7-4841-97e8-747c5455b424" />
   <Project Path="Hand.GenerateProperty/Hand.GenerateProperty.csproj" />

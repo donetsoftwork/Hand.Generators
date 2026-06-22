@@ -1,4 +1,3 @@
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Hand.Builders;
@@ -9,48 +8,34 @@ namespace Hand.Builders;
 /// <typeparam name="TGrandpa"></typeparam>
 /// <typeparam name="TParent"></typeparam>
 /// <param name="try"></param>
-/// <param name="declaration"></param>
-/// <param name="when"></param>
-public class CatchBuilder<TGrandpa, TParent>(TryBuilder<TGrandpa, TParent> @try, CatchDeclarationSyntax? declaration, ExpressionSyntax? when)
-    : ScopeBuilder<TGrandpa, TParent>(@try.Parent)
+/// <param name="original"></param>
+public class CatchBuilder<TGrandpa, TParent>(TryBuilder<TGrandpa, TParent> @try, CatchBuilder original)
+    : ScopeBuilder<TGrandpa, TParent>(@try.Parent, original._statements)
     where TParent : StatementBuilder<TGrandpa>
 {
     #region 配置
     /// <summary>
     /// try节点
     /// </summary>
-    protected readonly TryBuilder<TGrandpa, TParent> _try = @try;
-    private readonly CatchDeclarationSyntax? _declaration = declaration;
-    private readonly ExpressionSyntax? _when = when;
-
+    private readonly TryBuilder<TGrandpa, TParent> _try = @try;
+    private readonly CatchBuilder _original = original;
     /// <summary>
     /// try节点
     /// </summary>
     public TryBuilder<TGrandpa, TParent> Try
         => _try;
     /// <summary>
-    /// 异常变量声明
+    /// 原始catch
     /// </summary>
-    public CatchDeclarationSyntax? Declaration
-        => _declaration;
-    /// <summary>
-    /// 过滤条件
-    /// </summary>
-    public ExpressionSyntax? When 
-        => _when;
+    public CatchBuilder Original
+        => _original;
     #endregion
     /// <summary>
     /// 构建分支
     /// </summary>
     /// <returns></returns>
     public CatchClauseSyntax BuildCatch()
-    {
-        var statement = SyntaxFactory.Block(_statements);
-        if(_declaration is null)
-            return SyntaxFactory.CatchClause(null, null, statement);
-        var filter = _when is null ? null : SyntaxFactory.CatchFilterClause(_when);
-        return SyntaxFactory.CatchClause(_declaration, filter, statement);
-    }
+        => _original.BuildCatch();
     /// <inheritdoc />
     protected internal override TParent BuildCore()
         => _try.BuildCore();

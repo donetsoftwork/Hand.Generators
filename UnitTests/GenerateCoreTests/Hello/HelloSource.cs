@@ -21,7 +21,7 @@ public class HelloSource(ClassDeclarationSyntax type, INamedTypeSymbol symbol)
     {
         var builder = SyntaxGenerator.Clone(_type);
         var method = GenerateMethod();
-        builder.AddMember(method);
+        builder.AddOther(method);
         return builder;
     }
     /// <summary>
@@ -41,7 +41,7 @@ public class HelloSource(ClassDeclarationSyntax type, INamedTypeSymbol symbol)
             .Public()
             .Static()
             .ToBuilder()
-            .Add(SyntaxFactory.IdentifierName("Console").Access("WriteLine").Invocation([expression]))
+            .AddPatter(SyntaxFactory.IdentifierName("Console").Access("WriteLine").Invocation([expression]))
             .End();
     }
 }

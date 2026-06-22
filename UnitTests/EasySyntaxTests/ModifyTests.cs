@@ -66,6 +66,46 @@ public class ModifyTests
         Assert.NotEmpty(code);
     }
     [Fact]
+    public void In()
+    {
+        var original = SyntaxFactory.Parameter(SyntaxFactory.Identifier("name"))
+            .WithType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)))
+            .AddModifiers(SyntaxFactory.Token(SyntaxKind.InKeyword));
+        Assert.NotNull(original);
+        var parameter = SyntaxGenerator.StringType.Parameter("name")
+            .In();
+        Assert.NotNull(parameter);
+        var code = parameter.NormalizeWhitespace().ToFullString();
+        Assert.NotEmpty(code);
+    }
+    [Fact]
+    public void Out()
+    {
+        var original = SyntaxFactory.Parameter(SyntaxFactory.Identifier("name"))
+            .WithType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)))
+            .AddModifiers(SyntaxFactory.Token(SyntaxKind.OutKeyword));
+        Assert.NotNull(original);
+        var parameter = SyntaxGenerator.StringType.Parameter("name")
+            .Out();
+        Assert.NotNull(parameter);
+        var code = parameter.NormalizeWhitespace().ToFullString();
+        Assert.NotEmpty(code);
+    }
+    [Fact]
+    public void This()
+    {
+        var original = SyntaxFactory.Parameter(SyntaxFactory.Identifier("name"))
+            .WithType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)))
+            .AddModifiers(SyntaxFactory.Token(SyntaxKind.ThisKeyword));
+        Assert.NotNull(original);
+        var parameter = SyntaxGenerator.StringType.Parameter("name")
+            .This();
+        Assert.NotNull(parameter);
+        var code = parameter.NormalizeWhitespace().ToFullString();
+        Assert.NotEmpty(code);
+    }
+
+    [Fact]
     public void Virtual()
     {
         var original = SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)), "CreateId")

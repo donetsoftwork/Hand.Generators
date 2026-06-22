@@ -7,7 +7,7 @@ namespace Hand.Builders;
 /// 函数构造器基类
 /// </summary>
 public abstract class BodyBuilder<TParent>(TParent parent)
-    : StatementBuilder<TParent>(parent)
+    : StatementBuilder<TParent>(parent, [])
 {
     ///// <summary>
     ///// 构造

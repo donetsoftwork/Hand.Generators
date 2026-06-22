@@ -1,27 +1,28 @@
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-
 namespace Hand.Builders;
 
 /// <summary>
-/// while
+/// do while
 /// </summary>
 /// <typeparam name="TGrandpa"></typeparam>
 /// <typeparam name="TParent"></typeparam>
 /// <param name="parent"></param>
-/// <param name="condition"></param>
-public class DoBuilder<TGrandpa, TParent>(TParent parent, ExpressionSyntax condition)
-    : BlockBuilder<TGrandpa, TParent>(parent)
+/// <param name="original"></param>
+public class DoBuilder<TGrandpa, TParent>(TParent parent, DoBuilder original)
+    : ScopeBuilder<TGrandpa, TParent>(parent, original._statements)
     where TParent : StatementBuilder<TGrandpa>
 {
     #region 配置
-    private readonly ExpressionSyntax _condition = condition;
+    private readonly DoBuilder _original = original;
+    /// <summary>
+    /// 原始do while
+    /// </summary>
+    public DoBuilder Original
+        => _original;
     #endregion
     /// <inheritdoc />
     protected internal override TParent BuildCore()
     {
-        var statement = SyntaxFactory.DoStatement(Block(_statements), _condition);
-        _parent.AddCore(statement);
+        _parent.AddCore(_original.Build());
         return _parent;
     }
 }

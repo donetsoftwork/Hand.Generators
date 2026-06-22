@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
 namespace Hand;
@@ -122,6 +123,14 @@ public static partial class GenerateServices
     public static BinaryExpressionSyntax LogicalOr(this ExpressionSyntax left, ExpressionSyntax right)
         => SyntaxFactory.BinaryExpression(SyntaxKind.LogicalOrExpression, left, right);
     #endregion
+    /// <summary>
+    /// 括号表达式
+    /// </summary>
+    /// <param name="expression"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ParenthesizedExpressionSyntax Parenthesized(this ExpressionSyntax expression)
+        => SyntaxFactory.ParenthesizedExpression(expression);
     #region PrefixUnaryExpression
     /// <summary>
     /// ++variable
@@ -139,6 +148,22 @@ public static partial class GenerateServices
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PrefixUnaryExpressionSyntax PreDecrement(this ExpressionSyntax variable)
         => SyntaxFactory.PrefixUnaryExpression(SyntaxKind.PreDecrementExpression, variable);
+    /// <summary>
+    /// -variable
+    /// </summary>
+    /// <param name="variable"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static PrefixUnaryExpressionSyntax PreMinus(this ExpressionSyntax variable)
+        => SyntaxFactory.PrefixUnaryExpression(SyntaxKind.UnaryMinusExpression, variable);
+    /// <summary>
+    /// +variable
+    /// </summary>
+    /// <param name="variable"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static PrefixUnaryExpressionSyntax PrePlus(this ExpressionSyntax variable)
+        => SyntaxFactory.PrefixUnaryExpression(SyntaxKind.UnaryPlusExpression, variable);
     /// <summary>
     /// 按位取反
     /// </summary>
@@ -254,7 +279,7 @@ public static partial class GenerateServices
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ConditionalAccessExpressionSyntax ConditionalAccess(this ExpressionSyntax owner, SimpleNameSyntax member)
-        => SyntaxFactory.ConditionalAccessExpression(owner, member);
+        => SyntaxFactory.ConditionalAccessExpression(owner, SyntaxFactory.MemberBindingExpression(member));
     /// <summary>
     /// 条件定位
     /// </summary>
@@ -277,6 +302,27 @@ public static partial class GenerateServices
         return owner;
     }
     #endregion
+    //public static ExpressionSyntax Parenthesize(this ExpressionSyntax expression)
+    //    => SyntaxFactory.ParenthesizedExpression(expression);
+    /// <summary>
+    /// 三元运算(? :)
+    /// </summary>
+    /// <param name="condition"></param>
+    /// <param name="whenTrue"></param>
+    /// <param name="whenFalse"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ExpressionSyntax Conditional(this ExpressionSyntax condition, ExpressionSyntax whenTrue, ExpressionSyntax whenFalse)
+        => SyntaxFactory.ConditionalExpression(condition, whenTrue, whenFalse);
+    /// <summary>
+    /// 合并(替换)
+    /// </summary>
+    /// <param name="left"></param>
+    /// <param name="right"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ExpressionSyntax NullCoalesce(this ExpressionSyntax left, ExpressionSyntax right)
+        => SyntaxFactory.BinaryExpression(SyntaxKind.CoalesceExpression, left, right);
     /// <summary>
     /// 判等逻辑
     /// </summary>
@@ -348,6 +394,14 @@ public static partial class GenerateServices
     public static BinaryExpressionSyntax NotNull(this ExpressionSyntax variable)
         => SyntaxFactory.BinaryExpression(SyntaxKind.NotEqualsExpression, variable, SyntaxGenerator.NullLiteral);
     /// <summary>
+    /// is模式
+    /// </summary>
+    /// <param name="variable"></param>
+    /// <param name="pattern"></param>
+    /// <returns></returns>
+    public static IsPatternExpressionSyntax Is(this ExpressionSyntax variable, PatternSyntax pattern)
+        => SyntaxFactory.IsPatternExpression(variable, pattern);
+    /// <summary>
     /// 判断类型
     /// </summary>
     /// <param name="variable"></param>
@@ -361,11 +415,30 @@ public static partial class GenerateServices
     /// </summary>
     /// <param name="variable"></param>
     /// <param name="type"></param>
-    /// <param name="name"></param>
+    /// <param name="variableName"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IsPatternExpressionSyntax IsType(this ExpressionSyntax variable, TypeSyntax type, SyntaxToken name)
-        => SyntaxFactory.IsPatternExpression(variable, SyntaxFactory.DeclarationPattern(type, SyntaxFactory.SingleVariableDesignation(name)));
+    public static IsPatternExpressionSyntax IsType(this ExpressionSyntax variable, TypeSyntax type, SyntaxToken variableName)
+        => SyntaxFactory.IsPatternExpression(variable, SyntaxFactory.DeclarationPattern(type, SyntaxFactory.SingleVariableDesignation(variableName)));
+    /// <summary>
+    /// 判断类型
+    /// </summary>
+    /// <param name="variable"></param>
+    /// <param name="type"></param>
+    /// <param name="variableName"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IsPatternExpressionSyntax IsType(this ExpressionSyntax variable, TypeSyntax type, string variableName)
+        => SyntaxFactory.IsPatternExpression(variable, SyntaxFactory.DeclarationPattern(type, SyntaxFactory.SingleVariableDesignation(SyntaxFactory.Identifier(variableName))));
+    /// <summary>
+    /// as类型转换
+    /// </summary>
+    /// <param name="variable"></param>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ExpressionSyntax AsType(this ExpressionSyntax variable, TypeSyntax type)
+        => SyntaxFactory.BinaryExpression(SyntaxKind.AsExpression, variable, type);
     #region Invocation
     /// <summary>
     /// 调用方法
@@ -519,6 +592,23 @@ public static partial class GenerateServices
     public static AccessorDeclarationSyntax? GetInitAccessor(this PropertyDeclarationSyntax property)
         => GetAccessor(property, SyntaxKind.InitAccessorDeclaration);
     #endregion
+    /// <summary>
+    /// 转化常量为特性参数
+    /// </summary>
+    /// <param name="argument"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AttributeArgumentSyntax ToAttributeArgument(this ExpressionSyntax argument)
+        => SyntaxFactory.AttributeArgument(argument);
+    /// <summary>
+    /// 转化常量为特性参数
+    /// </summary>
+    /// <param name="argument"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AttributeArgumentSyntax ToAttributeArgument(this ExpressionSyntax argument, string name)
+        => SyntaxFactory.AttributeArgument(SyntaxFactory.NameEquals(SyntaxFactory.IdentifierName(name)), default, argument);
     ///// <summary>
     ///// 转化为构造表达式(attribute.Name可能不是类名,此方案不可行)
     ///// </summary>

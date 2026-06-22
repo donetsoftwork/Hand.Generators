@@ -126,6 +126,19 @@ public class ExpressionTest
         Assert.Equal("!reader.Read()", code);
     }
     [Fact]
+    public void Parenthesized()
+    {
+        var a = SyntaxFactory.IdentifierName("a");
+        var b = SyntaxFactory.IdentifierName("b");
+        var c = SyntaxFactory.IdentifierName("c");
+        var expression0 = SyntaxFactory.BinaryExpression(SyntaxKind.SubtractExpression, a, SyntaxFactory.ParenthesizedExpression(SyntaxFactory.BinaryExpression(SyntaxKind.SubtractExpression, b, c)));
+        var code0 = expression0.ToFullString();
+        Assert.Equal("a-(b-c)", code0);
+        var expression = a.Subtract(b.Subtract(c).Parenthesized());
+        var code = expression.ToFullString();
+        Assert.Equal("a-(b-c)", code);
+    }
+    [Fact]
     public void PreIncrement()
     {
         var i = SyntaxFactory.IdentifierName("i");
@@ -156,6 +169,22 @@ public class ExpressionTest
         var expression = i.PostDecrement();
         var code = expression.ToFullString();
         Assert.Equal("i--", code);
+    }
+    [Fact]
+    public void PreMinus()
+    {
+        var i = SyntaxFactory.IdentifierName("i");
+        var expression = i.PreMinus();
+        var code = expression.ToFullString();
+        Assert.Equal("-i", code);
+    }
+    [Fact]
+    public void PrePlus()
+    {
+        var i = SyntaxFactory.IdentifierName("i");
+        var expression = i.PrePlus();
+        var code = expression.ToFullString();
+        Assert.Equal("+i", code);
     }
     [Fact]
     public void Qualified()
@@ -192,6 +221,70 @@ public class ExpressionTest
         var userName = user.ConditionalAccess("Name");
         var code = userName.ToFullString();
         Assert.Equal("user?.Name", code);
+    }
+    [Fact]
+    public void ConditionalAccess2()
+    {
+        var user = SyntaxFactory.IdentifierName("user");
+        var name = SyntaxFactory.IdentifierName("Name");
+        var userName = user.ConditionalAccess(name);
+        var code = userName.ToFullString();
+        Assert.Equal("user?.Name", code);
+    }
+    [Fact]
+    public void ConditionalAccess3()
+    {
+        var reader = SyntaxFactory.IdentifierName("reader");
+        var getFieldValue = SyntaxGenerator.Generic("GetFieldValue", SyntaxGenerator.IntType);
+        var readerGetFieldValue = reader.ConditionalAccess(getFieldValue).Invocation();
+        var code = readerGetFieldValue.ToFullString();
+        Assert.Equal("reader?.GetFieldValue<int>()", code);
+    }
+    [Fact]
+    public void Conditional()
+    {
+        var a = SyntaxFactory.IdentifierName("a");
+        var b = SyntaxFactory.IdentifierName("b");
+        //var expression = SyntaxFactory.ConditionalExpression(a.IsNull(), b, a);
+        var expression = a.IsNull().Conditional(b, a);
+        var code = expression.NormalizeWhitespace().ToFullString();
+        Assert.Equal("a == null ? b : a", code);
+    }
+    [Fact]
+    public void Coalesce()
+    {
+        var a = SyntaxFactory.IdentifierName("a");
+        var b = SyntaxFactory.IdentifierName("b");
+        //var expression = SyntaxFactory.BinaryExpression(SyntaxKind.CoalesceExpression, a, b);
+        var expression = a.NullCoalesce(b);
+        var code = expression.NormalizeWhitespace().ToFullString();
+        Assert.Equal("a ?? b", code);
+    }
+    [Fact]
+    public void Cast()
+    {
+        var obj = SyntaxFactory.IdentifierName("obj");
+        //var expression = SyntaxFactory.CastExpression(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)), obj);
+        var expression = SyntaxGenerator.IntType.Cast(obj);
+        var code = expression.NormalizeWhitespace().ToFullString();
+        Assert.Equal("(int)obj", code);
+    }
+    [Fact]
+    public void AsType()
+    {
+        var obj = SyntaxFactory.IdentifierName("obj");
+        var expression = obj.AsType(SyntaxGenerator.IntType);
+        //var expression = SyntaxFactory.BinaryExpression(SyntaxKind.AsExpression, obj, SyntaxGenerator.IntType);
+        var code = expression.NormalizeWhitespace().ToFullString();
+        Assert.Equal("obj as int", code);
+    }
+    [Fact]
+    public void TypeOf()
+    {
+        //SyntaxFactory.TypeOfExpression(SyntaxGenerator.IntType);
+        var expression = SyntaxGenerator.IntType.TypeOf();
+        var code = expression.NormalizeWhitespace().ToFullString();
+        Assert.Equal("typeof(int)", code);
     }
     [Fact]
     public void Interpolation()

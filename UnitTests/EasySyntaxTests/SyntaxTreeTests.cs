@@ -105,7 +105,7 @@ public class SyntaxTreeTests
     {
         var field = SyntaxGenerator.IntType.Field("_id")
              .Private();
-        var property = SyntaxGenerator.IntType.GetOnlyProperty("Id", field.ToIdentifierName())
+        var property = SyntaxGenerator.IntType.Property("Id", field.ToIdentifierName())
             .Public();
         var type = SyntaxFactory.ClassDeclaration("User")
             .Public()

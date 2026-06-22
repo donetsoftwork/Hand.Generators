@@ -183,7 +183,7 @@ public class SourceTextExecutor : IGeneratorExecutor<AttributeContext>
     {
         var symbol = descriptor.Symbol;
         // 获取GenerateProperty的Rules属性
-        var attribute = descriptor.GetSymbol("Hand.Entities.GeneratePropertyAttribute");
+        var attribute = descriptor.Compilation.GetSymbol("Hand.Entities.GeneratePropertyAttribute");
         var ruleText = SymbolAttributeHelper.GetArgumentValue<string>(symbol, attribute, 0);
         var rule = new PropertyRule(ruleText);
         var builder = new SourceTextBuilder();
@@ -374,12 +374,12 @@ public class SourceTextExecutor : IGeneratorExecutor<AttributeContext>
         var entityId = compilation.GetTypeByMetadataName("Hand.Models.IEntityId");
         if (entityId is null)
             return null;
-        if(interfaces.Contains(entityId))
+        if(interfaces.Any(item => SymbolTypeDescriptor.CheckEquals(entityId, item)))
             return compilation.GetSpecialType(SpecialType.System_Int64);
         var entityProperty = compilation.GetTypeByMetadataName("Hand.Models.IEntityProperty`1");
         if (entityProperty is null)
             return null;
-        var @interface = SymbolReflection.GetGenericCloseInterfaces(symbol, entityProperty)
+        var @interface = symbol.GetGenericCloseInterfaces(entityProperty)
             .FirstOrDefault();
         if (@interface is null)
             return null;

@@ -2,9 +2,6 @@ using Hand;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
-using System.Collections.Generic;
-using System.Xml.Linq;
 
 namespace EasySyntaxTests;
 
@@ -23,10 +20,30 @@ public class ForTests
             // for(var i=0;i<num;i++)
             .For(i, num)
                 // count+=i
-                .Add(count.AddAssign(i))
+                .AddPatter(count.AddAssign(i))
             .End()
             // return count
             .Return(count);
+        var code = method.NormalizeWhitespace().ToFullString();
+        Assert.NotEmpty(code);
+    }
+    [Fact]
+    public void Total2()
+    {
+        var i = SyntaxFactory.IdentifierName("i");
+        var num = SyntaxFactory.IdentifierName("num");
+        var count = SyntaxFactory.IdentifierName("count");
+
+        var @for = num.For(i)
+            .AddPatter(count.AddAssign(i))
+            .Build();
+        var body = SyntaxGenerator.Scope()
+             .Declare(SyntaxGenerator.IntType.Variable(count.Identifier, SyntaxGenerator.Literal(0)))
+            .Add(@for)
+            .Add(count.Return())
+            .Block();
+        var method = SyntaxGenerator.IntType.Method("Total", SyntaxGenerator.IntType.Parameter(num.Identifier))
+            .WithBody(body);
         var code = method.NormalizeWhitespace().ToFullString();
         Assert.NotEmpty(code);
     }
@@ -79,7 +96,7 @@ public class ForTests
                 // for(var j = 0;j<list.GetLength(1);j++)
                 .For(j, getLength.Invocation([SyntaxGenerator.Literal(1)]))
                     // count+=list[i,j]
-                    .Add(count.ToIdentifierName().AddAssign(list.Element([i, j])))
+                    .AddPatter(count.ToIdentifierName().AddAssign(list.Element([i, j])))
                 .End()
             .End()
             // return count

@@ -25,5 +25,13 @@ public class GeneratePocoAttribute(Type from)
     /// 是否使用init访问器
     /// </summary>
     public bool Init { get; set; }
+    /// <summary>
+    /// 
+    /// </summary>
+    public bool ConvertTo { get; set; }
+    /// <summary>
+    /// 
+    /// </summary>
+    public bool ConvertFrom { get; set; }
     #endregion
 }

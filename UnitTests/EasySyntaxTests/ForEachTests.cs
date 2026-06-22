@@ -17,7 +17,7 @@ public class ForEachTests
             .ToBuilder()
             .Declare(SyntaxGenerator.VarType.Variable(count.Identifier, SyntaxGenerator.Literal(0)))
             .ForEach(SyntaxGenerator.VarType, item.Identifier, list)
-                .Add(count.AddAssign(item))
+                .AddPatter(count.AddAssign(item))
             .End()
             .Return(count);
         var code = method.NormalizeWhitespace().ToFullString();
@@ -61,11 +61,38 @@ public class ForEachTests
             .ToBuilder()
             // var count = 0
             .Declare(VarType.Variable(count.Identifier, Literal(0)))
-            // foreach(
-            .ForEach(VarType, item.Identifier, list)
-                .Add(count.AddAssign(item))
+            // foreach(item in list)
+            .ForEach(item.Identifier, list)
+                //count += item
+                .AddPatter(count.AddAssign(item))
             .End()
             .Return(count);
+        var code = method.NormalizeWhitespace().ToFullString();
+        Assert.NotEmpty(code);
+    }
+    [Fact]
+    public void Count3()
+    {
+        var list = SyntaxFactory.IdentifierName("list");
+        var item = SyntaxFactory.IdentifierName("item");
+        var count = SyntaxFactory.IdentifierName("count");
+
+        // foreach(item in list)
+        var forEach = list.ForEach(item.Identifier)
+            //count += item
+            .AddPatter(count.AddAssign(item))
+            .Build();
+        var body = SyntaxGenerator.Scope()
+            // var count = 0
+            .Declare(VarType.Variable(count.Identifier, Literal(0)))
+            .Add(forEach)
+            // return count
+            .Add(count.Return())
+            .Block();
+
+        // int Count(int[] list)
+        var method = IntType.Method("Count", IntType.Array().Parameter(list.Identifier))
+            .WithBody(body);
         var code = method.NormalizeWhitespace().ToFullString();
         Assert.NotEmpty(code);
     }

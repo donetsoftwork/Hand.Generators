@@ -20,15 +20,15 @@ public class DoTests
             // string? thing
             .Declare(SyntaxGenerator.StringType.Nullable().Variable(thing.Identifier))
             // Console.WriteLine("Enter some things:")
-            .Add(writeLine.Invocation([SyntaxGenerator.Literal("Enter some things:")]))
+            .AddPatter(writeLine.Invocation([SyntaxGenerator.Literal("Enter some things:")]))
             // do ... while(thing!="exit"){
             .Do(thing.NotEqual(SyntaxGenerator.Literal("exit")))
                 // thing=Console.ReadLine()
-                .Add(thing.Assign(console.Access("ReadLine").Invocation()))
+                .AddPatter(thing.Assign(console.Access("ReadLine").Invocation()))
                 // Console.Write("Do ")
-                .Add(console.Access("Write").Invocation([SyntaxGenerator.Literal("Do ")]))
+                .AddPatter(console.Access("Write").Invocation([SyntaxGenerator.Literal("Do ")]))
                 // Console.WriteLine(thing)
-                .Add(writeLine.Invocation([thing]))
+                .AddPatter(writeLine.Invocation([thing]))
                 // }
                 .End()
             // }
@@ -89,19 +89,56 @@ public class DoTests
             // string? thing
             .Declare(StringType.Nullable().Variable(thing.Identifier))
             // Console.WriteLine("Enter some things:")
-            .Add(writeLine.Invocation([Literal("Enter some things:")]))
+            .AddPatter(writeLine.Invocation([Literal("Enter some things:")]))
             // do ... while(thing!="exit"){
             .Do(thing.NotEqual(Literal("exit")))
                 // thing=Console.ReadLine()
-                .Add(thing.Assign(readLine.Invocation()))
+                .AddPatter(thing.Assign(readLine.Invocation()))
                 // Console.Write("Do ")
-                .Add(write.Invocation([Literal("Do ")]))
+                .AddPatter(write.Invocation([Literal("Do ")]))
                 // Console.WriteLine(thing)
-                .Add(writeLine.Invocation([thing]))
+                .AddPatter(writeLine.Invocation([thing]))
                 // }
                 .End()
             // }
             .End();
+        var code = method.NormalizeWhitespace().ToFullString();
+        Assert.NotEmpty(code);
+    }
+    [Fact]
+    public void DoSTh3()
+    {
+        var console = SyntaxFactory.IdentifierName("Console");
+        var write = console.Access("Write");
+        var writeLine = console.Access("WriteLine");
+        var readLine = console.Access("ReadLine");
+        var thing = SyntaxFactory.IdentifierName("thing");
+
+        var @do = thing.NotEqual(Literal("exit"))
+            // do ... while(thing!="exit"){
+            .Do()
+                // thing=Console.ReadLine()
+                .AddPatter(thing.Assign(readLine.Invocation()))
+                // Console.Write("Do ")
+                .AddPatter(write.Invocation([Literal("Do ")]))
+                // Console.WriteLine(thing)
+                .AddPatter(writeLine.Invocation([thing]))
+                // }
+            .Build();
+
+        var body = SyntaxGenerator.Scope()
+            // string? thing
+            .Declare(StringType.Nullable().Variable(thing.Identifier))
+            // Console.WriteLine("Enter some things:")
+            .AddPatter(writeLine.Invocation([Literal("Enter some things:")]))
+            // do ... while
+            .Add(@do)
+            // }
+            .Block();
+
+        // void DoSTh()
+        var method = VoidType.Method("DoSTh")
+            .WithBody(body);
         var code = method.NormalizeWhitespace().ToFullString();
         Assert.NotEmpty(code);
     }

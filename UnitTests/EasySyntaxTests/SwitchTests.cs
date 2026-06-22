@@ -2,8 +2,6 @@ using Hand;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Generic;
-using System.Reflection.Emit;
 using static Hand.SyntaxGenerator;
 
 namespace EasySyntaxTests;
@@ -93,4 +91,72 @@ public class SwitchTests
         var code = method.NormalizeWhitespace().ToFullString();
         Assert.NotEmpty(code);
     }
+    [Fact]
+    public void IntToBool3()
+    {
+        var value = SyntaxFactory.IdentifierName("value");
+        var body = value.Switch()
+            .Case(Literal(0))
+                .Add(FalseLiteral.Return())
+            .Case(Literal(1))
+                .Add(TrueLiteral.Return())
+            .Default()
+                .Add(TrueLiteral.Return())
+            .Block();
+
+
+        // bool IntToBool(int value)
+        var method = BoolType.Method("IntToBool", IntType.Parameter(value.Identifier))
+            .WithBody(body);
+        var code = method.NormalizeWhitespace().ToFullString();
+        Assert.NotEmpty(code);
+    }
+    //bool IntToBool(int value)
+    //{
+    //    switch (value)
+    //    {
+    //        case 0:
+    //            return false;
+    //        case 1:
+    //            return true;
+    //        default:
+    //            return true;
+    //    }
+    //}
+    [Fact]
+    public void ScoreToGrade()
+    {
+        var score = SyntaxFactory.IdentifierName("score");
+        var body = score.Switch()
+            .Case(SyntaxGenerator.Literal(10), SyntaxGenerator.Literal(9))
+                .Add(SyntaxGenerator.Literal("优").Return())
+            .Case(Literal(8), Literal(7))
+                .Add(SyntaxGenerator.Literal("良").Return())
+            .Case(Literal(6))
+                .Add(SyntaxGenerator.Literal("中").Return())
+            .Default()
+                .Add(SyntaxGenerator.Literal("差").Return())
+            .Block();
+        // bool IntToBool(int value)
+        var method = SyntaxGenerator.StringType.Method("ScoreToGrade", SyntaxGenerator.IntType.Parameter(score.Identifier))
+            .WithBody(body);
+        var code = method.NormalizeWhitespace().ToFullString();
+        Assert.NotEmpty(code);
+    }
+    //string ScoreToGrade(int score)
+    //{
+    //    switch (score)
+    //    {
+    //        case 10:
+    //        case 9:
+    //            return "优";
+    //        case 8:
+    //        case 7:
+    //            return "良";
+    //        case 6:
+    //            return "中";
+    //        default:
+    //            return "差";
+    //    }
+    //}
 }

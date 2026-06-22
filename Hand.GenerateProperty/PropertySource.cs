@@ -54,9 +54,9 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
         var builder = SyntaxGenerator.Clone(_type);
         IdentifierNameSyntax member = BuildOriginal(builder);
         if (_rule.ToStringMethod)
-            builder.AddMember(BuildToString(member, _originalType, _originalNullable));
+            builder.AddOther(BuildToString(member, _originalType, _originalNullable));
         if (_rule.GetHashCodeMethod)
-            builder.AddMember(BuildGetHashCode(member, _originalNullable));
+            builder.AddOther(BuildGetHashCode(member, _originalNullable));
         return builder;
     }
     /// <summary>
@@ -80,9 +80,9 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
             var constructor = _type.Constructor(_originalType.Parameter(original.Identifier))
                 .Public()
                 .ToBuilder()
-                .Add(member.Assign(original))
+                .AddPatter(member.Assign(original))
                 .End();
-            builder.AddMember(constructor);
+            builder.AddOther(constructor);
         }
         if (!_symbol.IsRecord)
             BuildEqualOperator(builder, member);
@@ -118,13 +118,13 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
                 // set => _original = value;
                 accessorList.Add(SyntaxGenerator.PropertySetDeclaration()
                         .ToBuilder()
-                        .Add(_original.AssignValue())
+                        .AddPatter(_original.AssignValue())
                         .End());
             }
             var property = _originalType.Property(Original.Identifier, accessorList.ToArray())
                 .Public();
-            builder.AddMember(field);
-            builder.AddMember(property);
+            builder.AddOther(field);
+            builder.AddOther(property);
             return _original;
         }
         else
@@ -137,7 +137,7 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
             }
             var property = _originalType.Property(Original.Identifier, accessorList.ToArray())
                 .Public();
-            builder.AddMember(property);
+            builder.AddOther(property);
             return Original;
         }
     }
@@ -155,10 +155,10 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
         if (_rule.EqualsMethod)
         {
             if (equalsMethod is null)
-                builder.AddMember(BuildEquals(type, _nullable, original, _originalNullable));
+                builder.AddOther(BuildEquals(type, _nullable, original, _originalNullable));
             hasEquals = true;
-            if (_descriptor.GetMethod("Equals", false, [_descriptor.Object]) is null)
-                builder.AddMember(SyntaxGenerator.ObjectEqualsDeclaration(type));
+            if (_descriptor.GetMethod("Equals", false, [_descriptor.Compilation.GetObjectSymbol()]) is null)
+                builder.AddOther(SyntaxGenerator.ObjectEqualsDeclaration(type));
         }
         else
         {
@@ -167,7 +167,7 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
         // 重载需要调用Equals
         if (hasEquals && _rule.Operator)
         {
-            builder.AddMembers(
+            builder.AddOthers(
                 SyntaxGenerator.BuildEqualOperator(type, _nullable),
                 SyntaxGenerator.BuildNotEqualOperator(type, _nullable));
         }
@@ -227,10 +227,7 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
     {
         var expression = original.Access("GetHashCode").Invocation();
         if (nullable)
-        {
-            var zero = SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(0));
-            return SyntaxFactory.ConditionalExpression(original.IsNull(), zero, expression);
-        }
+            return SyntaxFactory.ConditionalExpression(original.IsNull(), SyntaxGenerator.Literal(0), expression);
         return expression;
     }
     /// <summary>
@@ -255,10 +252,10 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
         if (rule.EqualsMethod)
         {
             if (equalsMethod is null)
-                builder.AddMember(BuildEquals(type, nullable, original, originalNullCondition));
+                builder.AddOther(BuildEquals(type, nullable, original, originalNullCondition));
             hasEquals = true;
-            if (descriptor.GetMethod("Equals", false, [descriptor.Object]) is null)
-                builder.AddMember(SyntaxGenerator.ObjectEqualsDeclaration(type));
+            if (descriptor.GetMethod("Equals", false, [descriptor.Compilation.GetObjectSymbol()]) is null)
+                builder.AddOther(SyntaxGenerator.ObjectEqualsDeclaration(type));
         }
         else
         {
@@ -267,7 +264,7 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
         // 重载需要调用Equals
         if (hasEquals && rule.Operator)
         {
-            builder.AddMembers(
+            builder.AddOthers(
                 SyntaxGenerator.BuildEqualOperator(type, nullable),
                 SyntaxGenerator.BuildNotEqualOperator(type, nullable));
         }

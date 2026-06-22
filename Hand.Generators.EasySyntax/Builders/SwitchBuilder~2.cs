@@ -1,7 +1,4 @@
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Generic;
 
 namespace Hand.Builders;
 
@@ -11,48 +8,39 @@ namespace Hand.Builders;
 /// <typeparam name="TGrandpa"></typeparam>
 /// <typeparam name="TParent"></typeparam>
 /// <param name="parent"></param>
-/// <param name="governing"></param>
-public class SwitchBuilder<TGrandpa, TParent>(TParent parent, ExpressionSyntax governing)
-    : ScopeBuilder<TGrandpa, TParent>(parent)
+/// <param name="original"></param>
+public class SwitchBuilder<TGrandpa, TParent>(TParent parent, SwitchBuilder original)
+    : ScopeBuilder<TGrandpa, TParent>(parent, [])
     where TParent : StatementBuilder<TGrandpa>
 {
     #region 配置
-    private readonly ExpressionSyntax _governing = governing;
+    private readonly SwitchBuilder _original = original;
     /// <summary>
-    /// 当前控制
+    /// 原始分支
     /// </summary>
-    public ExpressionSyntax Governing
-        => _governing;
-    private readonly List<SwitchSection<TGrandpa, TParent>> _sections = [];
+    public SwitchBuilder Original
+        => _original;
     #endregion
+    /// <inheritdoc />
+    protected internal override void AddCore(StatementSyntax statement)
+        => _original.AddCore(statement);
     /// <summary>
     /// 分支
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="values"></param>
     /// <returns></returns>
-    public CaseBuilder<TGrandpa, TParent> Case(ExpressionSyntax value)
-        => Section(new CaseBuilder<TGrandpa, TParent>(this, value));
+    public CaseBuilder<TGrandpa, TParent> Case(params ExpressionSyntax[] values)
+        => new(this, _original.Case(values));
+    /// <summary>
+    /// 默认分支
+    /// </summary>
+    /// <returns></returns>
+    public SwitchSection<TGrandpa, TParent> Default()
+        => new(this, _original.Default());
     /// <inheritdoc />
     protected internal override TParent BuildCore()
     {
-        var count = _sections.Count;
-        if (count == 0)
-            return _parent;
-        var list = new List<SwitchSectionSyntax>();
-        foreach (var item in _sections)
-            list.Add(item.BuildSection());
-        var statement = SyntaxFactory.SwitchStatement(_governing, SyntaxGenerator.List(list));
-        _parent.AddCore(statement);        
+        _parent.AddCore(_original.Build());
         return _parent;
-    }
-    /// <summary>
-    /// 添加分支
-    /// </summary>
-    /// <param name="section"></param>
-    internal TSection Section<TSection>(TSection section)
-        where TSection: SwitchSection<TGrandpa, TParent>
-    {
-        _sections.Add(section);
-        return section;
     }
 }

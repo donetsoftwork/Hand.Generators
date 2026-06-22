@@ -56,12 +56,12 @@ public class PropertyTransform : IGeneratorTransform<PropertySource>
         var entityId = compilation.GetTypeByMetadataName("Hand.Models.IEntityId");
         if (entityId is null)
             return null;
-        if (interfaces.Contains(entityId))
+        if (interfaces.Any(item => SymbolTypeDescriptor.CheckEquals(entityId, item)))
             return compilation.GetSpecialType(SpecialType.System_Int64);
         var entityProperty = compilation.GetTypeByMetadataName("Hand.Models.IEntityProperty`1");
         if (entityProperty is null)
             return null;
-        var @interface = SymbolReflection.GetGenericCloseInterfaces(symbol, entityProperty)
+        var @interface = symbol.GetGenericCloseInterfaces(entityProperty)
             .FirstOrDefault();
         if (@interface is null)
             return null;

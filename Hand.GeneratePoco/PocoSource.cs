@@ -44,7 +44,7 @@ public class PocoSource(TypeDeclarationSyntax type, Compilation compilation, INa
     public SyntaxGenerator Generate()
     {
         var builder = SyntaxGenerator.Clone(_type);
-        var properties0 = SymbolReflection.GetProperties(_typeSymbol)
+        var properties0 = SymbolReflection.GetPublicPropertiesWithBase(_typeSymbol)
             .Select(p => p.Name)
             .ToFrozenSet();
         var kinds = ChecAccessorKinds(_init);
@@ -55,15 +55,17 @@ public class PocoSource(TypeDeclarationSyntax type, Compilation compilation, INa
             if (properties0.Contains(name))
                 continue;            
             var propertySymbol = item.Value;
-            var propertySymbolType = CheckPropertySymbol(_compilation, propertySymbol.Type);
+            var propertySymbolType = SymbolReflection.CheckOriginalSymbol(_compilation, propertySymbol.Type);
             if (propertySymbolType is null)
                 continue;
-            var attributes = propertySymbol.GetAttributes().ToSyntax(namespaces);
+            var attributes = propertySymbol.GetAttributes()
+                .ToArray()
+                .ToSyntax(namespaces);
             var propertyType = CheckPropertyNullAble(name, propertySymbolType.ToSyntax());
             var property = propertyType.Property(name, kinds)
                 .AddAttributeLists(attributes)
                 .Public();
-            builder.AddMember(property);
+            builder.AddProperty(property);
         }
         builder.Using(namespaces);
         return builder;
@@ -94,34 +96,7 @@ public class PocoSource(TypeDeclarationSyntax type, Compilation compilation, INa
 
         return propertyType;
     }
-    /// <summary>
-    /// 获取原始类型信息
-    /// </summary>
-    /// <param name="compilation"></param>
-    /// <param name="symbol"></param>
-    /// <returns></returns>
-    public static INamedTypeSymbol? CheckPropertySymbol(Compilation compilation, ITypeSymbol symbol)
-    {
-        if(symbol is INamedTypeSymbol namedTypeSymbol)
-        {
-            var interfaces = namedTypeSymbol.AllInterfaces;
-            var entityId = compilation.GetTypeByMetadataName("Hand.Models.IEntityId");
-            if (entityId is null)
-                return namedTypeSymbol;
-            if (interfaces.Contains(entityId))
-                return compilation.GetSpecialType(SpecialType.System_Int64);
-            var entityProperty = compilation.GetTypeByMetadataName("Hand.Models.IEntityProperty`1");
-            if (entityProperty is null)
-                return namedTypeSymbol;
-            var @interface = SymbolReflection.GetGenericCloseInterfaces(namedTypeSymbol, entityProperty)
-                .FirstOrDefault();
-            if (@interface is null)
-                return namedTypeSymbol;
-            if (@interface.TypeArguments.FirstOrDefault() is INamedTypeSymbol original)
-                return original;
-        }
-        return null;
-    }
+
     /// <summary>
     /// 获取属性字典
     /// </summary>
@@ -130,11 +105,10 @@ public class PocoSource(TypeDeclarationSyntax type, Compilation compilation, INa
     /// <returns></returns>
     public static IDictionary<string, IPropertySymbol> GetProperties(INamedTypeSymbol type, IRecognizer<string>[] rules)
     {
-        IDictionary<string, IPropertySymbol> properties = SymbolReflection.GetProperties(type).ToDictionary(p => p.Name);
+        IDictionary<string, IPropertySymbol> properties = SymbolReflection.GetPublicPropertiesWithBase(type)
+            .ToDictionary(p => p.Name);
         foreach (var rule in rules)
-        {
             properties = rule.Recognize(properties);
-        }
         return properties;
     }
 }

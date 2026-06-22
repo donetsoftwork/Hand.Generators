@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -26,16 +27,16 @@ public static partial class GenerateCoreServices
         var name = type.Name;
         if (name.EndsWith("Attribute"))
             name = name.Substring(0, name.Length - "Attribute".Length);
-        var arguments = new List<AttributeArgumentSyntax>();
-        foreach (var item in data.ConstructorArguments)
-            arguments.Add(ToAttributeArgument(item));
-        foreach (var item in data.NamedArguments)
-            arguments.Add(ToAttributeArgument(item.Value, item.Key));
-
-        if (arguments.Count == 0)
+        var arguments = ConvertToArguments(data.ConstructorArguments, data.NamedArguments)
+            .ToArray();
+        //foreach (var item in data.ConstructorArguments)
+        //    arguments.Add(ToExpression(item).ToAttributeArgument());
+        //foreach (var item in data.NamedArguments)
+        //    arguments.Add(ToExpression(item.Value).ToAttributeArgument(item.Key));
+        if (arguments.Length == 0)
             return SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(name));
-        return SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(name))
-            .AddArgumentListArguments(arguments.ToArray());
+        return SyntaxFactory.IdentifierName(name)
+            .Attribute(arguments);
     }
     /// <summary>
     /// 转化特性数据为特性语法数组
@@ -43,14 +44,9 @@ public static partial class GenerateCoreServices
     /// <param name="datas"></param>
     /// <param name="namespaces"></param>
     /// <returns></returns>
-    public static AttributeListSyntax[] ToSyntax(this ImmutableArray<AttributeData> datas, List<string> namespaces)
-    {
-        var count = datas.Length;
-        var result = new AttributeListSyntax[count];
-        for ( var i = 0; i < count; i++)
-            result[i] = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(ToSyntax(datas[i], namespaces)));
-        return result;
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AttributeListSyntax[] ToSyntax(this AttributeData[] datas, List<string> namespaces)
+        => Array.ConvertAll(datas, data => ToSyntax(data, namespaces).ToSingletonList());
     /// <summary>
     /// 转化特性参数列表
     /// </summary>
@@ -60,26 +56,10 @@ public static partial class GenerateCoreServices
     public static IEnumerable<AttributeArgumentSyntax> ConvertToArguments(ImmutableArray<TypedConstant> arguments, ImmutableArray<KeyValuePair<string, TypedConstant>> namedArguments)
     {
         foreach (var item in arguments)
-            yield return ToAttributeArgument(item);
+            yield return ToExpression(item)
+                .ToAttributeArgument();
         foreach (var item in namedArguments)
-            yield return ToAttributeArgument(item.Value, item.Key);
+            yield return ToExpression(item.Value)
+                .ToAttributeArgument(item.Key);
     }
-    /// <summary>
-    /// 转化常量为特性参数
-    /// </summary>
-    /// <param name="argument"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static AttributeArgumentSyntax ToAttributeArgument(this TypedConstant argument)
-        => SyntaxFactory.AttributeArgument(ToExpression(argument));
-    /// <summary>
-    /// 转化常量为特性参数
-    /// </summary>
-    /// <param name="argument"></param>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static AttributeArgumentSyntax ToAttributeArgument(this TypedConstant argument, string name)
-        => SyntaxFactory.AttributeArgument(ToExpression(argument))
-            .WithNameEquals(SyntaxFactory.NameEquals(SyntaxFactory.IdentifierName(name)));
 }

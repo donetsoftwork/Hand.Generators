@@ -64,17 +64,16 @@ public static partial class GenerateCoreServices
     /// </summary>
     /// <param name="type"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ExpressionSyntax TypeToExpression(this INamedTypeSymbol @type)
-    {
-        return SyntaxFactory.TypeOfExpression(SyntaxFactory.IdentifierName(type.Name));
-    }
+        => SyntaxFactory.TypeOfExpression(SyntaxFactory.IdentifierName(type.Name));
     /// <summary>
     /// 枚举常量转化为表达式
     /// </summary>
     /// <param name="enum"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
-    public static ExpressionSyntax EnumToExpression(this TypedConstant @enum)
+    public static MemberAccessExpressionSyntax EnumToExpression(this TypedConstant @enum)
     {
         var type = @enum.Type
             ?? throw new ArgumentException("缺少枚举类型");
@@ -90,14 +89,9 @@ public static partial class GenerateCoreServices
     /// </summary>
     /// <param name="constants"></param>
     /// <returns></returns>
-    public static ExpressionSyntax[] ToExpressions(this ImmutableArray<TypedConstant> constants)
-    {
-        var count = constants.Length;
-        var items = new ExpressionSyntax[count];
-        for (var i = 0; i < count; i++)
-            items[i] = ToExpression(constants[i]);
-        return items;
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ExpressionSyntax[] ToExpressions(this TypedConstant[] constants)
+        => Array.ConvertAll(constants, static constant => ToExpression(constant));
     /// <summary>
     /// 转化数组常量为表达式
     /// </summary>
@@ -105,7 +99,7 @@ public static partial class GenerateCoreServices
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static CollectionExpressionSyntax ArrayToExpression(this TypedConstant array)
-        => SyntaxGenerator.Collection(ToExpressions(array.Values));
+        => SyntaxGenerator.Collection(ToExpressions([.. array.Values]));
     /// <summary>
     /// 转化数组常量为表达式
     /// </summary>
@@ -113,7 +107,7 @@ public static partial class GenerateCoreServices
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static CollectionExpressionSyntax ArrayToExpression(this ImmutableArray<TypedConstant> array)
-        => SyntaxGenerator.Collection(ToExpressions(array));
+        => SyntaxGenerator.Collection(ToExpressions([.. array]));
     /// <summary>
     /// 基础类型转化为字面量表达式
     /// </summary>

@@ -139,7 +139,7 @@ public class GenerateProvider
     //    Debug.Assert(compilationUnit is ICompilationUnitSyntax);
 
     //    var isCaseSensitive = syntaxHelper.IsCaseSensitive;
-    //    var comparison = isCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+    //    var comparison = isCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase‌;
 
     //    // As we walk down the compilation unit and nested namespaces, we may encounter additional using aliases local
     //    // to this file. Keep track of them so we can determine if they would allow an attribute in code to bind to the

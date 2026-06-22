@@ -1,6 +1,7 @@
 using Hand;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using System.Data.Common;
 using static Hand.SyntaxGenerator;
 
 namespace EasySyntaxTests;
@@ -24,7 +25,7 @@ public class WhileTests
             // while(reader.Read()){
             .While(reader.Access("Read").Invocation())
                 // list.Add(reader.GetFieldValue(0))
-                .Add(list.Access("Add").Invocation([getFieldValue.Invocation([SyntaxGenerator.Literal(0)])]))
+                .AddPatter(list.Access("Add").Invocation([getFieldValue.Invocation([SyntaxGenerator.Literal(0)])]))
             // }
             .End()
             // return list
@@ -95,19 +96,54 @@ public class WhileTests
             // while(reader.Read()){
             .While(read.Invocation())
                 // list.Add(reader.GetFieldValue(0))
-                .Add(add.Invocation([getFieldValue.Invocation([Literal(0)])]))
+                .AddPatter(add.Invocation([getFieldValue.Invocation([Literal(0)])]))
             // }
             .End()
             // return list
             .Return(list);
         var code = method.NormalizeWhitespace().ToFullString();
         Assert.NotEmpty(code);
-        //SyntaxFactory.DoStatement()
-        //SyntaxFactory.LabeledStatement()
-        //SyntaxFactory.ThrowExpression()
-        //Exception
-        SyntaxFactory.BreakStatement();
-        SyntaxFactory.ContinueStatement();
-        //SyntaxFactory.GotoStatement()
     }
+    [Fact]
+    public void GetIds3()
+    {
+        var readerType = SyntaxFactory.IdentifierName("DbDataReader");
+        var reader = SyntaxFactory.IdentifierName("reader");
+        var listType = Generic("List", IntType);
+        var list = SyntaxFactory.IdentifierName("list");
+        // reader.Read
+        var read = reader.Access("Read");
+        // reader.GetFieldValue<int>
+        var getFieldValue = Generic("GetFieldValue", IntType).Qualified("reader");
+        // List<int> GetIds(DbDataReader reader)
+        // list.Add
+        var add = list.Access("Add");
+
+        var whileStatement = read.Invocation()
+            .While()
+                // list.Add(reader.GetFieldValue(0))
+                .AddPatter(add.Invocation([getFieldValue.Invocation([Literal(0)])]))
+            .Build();
+        var body = SyntaxGenerator.Scope()
+            // List<int> list = []
+            .Declare(listType.Variable(list.Identifier, SyntaxFactory.CollectionExpression()))
+            .Add(whileStatement)
+            // return list
+            .Add(list.Return())
+            .Block();
+
+        // List<int> GetIds(DbDataReader reader)
+        var method = listType.Method("GetIds", readerType.Parameter(reader.Identifier))
+            .WithBody(body);
+        var code = method.NormalizeWhitespace().ToFullString();
+        Assert.NotEmpty(code);
+    }
+
+    //List<int> GetIds(DbDataReader reader)
+    //{
+    //    List<int> list = [];
+    //    while (reader.Read())
+    //        list.Add(reader.GetFieldValue<int>(0));
+    //    return list;
+    //}
 }

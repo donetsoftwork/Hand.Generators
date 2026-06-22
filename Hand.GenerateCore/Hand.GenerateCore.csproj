@@ -4,7 +4,7 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<RootNamespace>Hand</RootNamespace>
-		<Version>$(VersionBase).4</Version>
+		<Version>$(VersionBase).0</Version>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<LangVersion>Latest</LangVersion>
@@ -15,6 +15,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Hand.Naming" Version="0.3.1-alpha" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="5.3.0">
 			<IncludeAssets>compile;analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
@@ -24,7 +25,12 @@
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
 	</ItemGroup>
-
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'&#xD;&#xA;             OR '$(TargetFramework)' == 'net4.6.2'&#xD;&#xA;             OR '$(TargetFramework)' == 'net4.7'&#xD;&#xA;             OR '$(TargetFramework)' == 'net4.8'">
+		<PackageReference Include="Microsoft.Bcl.HashCode" Version="6.0.0">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</PackageReference>
+	</ItemGroup>
 	<ItemGroup>
 		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 	</ItemGroup>

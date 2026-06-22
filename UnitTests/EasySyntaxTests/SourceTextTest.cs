@@ -135,7 +135,7 @@ class User
 {
     public string Name { get; set; }
 }";
-        SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var compilation = CSharpCompilation.Create("Tests", [syntaxTree]);
         INamedTypeSymbol? userSymbol = compilation.GetTypeByMetadataName("EasySyntaxTests.User");
         Assert.NotNull(userSymbol);
@@ -151,5 +151,22 @@ class User
         INamedTypeSymbol? userSymbol = compilation.GetTypeByMetadataName("User");
         Assert.NotNull(userSymbol);
     }
+    [Fact]
+    public void ExpressionBody()
+    {
+        string sourceText = @"
+public class A
+{
+    private int _value;
+
+    public int Value
+        => _value = Value;
+}";
+        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var typeDeclaration = syntaxTree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+        Assert.NotNull(typeDeclaration);
+    }
 }
+
+
 

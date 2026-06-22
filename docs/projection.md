@@ -51,8 +51,8 @@ graph LR
 
 ### 5. 生成代码的作用
 >* 避免重复代码
->* 一个系统往往属性相同或相似的类型很多
->* 而且如果如果其一修改了属性，其他类也往往要联动修改
+>* 一个系统往往属性相同或相似的相关类型很多
+>* 而且如果其一修改了属性，其他类也往往要联动修改
 >* 这时用代码生成就可以避免重复代码和联动修改
 
 ## 二、使用投影来调整代码
@@ -141,7 +141,7 @@ graph LR
 ~~~
 
 ### 3. 多投影顺序问题
-#### 3.1 调整影规则的顺序
+#### 3.1 调整投影规则的顺序
 >* Prefix User还是生成的属性前缀是User
 >* Exclude: UserId就是排除UserId属性
 
@@ -179,7 +179,7 @@ graph LR
 
     source-Id -->| AddUser | tmp-UserId
     source-Name -->| AddUser | tmp-UserName
-    tmp-UserName -->| | projection-UserName
+    tmp-UserName -->| Filter | projection-UserName
 ~~~
 
 #### 3.4. 多投影调整顺序的作用
@@ -331,7 +331,7 @@ partial class UserDto
 
 ### 4. 反向配置
 >* 如果需要配置为空的字段太多,可以使用反向配置
->* 通过Exclude: 前缀进行方向配置
+>* 通过Exclude: 前缀进行反向配置
 
 #### 4.1 目标类型代码
 >* NullableRule配置为Exclude: UserId
@@ -358,6 +358,12 @@ partial class UserDto
 ```
 
 ## 五、 处理Attribute
+>* Attribute很重要,有时是必不可少的
+>* 比如参数的校验Attribute
+>* 比如数据库存储的类型Attribute
+>* 这些虽然对模型类(领域模型)逻辑上无用,语义上还是有用的
+>* 其他关联类型由模型类生成就可以把相关Attribute都放在模型类(领域模型)上统一管理
+
 ### 1. 源类型代码
 ```csharp
 public class User(int id, string name, string email)
@@ -429,7 +435,7 @@ partial class UserDto
 }
 ```
 
-## 八、实现原理
+## 七、实现原理
 ### 1. 使用SyntaxTree简化语法
 >* 参看以前的文章[.NET源码生成器使用SyntaxTree生成代码及简化语法](https://www.cnblogs.com/xiangji/p/19688804)
 
@@ -445,7 +451,18 @@ partial class UserDto
 >* 非以上前缀的尝试解析为Through投影
 >* 解析失败的再尝试解析为IValidation规则(相当于Filter)
 
-## 九、总结
+### 4. 迁移Attribute
+>* Attribute从原模型类的属性迁移到目标类型上看上去简单,就是复制
+>* 实现上笔者还是费了些周折
+>* 从原模型类拿到的是AttributeData,需要转化为AttributeSyntax
+>* AttributeData由TypedConstant构成
+>* TypedConstant需要转化为AttributeArgumentSyntax
+>* TypedConstant由四种,分别是Primitive、Enum、Type和Array
+>* 最难搞的就是Enum,处理枚举又要反射枚举字段,再用枚举值去匹配再拼接表达式
+>* 所以迁移Attribute并不是简单的复制
+>* 而是先拆迁(拆解)再重建
+
+## 八、总结
 >* 以上规则基本都是可以排列组合使用的
 >* 通过代码生成可以减少重复属性的定义,同时减少重复属性重构时要修改多个类的问题
 >* 间接解决DTO类型复杂的继承关系(修改DTO继承新建DTO等)

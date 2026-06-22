@@ -15,7 +15,7 @@ public class ConstructorCollect(List<IMethodSymbol> members)
     {
         return member.MethodKind switch
         {
-            MethodKind.Constructor or MethodKind.SharedConstructor or MethodKind.StaticConstructor
+            MethodKind.Constructor or MethodKind.StaticConstructor
                 => base.AddCore(member),
             _ => false,
         };

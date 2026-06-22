@@ -37,11 +37,57 @@ public class LockTests
                     // return
                     .Return()
                 // _list.Add(value)
-                .Add(_listAdd.Invocation([value]))
+                .AddPatter(_listAdd.Invocation([value]))
                 // }
                 .End()
             // }
             .End()
+            // public
+            .Public();
+
+        var type = SyntaxFactory.ClassDeclaration("SafeList")
+            .AddParameterListParameters(parameter)
+            .AddMembers(field, method)
+            .Public();
+        var code = type.NormalizeWhitespace().ToFullString();
+        Assert.NotEmpty(code);
+    }
+
+    [Fact]
+    public void Lock2()
+    {
+        var listType = SyntaxGenerator.Generic("List", SyntaxGenerator.IntType);
+        var list = SyntaxFactory.IdentifierName("list");
+        var _list = SyntaxFactory.IdentifierName("_list");
+        var value = SyntaxFactory.IdentifierName("value");
+        var _listAdd = _list.Access("Add");
+        var _listContains = _list.Access("Contains");
+
+        // List<int> list
+        var parameter = listType.Parameter(list.Identifier);
+        // private readonly _list = list;
+        var field = listType.Field(_list.Identifier, list)
+            .Private()
+            .ReadOnly();
+
+        var containsReturn = _listContains.Invocation([value])
+            .If()
+                .Add(SyntaxFactory.ReturnStatement())
+            .Build();
+
+        var lockAdd = _list.Lock()
+            .Add(containsReturn)
+            .AddPatter(_listAdd.Invocation([value]))
+            .Build();
+
+        var body = SyntaxGenerator.Scope()
+            .Add(containsReturn)
+            .Add(lockAdd)
+            .Block();
+
+        // void Add(int value)
+        var method = SyntaxGenerator.VoidType.Method("Add", SyntaxGenerator.IntType.Parameter(value.Identifier))
+            .WithBody(body)
             // public
             .Public();
 

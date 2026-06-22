@@ -58,4 +58,38 @@ public class IfTest
         var code = method.NormalizeWhitespace().ToFullString();
         Assert.NotEmpty(code);
     }
+    [Fact]
+    public void BoolToString3()
+    {
+        var value = SyntaxFactory.IdentifierName("value");
+        var method = StringType.Method("BoolToString", BoolType.Nullable().Parameter(value.Identifier))
+            .ToBuilder()
+            .If(value.IsNull())
+                .Add(Literal("false").Return())
+            .ElseIf(value)
+                .Add(Literal("true").Return())
+            .Else()
+                .Return(Literal("false"))
+             .End();
+        var code = method.NormalizeWhitespace().ToFullString();
+        Assert.NotEmpty(code);
+    }
+    [Fact]
+    public void BoolToString4()
+    {
+        var value = SyntaxFactory.IdentifierName("value");
+
+        var body = value.IsNull()
+            .If()
+                .Add(Literal("false").Return())
+            .ElseIf(value)
+                .Add(Literal("true").Return())
+            .Else()
+                .Add(Literal("false").Return())
+            .Block();
+        var method = StringType.Method("BoolToString", BoolType.Nullable().Parameter(value.Identifier))
+            .WithBody(body);
+        var code = method.NormalizeWhitespace().ToFullString();
+        Assert.NotEmpty(code);
+    }
 }

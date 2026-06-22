@@ -1,8 +1,9 @@
-using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using Microsoft.CodeAnalysis;
 
 namespace Hand.Symbols;
 
@@ -51,41 +52,6 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
         => _methods;
     #endregion
     /// <summary>
-    /// 获取INamedTypeSymbol
-    /// </summary>
-    /// <param name="typeFullName"></param>
-    /// <returns></returns>
-    public INamedTypeSymbol? GetSymbol(string typeFullName)
-        => _compilation.GetTypeByMetadataName(typeFullName);
-    /// <summary>
-    /// 把Type转INamedTypeSymbol
-    /// </summary>
-    /// <param name="type"></param>
-    /// <returns></returns>
-    public INamedTypeSymbol? GetSymbol(Type type)
-        => _compilation.GetTypeByMetadataName(type.FullName);
-    //public INamedTypeSymbol? GetSymbol(SyntaxNode declaration)
-    //    => _compilation.GetDeclaredSymbolForNode
-    ///// <summary>
-    ///// 把Type转INamedTypeSymbol
-    ///// </summary>
-    ///// <param name="types"></param>
-    ///// <returns></returns>
-    //public INamedTypeSymbol[] GetSymbols(Type[] types)
-    //{
-    //    var count = types.Length;
-    //    if (count == 0)
-    //        return [];
-    //    var symbols = new INamedTypeSymbol[count];
-    //    for (int i = 0; i < count; i++)
-    //    {
-    //        var type = types[i];
-    //        var symbol = GetSymbol(type) ?? throw new NotSupportedException(type.FullName);
-    //        symbols[i] = symbol;
-    //    }
-    //    return symbols;
-    //}
-    /// <summary>
     /// 获取标记值
     /// </summary>
     /// <typeparam name="TAttribute"></typeparam>
@@ -93,6 +59,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="symbol"></param>
     /// <param name="key"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public TValue? GetAttributeValue<TAttribute, TValue>(ISymbol symbol, string key)
         where TAttribute : Attribute
         => GetAttributeValue<TAttribute, TValue>(symbol, key);
@@ -155,10 +122,35 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="parameterTypes"></param>
     /// <returns></returns>
     public IMethodSymbol? GetMethod(string name, params INamedTypeSymbol[] parameterTypes)
+        => GetMethod(_methods, name, parameterTypes);
+    /// <summary>
+    /// 获取方法
+    /// </summary>
+    /// <param name="methods"></param>
+    /// <param name="name"></param>
+    /// <param name="parameterTypes"></param>
+    /// <returns></returns>
+    public static IMethodSymbol? GetMethod(IEnumerable<IMethodSymbol> methods, string name, params INamedTypeSymbol[] parameterTypes)
     {
-        foreach (var item in _methods)
+        foreach (var item in methods)
         {
             if (item.Name == name && MatchParameterType(item.Parameters, parameterTypes))
+                return item;
+        }
+        return null;
+    }
+    /// <summary>
+    /// 获取方法
+    /// </summary>
+    /// <param name="methods"></param>
+    /// <param name="name"></param>
+    /// <param name="parameterType"></param>
+    /// <returns></returns>
+    public static IMethodSymbol? GetSingleParameterMethod(IEnumerable<IMethodSymbol> methods, string name, INamedTypeSymbol parameterType)
+    {
+        foreach (var item in methods)
+        {
+            if (item.Name == name && MatchSingle(item.Parameters, parameterType))
                 return item;
         }
         return null;
@@ -168,8 +160,9 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// </summary>
     /// <param name="returnType"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IEnumerable<IMethodSymbol> GetMethodsByReturnType(INamedTypeSymbol returnType)
-        => _methods.Where(item => CheckEquals(returnType, item.ReturnType));
+        => _methods.Where(item => SymbolEqualityComparer.IncludeNullability.Equals(returnType, item.ReturnType));
     #endregion
     #region Operator
     /// <summary>
@@ -192,6 +185,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// </summary>
     /// <param name="otherType"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IMethodSymbol? GetEqualOperator(INamedTypeSymbol otherType)
         => GetOperator("op_Equality", [_symbol, otherType]);
     /// <summary>
@@ -199,6 +193,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// </summary>
     /// <param name="otherType"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IMethodSymbol? GetUnEqualOperator(INamedTypeSymbol otherType)
         => GetOperator("op_Inequality", [_symbol, otherType]);
     /// <summary>
@@ -206,6 +201,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// </summary>
     /// <param name="otherType"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IMethodSymbol? GetAddOperator(INamedTypeSymbol otherType)
         => GetOperator("op_Addition", [_symbol, otherType]);
     /// <summary>
@@ -213,6 +209,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// </summary>
     /// <param name="otherType"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IMethodSymbol? GetSubtractOperator(INamedTypeSymbol otherType)
         => GetOperator("op_Subtraction", [_symbol, otherType]);
     /// <summary>
@@ -220,6 +217,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// </summary>
     /// <param name="otherType"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IMethodSymbol? GetMultiplyOperator(INamedTypeSymbol otherType)
         => GetOperator("op_Multiply", [_symbol, otherType]);
     /// <summary>
@@ -227,6 +225,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// </summary>
     /// <param name="otherType"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IMethodSymbol? GetDivideOperator(INamedTypeSymbol otherType)
         => GetOperator("op_Division", [_symbol, otherType]);
     /// <summary>
@@ -234,6 +233,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// </summary>
     /// <param name="otherType"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IMethodSymbol? GetModOperator(INamedTypeSymbol otherType)
         => GetOperator("op_Modulus", [_symbol, otherType]);
     /// <summary>
@@ -241,6 +241,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// </summary>
     /// <param name="otherType"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IMethodSymbol? GetAndOperator(INamedTypeSymbol otherType)
         => GetOperator("op_LogicalAnd", [_symbol, otherType]);
     /// <summary>
@@ -248,6 +249,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// </summary>
     /// <param name="otherType"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IMethodSymbol? GetOrOperator(INamedTypeSymbol otherType)
         => GetOperator("op_LogicalOr", [_symbol, otherType]);
     #endregion
@@ -264,10 +266,34 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
             return false;
         for (var i = 0; i < typeCount; i++)
         {
-            if (!CheckEquals(parameterTypes[i], parameters[i].Type))
+            if (!SymbolEqualityComparer.Default.Equals(parameterTypes[i], parameters[i].Type))
                 return false;
         }
         return true;
+    }
+    /// <summary>
+    /// 按单一参数类型匹配
+    /// </summary>
+    /// <param name="parameters"></param>
+    /// <param name="parameterType"></param>
+    /// <returns></returns>
+    public static bool MatchSingle(ImmutableArray<IParameterSymbol> parameters, INamedTypeSymbol parameterType)
+    {
+        if (parameters.Length != 1)
+            return false;
+        return SymbolEqualityComparer.Default.Equals(parameterType, parameters[0].Type);
+    }
+    /// <summary>
+    /// 按单一参数类型匹配
+    /// </summary>
+    /// <param name="parameters"></param>
+    /// <param name="parameterType"></param>
+    /// <returns></returns>
+    public static bool MatchFirst(ImmutableArray<IParameterSymbol> parameters, INamedTypeSymbol parameterType)
+    {
+        if (parameters.Length == 0)
+            return false;
+        return SymbolEqualityComparer.Default.Equals(parameterType, parameters[0].Type);
     }
     /// <summary>
     /// 判断相等
@@ -275,80 +301,22 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="symbol"></param>
     /// <param name="other"></param>
     /// <returns></returns>
-    public static bool CheckEquals(INamedTypeSymbol symbol, ITypeSymbol other)
+    public static bool CheckEquals(INamedTypeSymbol symbol, ITypeSymbol? other)
+    {
+        if (other is INamedTypeSymbol namedType)
+            return CheckEquals(symbol, namedType);
+        return false;
+    }
+    /// <summary>
+    /// 判断相等
+    /// </summary>
+    /// <param name="symbol"></param>
+    /// <param name="other"></param>
+    /// <returns></returns>
+    public static bool CheckEquals(INamedTypeSymbol symbol, INamedTypeSymbol other)
     {
         if (other.Kind == SymbolKind.ErrorType && other is IErrorTypeSymbol error)
             return string.Equals(symbol.MetadataName, error.MetadataName);
-        return symbol.Equals(other, SymbolEqualityComparer.Default);
+        return SymbolEqualityComparer.IncludeNullability.Equals(symbol, other);
     }
-    #region SpecialType
-    /// <summary>
-    /// bool
-    /// </summary>
-    public INamedTypeSymbol Bool => _compilation.GetSpecialType(SpecialType.System_Boolean);
-    /// <summary>
-    /// byte
-    /// </summary>
-    public INamedTypeSymbol Byte => _compilation.GetSpecialType(SpecialType.System_Byte);
-    /// <summary>
-    /// sbyte
-    /// </summary>
-    public INamedTypeSymbol SByte => _compilation.GetSpecialType(SpecialType.System_SByte);
-    /// <summary>
-    /// int
-    /// </summary>
-    public INamedTypeSymbol Int => _compilation.GetSpecialType(SpecialType.System_Int32);
-    /// <summary>
-    /// uint
-    /// </summary>
-    public INamedTypeSymbol UInt => _compilation.GetSpecialType(SpecialType.System_UInt32);
-    /// <summary>
-    /// short
-    /// </summary>
-    public INamedTypeSymbol Short => _compilation.GetSpecialType(SpecialType.System_Int16);
-    /// <summary>
-    /// ushort
-    /// </summary>
-    public INamedTypeSymbol UShort => _compilation.GetSpecialType(SpecialType.System_UInt16);
-    /// <summary>
-    /// long
-    /// </summary>
-    public INamedTypeSymbol Long => _compilation.GetSpecialType(SpecialType.System_Int64);
-    /// <summary>
-    /// ulong
-    /// </summary>
-    public INamedTypeSymbol ULong => _compilation.GetSpecialType(SpecialType.System_UInt64);
-    /// <summary>
-    /// float
-    /// </summary>
-    public INamedTypeSymbol Float => _compilation.GetSpecialType(SpecialType.System_Single);
-    /// <summary>
-    /// double
-    /// </summary>
-    public INamedTypeSymbol Double => _compilation.GetSpecialType(SpecialType.System_Double);
-    /// <summary>
-    /// decimal
-    /// </summary>
-    public INamedTypeSymbol Decimal => _compilation.GetSpecialType(SpecialType.System_Decimal);
-    /// <summary>
-    /// string
-    /// </summary>
-    public INamedTypeSymbol String => _compilation.GetSpecialType(SpecialType.System_String);
-    /// <summary>
-    /// char
-    /// </summary>
-    public INamedTypeSymbol Char => _compilation.GetSpecialType(SpecialType.System_Char);
-    /// <summary>
-    /// DateTime
-    /// </summary>
-    public INamedTypeSymbol DateTime => _compilation.GetSpecialType(SpecialType.System_DateTime);
-    /// <summary>
-    /// object
-    /// </summary>
-    public INamedTypeSymbol Object => _compilation.GetSpecialType(SpecialType.System_Object);
-    /// <summary>
-    /// void
-    /// </summary>
-    public INamedTypeSymbol Void => _compilation.GetSpecialType(SpecialType.System_Void);
-    #endregion
 }

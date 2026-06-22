@@ -86,17 +86,17 @@ public abstract class GenerateLazySource(TypeDeclarationSyntax type, INamedTypeS
             .Public();
         if (_isStatic)
         {
-            builder.AddMember(_valueField.Static());
-            builder.AddMember(_stateField.Static());
-            builder.AddMember(_lockField.Static());
-            builder.AddMember(property.Static());
+            builder.AddOther(_valueField.Static());
+            builder.AddOther(_stateField.Static());
+            builder.AddOther(_lockField.Static());
+            builder.AddOther(property.Static());
         }
         else
         {
-            builder.AddMember(_valueField);
-            builder.AddMember(_stateField);
-            builder.AddMember(_lockField);
-            builder.AddMember(property);
+            builder.AddOther(_valueField);
+            builder.AddOther(_stateField);
+            builder.AddOther(_lockField);
+            builder.AddOther(property);
         }
         
         return builder;
@@ -120,9 +120,9 @@ public abstract class GenerateLazySource(TypeDeclarationSyntax type, INamedTypeS
                     // return _value
                     .Return(_value)
                 // _value = GetValue()
-                .Add(_value.Assign(GetValueExpression()))
+                .AddPatter(_value.Assign(GetValueExpression()))
                 // _state = true
-                .Add(_state.Assign(SyntaxGenerator.TrueLiteral))
+                .AddPatter(_state.Assign(SyntaxGenerator.TrueLiteral))
                 // }
                 .End()
             // reurn _value
