@@ -1,5 +1,7 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Hand.Converters;
 
@@ -8,18 +10,27 @@ namespace Hand.Converters;
 /// </summary>
 /// <param name="targetType"></param>
 /// <param name="otherArguments"></param>
-public class ArgumentConstructorConverter(TypeSyntax targetType, params ExpressionSyntax[] otherArguments)
+public class ArgumentConstructorConverter(TypeSyntax targetType, IEnumerable<ArgumentSyntax> otherArguments)
     : ConstructorConverter(targetType)
 {
+    /// <summary>
+    /// 带参数构造函数转化类型
+    /// </summary>
+    /// <param name="targetType"></param>
+    /// <param name="otherArguments"></param>
+    public ArgumentConstructorConverter(TypeSyntax targetType, params IEnumerable<ExpressionSyntax> otherArguments)
+        : this(targetType, otherArguments.Select(SyntaxFactory.Argument))
+    {
+    }
     #region 配置
-    private readonly ExpressionSyntax[] _otherArguments = otherArguments;
+    private readonly IEnumerable<ArgumentSyntax> _otherArguments = otherArguments;
     /// <summary>
     /// 其他参数
     /// </summary>
-    public ExpressionSyntax[] OtherArguments
+    public IEnumerable<ArgumentSyntax> OtherArguments
         => _otherArguments;
     #endregion
     /// <inheritdoc />
-    protected override IEnumerable<ExpressionSyntax> CreateArguments(ExpressionSyntax source)
-        => [source, .. _otherArguments];
+    protected override IEnumerable<ArgumentSyntax> CreateArguments(ExpressionSyntax source)
+        => [SyntaxFactory.Argument(source), .. _otherArguments];
 }

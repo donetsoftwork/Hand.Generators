@@ -1,10 +1,10 @@
 ﻿using Hand.Generators;
+using Hand.Reflection;
 using Hand.Symbols;
 using Hand.Transform;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
@@ -32,19 +32,22 @@ public class GenerateLazyTransform : IGeneratorTransform<GenerateLazySource>
         var attributeType = compilation.GetTypeByMetadataName(GenerateLazyGenerator.Attribute);
         if (attributeType is null) 
             return null;
-        var propertyName = GetPropertyNameByAttribute(context.Attributes, attributeType);
+        var attribute = SymbolAttributeHelper.GetAttributesByType(context.Attributes, attributeType)
+            .FirstOrDefault();
+        var propertyName = GetPropertyNameByAttribute(attribute);
+        var lockType = GetLockTypeByAttribute(attribute);
         GenerateLazySource? source = null;
         if (targetNode is PropertyDeclarationSyntax property)
         {
             var propertySymbol = semanticModel.GetDeclaredSymbol(property, cancellation);
             if (propertySymbol is not null && propertySymbol.Type is INamedTypeSymbol symbol)
-                source = new LazyPropertySource(property, type, typeSymbol, propertyName, symbol, property.Modifiers.IsStatic());
+                source = new LazyPropertySource(property, type, typeSymbol, propertyName, symbol, property.Modifiers.IsStatic(), lockType);
         }
         else if (targetNode is MethodDeclarationSyntax method)
         {
             var methodSymbol = semanticModel.GetDeclaredSymbol(method, cancellation);
             if (methodSymbol is not null && methodSymbol.ReturnType is INamedTypeSymbol symbol)
-                source = new LazyMethodSource(method, type, typeSymbol, propertyName, symbol, method.Modifiers.IsStatic());
+                source = new LazyMethodSource(method, type, typeSymbol, propertyName, symbol, method.Modifiers.IsStatic(), lockType);
         }
         // 判断是否已经存在同名属性
         // 不存在才返回
@@ -79,17 +82,32 @@ public class GenerateLazyTransform : IGeneratorTransform<GenerateLazySource>
     /// <summary>
     /// 从Attribute配置中获取属性名
     /// </summary>
-    /// <param name="attributes"></param>
-    /// <param name="attributeType"></param>
+    /// <param name="attribute"></param>
     /// <returns></returns>
-
-    public static string? GetPropertyNameByAttribute(IEnumerable<AttributeData> attributes, INamedTypeSymbol attributeType)
+    public static string? GetPropertyNameByAttribute(AttributeData attribute)
     {
-        var attribute = SymbolAttributeHelper.GetAttributesByType(attributes, attributeType)
-            .FirstOrDefault();
-        if (attribute is null)
+        var argument = SymbolAttributeHelper.GetArgumentConstant(attribute, 0);
+        if (argument == null) 
             return null;
-        return SymbolAttributeHelper.GetArgumentValue<string>(attribute, 0);
+        return argument.Value.GetPrimitive<string>();
+    }
+    /// <summary>
+    /// 从Attribute配置中获取锁类型
+    /// </summary>
+    /// <param name="attribute"></param>
+    /// <returns></returns>
+    public static TypeSyntax GetLockTypeByAttribute(AttributeData attribute)
+    {
+        var argument = SymbolAttributeHelper.GetArgumentConstant(attribute, "LockType");
+        if (argument is not null)
+        {
+            var lockTypeName = argument.Value.GetPrimitive<string>();
+            if (!string.IsNullOrWhiteSpace(lockTypeName))
+                return SyntaxFactory.IdentifierName(lockTypeName);
+        }
+        if (SyntaxGenerator.FrameworkMajorVersion >= 9)
+            return SyntaxGenerator.LockType;
+        return SyntaxGenerator.ObjectType;
     }
     /// <summary>
     /// 获取类型信息

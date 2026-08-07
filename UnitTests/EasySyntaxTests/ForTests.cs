@@ -20,7 +20,7 @@ public class ForTests
             // for(var i=0;i<num;i++)
             .For(i, num)
                 // count+=i
-                .AddPatter(count.AddAssign(i))
+                .AddExpression(count.AddAssign(i))
             .End()
             // return count
             .Return(count);
@@ -35,7 +35,7 @@ public class ForTests
         var count = SyntaxFactory.IdentifierName("count");
 
         var @for = num.For(i)
-            .AddPatter(count.AddAssign(i))
+            .AddExpression(count.AddAssign(i))
             .Build();
         var body = SyntaxGenerator.Scope()
              .Declare(SyntaxGenerator.IntType.Variable(count.Identifier, SyntaxGenerator.Literal(0)))
@@ -96,7 +96,7 @@ public class ForTests
                 // for(var j = 0;j<list.GetLength(1);j++)
                 .For(j, getLength.Invocation([SyntaxGenerator.Literal(1)]))
                     // count+=list[i,j]
-                    .AddPatter(count.ToIdentifierName().AddAssign(list.Element([i, j])))
+                    .AddExpression(count.ToIdentifierName().AddAssign(list.Element([i, j])))
                 .End()
             .End()
             // return count

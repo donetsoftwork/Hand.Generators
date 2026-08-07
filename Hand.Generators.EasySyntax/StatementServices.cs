@@ -33,7 +33,7 @@ public static partial class GenerateServices
     /// <param name="expression"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TCollect AddPatter<TCollect>(this TCollect collect, ExpressionSyntax expression)
+    public static TCollect AddExpression<TCollect>(this TCollect collect, ExpressionSyntax expression)
         where TCollect : StatementCollect
         => collect.Add(SyntaxFactory.ExpressionStatement(expression));
     #region Declare

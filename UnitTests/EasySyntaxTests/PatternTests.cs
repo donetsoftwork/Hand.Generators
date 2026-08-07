@@ -3,6 +3,7 @@ using Hand.Patterns;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Newtonsoft.Json.Linq;
 using System.Collections;
 
 namespace EasySyntaxTests;
@@ -69,7 +70,7 @@ public class PatternTests
         var makeApplePieMethod = SyntaxFactory.IdentifierName("MakeApplePie");
         var statement = fruit.Is(appleType.VariablePattern(apple.Identifier))
             .If()
-                .AddPatter(makeApplePieMethod.Invocation([apple]))
+                .AddExpression(makeApplePieMethod.Invocation([apple]))
             .Build();
         var code = statement.NormalizeWhitespace().ToFullString();
         Assert.Contains("MakeApplePie", code);
@@ -87,14 +88,14 @@ public class PatternTests
     public void IsNull()
     {
         var obj = SyntaxFactory.IdentifierName("obj");
-        var expression = obj.Is(SyntaxGenerator.NullLiteral.ToPattern());
+        var expression = obj.Is(SyntaxGenerator.NullLiteral);
         var code = expression.NormalizeWhitespace().ToFullString();
         Assert.Equal("obj is null", code);
 
         var expression0 = SyntaxFactory.IsPatternExpression(obj, 
             SyntaxFactory.ConstantPattern(
                 SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression)));
-        var code0 = expression.NormalizeWhitespace().ToFullString();
+        var code0 = expression0.NormalizeWhitespace().ToFullString();
         Assert.Equal("obj is null", code0);
     }
     [Fact]
@@ -150,7 +151,7 @@ public class PatternTests
             SyntaxFactory.Token(SyntaxKind.ExclamationEqualsToken), 
             SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, 
                 SyntaxFactory.Literal(3)));
-        var code0 = pattern.NormalizeWhitespace().ToFullString();
+        var code0 = pattern0.NormalizeWhitespace().ToFullString();
         Assert.Equal("!= 3", code0);
     }
     [Fact]
@@ -190,7 +191,7 @@ public class PatternTests
                 SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, 
                     SyntaxFactory.Literal(60))));
         var code0 = expression0.NormalizeWhitespace().ToFullString();
-        Assert.Equal("GetScores(id)is var scores && scores.Average() >= 60", code);
+        Assert.Equal("GetScores(id)is var scores && scores.Average() >= 60", code0);
     }
     [Fact]
     public void Discard()
@@ -219,9 +220,9 @@ public class PatternTests
     [Fact]
     public void Or()
     {
-        var left = SyntaxGenerator.Literal(1).ToPattern();
-        var right = SyntaxGenerator.Literal(2).ToPattern();
-        var pattern = left.Or(right);
+        var left = SyntaxGenerator.Literal(1);
+        var right = SyntaxGenerator.Literal(2);
+        var pattern = left.OrPattern(right);
         var code = pattern.NormalizeWhitespace().ToFullString();
         Assert.Equal("1 or 2", code);
     }
@@ -431,11 +432,12 @@ public class PatternTests
     public void Recursive()
     {
         var point = SyntaxFactory.IdentifierName("point");
-        var builder = new RecursivePatternBuilder(null);
-        builder.Positional.Add(SyntaxGenerator.GreaterOrEqualPattern(0))
-            .Add(SyntaxGenerator.GreaterOrEqualPattern(0));
-        builder.Property.Add("Weight", SyntaxGenerator.GreaterThanPattern(0));
-        var isInDomain = point.Is(builder.Build());
+        var pattern = new RecursivePatternBuilder(null)
+            .Add(SyntaxGenerator.GreaterOrEqualPattern(0))
+            .Add(SyntaxGenerator.GreaterOrEqualPattern(0))
+            .Add("Weight", SyntaxGenerator.GreaterThanPattern(0))
+            .Build();
+        var isInDomain = point.Is(pattern);
         var code = isInDomain.NormalizeWhitespace().ToFullString();
         Assert.Contains("point is (>= 0, >= 0) { Weight: > 0 }", code);
     }
@@ -447,17 +449,26 @@ public class PatternTests
                 SyntaxFactory.PropertyPatternClause(
                     SyntaxFactory.SeparatedList(
                     [
-                                    SyntaxFactory.Subpattern(
-                                        SyntaxFactory.NameColon(SyntaxFactory.IdentifierName("Success")),
-                                        SyntaxFactory.ConstantPattern(
-                                            SyntaxFactory.LiteralExpression(SyntaxKind.TrueLiteralExpression)))
+                        SyntaxFactory.Subpattern(
+                            SyntaxFactory.NameColon(SyntaxFactory.IdentifierName("Success")),
+                            SyntaxFactory.ConstantPattern(SyntaxFactory.LiteralExpression(SyntaxKind.TrueLiteralExpression)))
                     ])))
             .WithDesignation(
-                SyntaxFactory.SingleVariableDesignation(
-                    SyntaxFactory.Identifier("a")));
-        //SyntaxFactory.RecursivePattern()
+                SyntaxFactory.SingleVariableDesignation(SyntaxFactory.Identifier("a")));
         var code = pattern.NormalizeWhitespace().ToFullString();
         Assert.Equal("{ Success: true } a", code);
+    }
+    [Fact]
+    public void NamedRecursive()
+    {
+        var point = SyntaxFactory.IdentifierName("point");
+        var builder = new NamedRecursivePatternBuilder(null);
+        builder.Positional.Add("X", SyntaxGenerator.GreaterOrEqualPattern(0))
+            .Add("Y", SyntaxGenerator.GreaterOrEqualPattern(0));
+        builder.Property.Add("Weight", SyntaxGenerator.GreaterThanPattern(0));
+        var isInDomain = point.Is(builder.Build());
+        var code = isInDomain.NormalizeWhitespace().ToFullString();
+        Assert.Contains("point is (X: >= 0, Y: >= 0) { Weight: > 0 }", code);
     }
     [Fact]
     public void Parenthesized()
@@ -580,6 +591,23 @@ public class PatternTests
         var isOrigin = point.Is(pattern);
         var code = isOrigin.NormalizeWhitespace().ToFullString();
         Assert.Contains("point is (0, 0)", code);
+        var pattern0 = SyntaxFactory.RecursivePattern(null,
+            SyntaxFactory.PositionalPatternClause(SyntaxFactory.SeparatedList([
+                SyntaxFactory.Subpattern(
+                    SyntaxFactory.ConstantPattern(
+                        SyntaxFactory.LiteralExpression(
+                            SyntaxKind.NumericLiteralExpression, 
+                            SyntaxFactory.Literal(0)))),
+                SyntaxFactory.Subpattern(
+                    SyntaxFactory.ConstantPattern(
+                        SyntaxFactory.LiteralExpression(
+                            SyntaxKind.NumericLiteralExpression,
+                            SyntaxFactory.Literal(0))))])),
+            null,
+            null);
+        var isOrigin0 = SyntaxFactory.IsPatternExpression(point, pattern0);
+        var code0 = isOrigin0.NormalizeWhitespace().ToFullString();
+        Assert.Contains("point is (0, 0)", code0);
     }
     [Fact]
     public void NamedPositional()
@@ -642,7 +670,7 @@ public class PatternTests
             .Build();
         var pattern2 = new PositionalPatternBuilder(null)
             .Add(SyntaxFactory.DiscardPattern())
-            .Add(dayOfWeekType.Access("Saturday").ToPattern().Or(dayOfWeekType.Access("Sunday").ToPattern()))
+            .Add(dayOfWeekType.Access("Saturday").OrPattern(dayOfWeekType.Access("Sunday")))
             .Build();
         var pattern3 = new PositionalPatternBuilder(null)
             .Add(SyntaxGenerator.GreaterOrEqualPattern(5).And(SyntaxGenerator.LessThanPattern(10)))

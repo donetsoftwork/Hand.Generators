@@ -6,49 +6,38 @@ namespace Hand.Members;
 /// <summary>
 /// 类型关联键
 /// </summary>
-/// <param name="leftSymbol"></param>
-/// <param name="rightSymbol"></param>
-public readonly struct PairTypeSymbolKey(INamedTypeSymbol leftSymbol, INamedTypeSymbol rightSymbol)
+/// <param name="left"></param>
+/// <param name="right"></param>
+public readonly struct PairTypeSymbolKey(INamedTypeSymbol left, INamedTypeSymbol right)
      : IEquatable<PairTypeSymbolKey>
 {
     #region 配置
-    private readonly INamedTypeSymbol _leftSymbol = leftSymbol;
-    private readonly INamedTypeSymbol _rightSymbol = rightSymbol;
+    private readonly INamedTypeSymbol _left = left;
+    private readonly INamedTypeSymbol _right = right;
     /// <summary>
     /// 映射源类型
     /// </summary>
-    public INamedTypeSymbol LeftSymbol
-        => _leftSymbol;
+    public INamedTypeSymbol Left
+        => _left;
     /// <summary>
     /// 映射目标类型
     /// </summary>
-    public INamedTypeSymbol RightSymbol
-        => _rightSymbol;
+    public INamedTypeSymbol Right
+        => _right;
     #endregion
-    /// <summary>
-    /// HashCode
-    /// </summary>
-    /// <returns></returns>
+    /// <inheritdoc />
     public override int GetHashCode()
-#if !NET45
-        => HashCode.Combine(SymbolEqualityComparer.Default.GetHashCode(_leftSymbol), SymbolEqualityComparer.Default.GetHashCode(_rightSymbol));
+#if NETSTANDARD2_0
+        => SymbolEqualityComparer.Default.GetHashCode(_left) * 31 + SymbolEqualityComparer.Default.GetHashCode(_right);
 #else
-        => _leftSymbol.GetHashCode() ^ _rightSymbol.GetHashCode();
+        => HashCode.Combine(SymbolEqualityComparer.Default.GetHashCode(_left), SymbolEqualityComparer.Default.GetHashCode(_right));
 #endif
     #region IEquatable
-    /// <summary>
-    /// 判同
-    /// </summary>
-    /// <param name="other"></param>
-    /// <returns></returns>
+    /// <inheritdoc />
     public bool Equals(PairTypeSymbolKey other)
-        => SymbolEqualityComparer.Default.Equals(_leftSymbol, other._leftSymbol) && SymbolEqualityComparer.Default.Equals(_rightSymbol, other._rightSymbol);
-    /// <summary>
-    /// 判同
-    /// </summary>
-    /// <param name="other"></param>
-    /// <returns></returns>
-    public override bool Equals(object other)
+        => SymbolEqualityComparer.Default.Equals(_left, other._left) && SymbolEqualityComparer.Default.Equals(_right, other._right);
+    /// <inheritdoc />
+    public override bool Equals(object? other)
         => other is PairTypeSymbolKey key && Equals(key);
     #endregion
     /// <summary>
@@ -58,8 +47,8 @@ public readonly struct PairTypeSymbolKey(INamedTypeSymbol leftSymbol, INamedType
     /// <param name="right"></param>
     public void Deconstruct(out INamedTypeSymbol left, out INamedTypeSymbol right)
     {
-        left = _leftSymbol;
-        right = _rightSymbol;
+        left = _left;
+        right = _right;
     }
     #region operator
     /// <summary>

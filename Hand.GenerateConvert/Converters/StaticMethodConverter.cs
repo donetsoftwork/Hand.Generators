@@ -32,8 +32,8 @@ public class StaticMethodConverter(ExpressionSyntax method)
     /// </summary>
     /// <param name="source"></param>
     /// <returns></returns>
-    protected virtual IEnumerable<ExpressionSyntax> CreateArguments(ExpressionSyntax source)
-        => [source];
+    protected virtual IEnumerable<ArgumentSyntax> CreateArguments(ExpressionSyntax source)
+        => [SyntaxFactory.Argument(source)];
 
     /// <inheritdoc />
     public virtual ExpressionSyntax Convert(ExpressionSyntax source)

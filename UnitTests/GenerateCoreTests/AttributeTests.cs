@@ -43,14 +43,14 @@ public class MyAttribute : Attribute;
         var targetSymbol = semanticModel.GetDeclaredSymbol(targetNode);
         Assert.NotNull(targetSymbol);
         var targetSyntaxTree = targetNode.SyntaxTree;
-        foreach (var attributeData in targetSymbol.GetAttributes())
-        {
-            var reference = attributeData.ApplicationSyntaxReference;
-            Assert.NotNull(reference);
-            var attributeClass = attributeData.AttributeClass;
-            Assert.NotNull(attributeClass);
-            Assert.Equal(reference.SyntaxTree, targetSyntaxTree);
-        }
+        var attributeData = targetSymbol.GetAttributes()
+            .FirstOrDefault();
+        Assert.NotNull(attributeData);
+        var reference = attributeData.ApplicationSyntaxReference;
+        Assert.NotNull(reference);
+        var attributeClass = attributeData.AttributeClass;
+        Assert.NotNull(attributeClass);
+        Assert.Equal(reference.SyntaxTree, targetSyntaxTree);
     }
     [Fact]
     public async Task AttributeData()
@@ -76,6 +76,7 @@ public class MyAttribute2(int val) : Attribute
         //var result = await script.ExecuteAsync();
         //Assert.NotNull(result);
     }
+
     [Fact]
     public void Script()
     {
@@ -86,5 +87,18 @@ public class MyAttribute2(int val) : Attribute
         var tree2 = expression.SyntaxTree;
         tree2 = tree2.WithRootAndOptions(tree2.GetRoot(), CSharpParseOptions.Default.WithKind(SourceCodeKind.Script));
         Assert.NotNull(tree2);
+    }
+    [Fact]
+    public void EqualsTest()
+    {
+        int a = 10;
+        object objA = a; // 装箱
+
+        int b = 10;
+        object objB = b; // 装箱
+        // 使用引用比较，结果为false
+        Assert.False(objA == objB);
+        // 使用值比较，结果为true
+        Assert.True(objA.Equals(objB));
     }
 }

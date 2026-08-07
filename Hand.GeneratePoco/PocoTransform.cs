@@ -1,12 +1,15 @@
-﻿using Hand.Generators;
-using Hand.Maping;
-using Hand.Rule;
-using Hand.Symbols;
+﻿using Hand.Builders;
+using Hand.Cachers;
+using Hand.Converters;
+using Hand.Entities;
+using Hand.Generators;
+using Hand.Reflection;
 using Hand.Transform;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Hand.GeneratePoco;
@@ -23,68 +26,74 @@ public class PocoTransform : IGeneratorTransform<PocoSource>
             return null;
         if (context.TargetNode is not TypeDeclarationSyntax type)
             return null;
-        if (context.TargetSymbol is not INamedTypeSymbol symbol)
+        if (context.TargetSymbol is not INamedTypeSymbol typeSymbol)
             return null;
         var compilation = context.SemanticModel.Compilation;
-        var attributeType = compilation.GetTypeByMetadataName(PocoGenerator.Attribute);
-        if (attributeType is null)
+        var typeCacher = new TypeSymbolCacher(compilation);
+        var typeInfo = typeCacher.Get(typeSymbol);
+        if (typeInfo is null || typeInfo.Kind != TypeSymbolKind.Complex)
             return null;
-        var attribute = SymbolAttributeHelper.GetAttributesByType(context.Attributes, attributeType)
-            .FirstOrDefault();
-        if (attribute is null)
-            return null;
-        //var from = SymbolAttributeHelper.GetArgumentValue<Type>(attribute, 0);
-        //if (from is null)
-        //    return null;
-        //var fromSymbol = compilation.GetTypeByMetadataName(from.FullName);
-        //if (fromSymbol is null) 
-        //    return null;
-        var fromSymbol = SymbolAttributeHelper.GetArgumentValue<INamedTypeSymbol>(attribute, 0);
-        if (fromSymbol is null)
-            return null;
-        var ruleTexts = SymbolAttributeHelper.GetArgumentValues<string>(attribute, "Rules");
-        var rules = ParsePropertyRules([.. ruleTexts]);
-        var nullableText = SymbolAttributeHelper.GetArgumentValue<string>(attribute, "NullableRule");
-        var nullableRule = CheckNullableRule(nullableText);
-        var init = SymbolAttributeHelper.GetArgumentValue<bool>(attribute, "Init");
 
-        return new PocoSource(type, compilation, symbol, fromSymbol, rules, nullableRule, init);
-    }
-    /// <summary>
-    /// 解析属性投影规则
-    /// </summary>
-    /// <param name="texts"></param>
-    /// <returns></returns>
-    public static IRecognizer<string>[] ParsePropertyRules(string[] texts)
-    {
-        if(texts is null)
-            return [];
-        var count = texts.Length;
-        if (count == 0) 
-            return [];
-        var list = new List<IRecognizer<string>>(count);
-        foreach (var text in texts)
-        {
-            if(string.IsNullOrEmpty(text)) 
-                continue;
-            list.Add(MemberRecognizeParser.Default.Parse(text));
-        }
-        return [.. list];
-    }
-    /// <summary>
-    /// 可空规则解析
-    /// </summary>
-    /// <param name="text"></param>
-    /// <returns></returns>
-    public static IValidation<string>? CheckNullableRule(string? text)
-    {
-        if (string.IsNullOrEmpty(text))
+        var attribute = context.Attributes.FirstOrDefault();
+        if (attribute is null) 
             return null;
-        return MemberRuleParser.Default.Parse(text);
-    }
+        var sourseSymbol = ConvertBuilder.CheckToSymbol(attribute);
+        if (sourseSymbol is null || sourseSymbol.Equals(typeSymbol, SymbolEqualityComparer.IncludeNullability))
+            return null;
+        var sourseInfo = typeCacher.Get(sourseSymbol);
+        if (sourseInfo is null || sourseInfo.Kind != TypeSymbolKind.Complex)
+            return null;
+        var isRecord = IsRecord(type);
+        var initializer = CheckInitializeKind(attribute, CheckDefaultKind(typeSymbol, isRecord));
 
+        var convertBuilder = new ConvertBuilder(compilation, typeCacher, SystemConvertProvider.Create(compilation), new(compilation), []);
+        if (isRecord && initializer == InitializeKind.Constructor)
+            return new PocoRecordSource(type, convertBuilder, typeInfo, sourseInfo, attribute);
+        if ((initializer & InitializeKind.Constructor) == InitializeKind.Constructor)
+            return new PocoConstructorSource(type, convertBuilder, typeInfo, sourseInfo, attribute, initializer);
+        if (initializer == InitializeKind.Field)
+            return new PocoFieldSource(type, convertBuilder, typeInfo, sourseInfo, attribute);
+        return new PocoPropertySource(type, convertBuilder, typeInfo, sourseInfo, attribute, initializer);
+    }
     /// <summary>
-    /// 单例
+    /// 是否记录类型
     /// </summary>
-    public static readonly PocoTransform Instance = new();
+    /// <param name="type"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsRecord(TypeDeclarationSyntax type)
+        => type.IsKind(SyntaxKind.RecordDeclaration) || type.IsKind(SyntaxKind.RecordStructDeclaration);
+    /// <summary>
+    /// 解析初始化类型
+    /// </summary>
+    /// <param name="attribute"></param>
+    /// <param name="defaultValue"></param>
+    /// <returns></returns>
+    public static InitializeKind CheckInitializeKind(AttributeData attribute, InitializeKind defaultValue)
+    {
+        var argument = SymbolAttributeHelper.GetArgumentConstant(attribute, "Initializer");
+        if (argument is null)
+            return defaultValue;
+        return argument.Value.GetEnum(defaultValue);
+    }
+    /// <summary>
+    /// 检查默认初始化类型
+    /// </summary>
+    /// <param name="symbol"></param>
+    /// <param name="isRecord"></param>
+    /// <returns></returns>
+    public static InitializeKind CheckDefaultKind(INamedTypeSymbol symbol, bool isRecord)
+    {
+        var hasConstructor = SymbolReflection.GetConstructors(symbol, true)
+            .Any(c => !c.IsStatic);
+        if (hasConstructor)
+            return InitializeKind.Property;
+        if (isRecord)
+            return InitializeKind.Constructor;
+        return InitializeKind.Property;
+    }    
+    ///// <summary>
+    ///// 单例
+    ///// </summary>
+    //public static readonly PocoTransform Instance = new();
 }

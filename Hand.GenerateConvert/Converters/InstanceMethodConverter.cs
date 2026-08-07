@@ -27,6 +27,6 @@ public class InstanceMethodConverter(SimpleNameSyntax methodName)
     /// 构造参数
     /// </summary>
     /// <returns></returns>
-    protected virtual IEnumerable<ExpressionSyntax> CreateArguments()
+    protected virtual IEnumerable<ArgumentSyntax> CreateArguments()
         => [];
 }

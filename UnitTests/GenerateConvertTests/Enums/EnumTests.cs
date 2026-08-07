@@ -1,6 +1,4 @@
 ﻿using GenerateConvertTests.Supports;
-using Microsoft.CodeAnalysis;
-using System.Drawing;
 
 namespace GenerateConvertTests.Enums;
 
@@ -51,7 +49,7 @@ public class EnumTests
     [Theory]
     [InlineData(MyColor.Red, ConsoleColor.DarkBlue)]
     [InlineData(MyColor.Green, ConsoleColor.DarkGreen)]    
-    [InlineData(MyColor.Blue, ConsoleColor.DarkCyan)]
+    [InlineData(MyColor.Blue, ConsoleColor.DarkRed)]
     public void EnumToEnum(MyColor myColor, ConsoleColor expected)
     {
         // 默认枚举转枚举是按值转的, 与常人直觉不符

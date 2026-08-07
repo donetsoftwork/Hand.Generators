@@ -1,5 +1,5 @@
 ﻿using Hand.Converters;
-using Hand.Members;
+using Hand.Reflection;
 using Hand.Sources;
 using System.Collections.Generic;
 
@@ -17,5 +17,5 @@ public interface IConvertBuilder
     /// <param name="toInfo"></param>
     /// <param name="generators"></param>
     /// <returns></returns>
-    public IConverter? GetConverter(MemberSymbolInfo fromInfo, MemberSymbolInfo toInfo, ICollection<IGeneratorSource> generators);
+    public IConverter? GetConverter(TypeSymbolInfo fromInfo, TypeSymbolInfo toInfo, ICollection<IGeneratorSource> generators);
 }

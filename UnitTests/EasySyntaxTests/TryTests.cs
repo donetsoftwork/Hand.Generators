@@ -20,13 +20,13 @@ public class TryTests
             .Declare(SyntaxFactory.IdentifierName("FileStream").Nullable().Variable(fs.Identifier, SyntaxGenerator.NullLiteral))
             .Declare(SyntaxGenerator.LongType.Variable(size.Identifier))
             .Try()
-                .AddPatter(fs.Assign(fileOpenRead.Invocation([fileName])))
-                .AddPatter(size.Assign(fs.Access("Length")))
+                .AddExpression(fs.Assign(fileOpenRead.Invocation([fileName])))
+                .AddExpression(size.Assign(fs.Access("Length")))
             .Catch(SyntaxFactory.IdentifierName("Exception").Catch(ex.Identifier))
-                .AddPatter(consoleWriteLine.Invocation([ex.Access("Message")]))
-                .AddPatter(size.Assign(SyntaxGenerator.Literal(-1)))
+                .AddExpression(consoleWriteLine.Invocation([ex.Access("Message")]))
+                .AddExpression(size.Assign(SyntaxGenerator.Literal(-1)))
             .Finally()
-                .AddPatter(fs.ConditionalInvocation(SyntaxFactory.IdentifierName("Close")))
+                .AddExpression(fs.ConditionalInvocation(SyntaxFactory.IdentifierName("Close")))
             .End()
             .Return(size);
         var code = method.NormalizeWhitespace().ToFullString();
@@ -44,13 +44,13 @@ public class TryTests
 
         var @try = SyntaxGenerator
             .Try()
-                .AddPatter(fs.Assign(fileOpenRead.Invocation([fileName])))
-                .AddPatter(size.Assign(fs.Access("Length")))
+                .AddExpression(fs.Assign(fileOpenRead.Invocation([fileName])))
+                .AddExpression(size.Assign(fs.Access("Length")))
             .Catch(SyntaxFactory.IdentifierName("Exception").Catch(ex.Identifier))
-                .AddPatter(consoleWriteLine.Invocation([ex.Access("Message")]))
-                .AddPatter(size.Assign(SyntaxGenerator.Literal(-1)))
+                .AddExpression(consoleWriteLine.Invocation([ex.Access("Message")]))
+                .AddExpression(size.Assign(SyntaxGenerator.Literal(-1)))
             .Finally()
-                .AddPatter(fs.ConditionalInvocation(SyntaxFactory.IdentifierName("Close")))
+                .AddExpression(fs.ConditionalInvocation(SyntaxFactory.IdentifierName("Close")))
              .Build();
 
         var body = SyntaxGenerator.Scope()

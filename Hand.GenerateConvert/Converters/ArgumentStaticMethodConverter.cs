@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Hand.Converters;
 
@@ -9,29 +10,38 @@ namespace Hand.Converters;
 /// </summary>
 /// <param name="method"></param>
 /// <param name="otherArguments"></param>
-public class ArgumentStaticMethodConverter(ExpressionSyntax method, params ExpressionSyntax[] otherArguments)
+public class ArgumentStaticMethodConverter(ExpressionSyntax method, IEnumerable<ArgumentSyntax> otherArguments)
     : StaticMethodConverter(method)
 {
     /// <summary>
     /// 使用静态方法转化
     /// </summary>
+    /// <param name="method"></param>
+    /// <param name="otherArguments"></param>
+    public ArgumentStaticMethodConverter(ExpressionSyntax method, params IEnumerable<ExpressionSyntax> otherArguments)
+        : this(method, otherArguments.Select(SyntaxFactory.Argument))
+    {
+    }
+    /// <summary>
+    /// 使用静态方法转化
+    /// </summary>
     /// <param name="methodName"></param>
     /// <param name="otherArguments"></param>
-    public ArgumentStaticMethodConverter(string methodName, params ExpressionSyntax[] otherArguments)
-        : this(SyntaxFactory.IdentifierName(methodName), otherArguments)
+    public ArgumentStaticMethodConverter(string methodName, params IEnumerable<ExpressionSyntax> otherArguments)
+        : this(SyntaxFactory.IdentifierName(methodName), otherArguments.Select(SyntaxFactory.Argument))
     {
     }
     #region 配置
-    private readonly ExpressionSyntax[] _otherArguments = otherArguments;
+    private readonly IEnumerable<ArgumentSyntax> _otherArguments = otherArguments;
     /// <summary>
     /// 其他参数
     /// </summary>
-    public ExpressionSyntax[] OtherArguments
+    public IEnumerable<ArgumentSyntax> OtherArguments
         => _otherArguments;
     #endregion
     /// <inheritdoc />
-    protected override IEnumerable<ExpressionSyntax> CreateArguments(ExpressionSyntax source)
-        => [source, .. _otherArguments];
+    protected override IEnumerable<ArgumentSyntax> CreateArguments(ExpressionSyntax source)
+        => [SyntaxFactory.Argument(source), .. _otherArguments];
     ///// <summary>
     ///// 使用静态方法转化
     ///// </summary>

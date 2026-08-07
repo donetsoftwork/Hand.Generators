@@ -18,12 +18,12 @@ public static partial class MyColorServices
             MyColor.Blue => "Blue",
             _ => color.ToString()
         };
-    public static MyColor ToMyColor(this string color)
-        => color switch
-        {
-            "Red" => MyColor.Red,
-            "Green" => MyColor.Green,
-            "Blue" => MyColor.Blue,
-            _ => default
-        };
+    //public static MyColor ToMyColor(this string color)
+    //    => color switch
+    //    {
+    //        "Red" => MyColor.Red,
+    //        "Green" => MyColor.Green,
+    //        "Blue" => MyColor.Blue,
+    //        _ => default
+    //    };
 }

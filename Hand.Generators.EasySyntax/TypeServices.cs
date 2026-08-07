@@ -421,6 +421,14 @@ public static partial class GenerateServices
     public static ObjectCreationExpressionSyntax New(this TypeSyntax type, IEnumerable<string> arguments, IEnumerable<AssignmentExpressionSyntax> items)
         => SyntaxFactory.ObjectCreationExpression(type, SyntaxGenerator.ArgumentList(arguments), SyntaxGenerator.Initializer(items));
     #endregion
+    /// <summary>
+    /// 默认值
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static DefaultExpressionSyntax Default(this TypeSyntax type)
+        => SyntaxFactory.DefaultExpression(type);
     #region Attribute
     /// <summary>
     /// 构造Attribute标记
@@ -870,6 +878,29 @@ public static partial class GenerateServices
         => SyntaxFactory.MethodDeclaration(returnType, methodName)
         .WithParameterList(ParameterList(parameters));
     #endregion
+    #region LocalFunction
+    /// <summary>
+    /// 定义局部函数
+    /// </summary>
+    /// <param name="returnType"></param>
+    /// <param name="functionName"></param>
+    /// <param name="parameters"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LocalFunctionStatementSyntax LocalFunction(this TypeSyntax returnType, string functionName, params ParameterSyntax[] parameters)
+        => LocalFunction(returnType, SyntaxFactory.Identifier(functionName), parameters);
+    /// <summary>
+    /// 定义局部函数
+    /// </summary>
+    /// <param name="returnType"></param>
+    /// <param name="functionName"></param>
+    /// <param name="parameters"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LocalFunctionStatementSyntax LocalFunction(this TypeSyntax returnType, SyntaxToken functionName, params ParameterSyntax[] parameters)
+        => SyntaxFactory.LocalFunctionStatement(returnType, functionName)
+        .WithParameterList(ParameterList(parameters));
+    #endregion
     /// <summary>
     /// 构造函数
     /// </summary>
@@ -922,7 +953,7 @@ public static partial class GenerateServices
     /// <param name="type"></param>
     /// <returns></returns>
     public static bool IsNullable(this INamedTypeSymbol type)
-        => IsGenericType(type, SpecialType.System_Nullable_T);
+        => type.NullableAnnotation == NullableAnnotation.Annotated || IsGenericType(type, SpecialType.System_Nullable_T);
     #endregion
     /// <summary>
     /// 是否泛型定义
@@ -987,13 +1018,10 @@ public static partial class GenerateServices
     /// <returns></returns>
     public static TypeSyntax ToSyntax(this INamedTypeSymbol symbol)
     {
-        if(IsNullable(symbol))
-        {
-            var original = symbol.TypeArguments[0];
-            if(original is INamedTypeSymbol namedOriginal)
-                return SyntaxFactory.NullableType(ToSyntaxCore(namedOriginal));
-            return SyntaxFactory.NullableType(ToGlobalName(original));
-        }
+        if (symbol.IsGenericType(SpecialType.System_Nullable_T) && symbol.TypeArguments[0] is INamedTypeSymbol namedType)
+            return SyntaxFactory.NullableType(ToSyntaxCore(namedType));
+        if (symbol.NullableAnnotation == NullableAnnotation.Annotated)
+            return SyntaxFactory.NullableType(ToSyntaxCore(symbol.ConstructedFrom));
         return ToSyntaxCore(symbol);
     }
     /// <summary>

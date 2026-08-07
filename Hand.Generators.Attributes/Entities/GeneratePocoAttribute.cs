@@ -3,16 +3,16 @@
 /// <summary>
 /// 生成Poco(Plain Old CLR Object)
 /// </summary>
-/// <param name="from"></param>
-[AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
-public class GeneratePocoAttribute(Type from)
+/// <typeparam name="TFrom"></typeparam>
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+public class GeneratePocoAttribute<TFrom>
     : Attribute
 {
     #region 配置
     /// <summary>
     /// 来源类型
     /// </summary>
-    public Type From { get; } = from;
+    public Type From { get; } = typeof(TFrom);
     /// <summary>
     /// 规则
     /// </summary>
@@ -22,16 +22,24 @@ public class GeneratePocoAttribute(Type from)
     /// </summary>
     public string NullableRule { get; set; }
     /// <summary>
-    /// 是否使用init访问器
+    /// 初始化类型
     /// </summary>
-    public bool Init { get; set; }
+    public InitializeKind Initializer { get; set; }
     /// <summary>
-    /// 
+    /// 是否生成特性标记
+    /// </summary>
+    public bool GenerateAttribute { get; set; }
+    /// <summary>
+    /// 是否生成ConvertTo方法
     /// </summary>
     public bool ConvertTo { get; set; }
     /// <summary>
-    /// 
+    /// 是否生成ConvertFrom方法
     /// </summary>
     public bool ConvertFrom { get; set; }
+    /// <summary>
+    /// 是否生成默认值
+    /// </summary>
+    public bool Default { get; set; }
     #endregion
 }

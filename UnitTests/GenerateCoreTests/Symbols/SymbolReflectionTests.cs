@@ -1,5 +1,5 @@
 using Hand;
-using Hand.Symbols;
+using Hand.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -128,6 +128,34 @@ public class UserId(int id) : EntityProperty<int>(id);";
             var baseType = type.BaseType;
             Assert.NotNull(baseType);
             Assert.True(baseType.IsObject());
+        }
+        [Fact]
+        public void GetEnumField()
+        {
+            string sourceCode = @"
+using System;
+
+namespace ExampleNamespace;
+
+[AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+public class MyAttribute : Attribute;
+";
+            var compilation = SyntaxTreeDriver.DefaultDriver.Compile(sourceCode);
+            var attributeType = compilation.GetTypeByMetadataName("ExampleNamespace.MyAttribute");
+            Assert.NotNull(attributeType);
+            var attributeUsage = attributeType.GetAttributes()
+                .FirstOrDefault();
+            Assert.NotNull(attributeUsage);
+            var attributeTargets = attributeUsage.ConstructorArguments
+                .FirstOrDefault();
+            var enumExpression = attributeTargets.EnumToExpression();
+            var enumCode = enumExpression.ToFullString();
+            Assert.Equal("AttributeTargets.All", enumCode);
+
+            var attributeTargetsType = compilation.GetTypeByMetadataName("System.AttributeTargets");
+            Assert.NotNull(attributeTargetsType);
+            var field = SymbolReflection.GetEnumField(attributeTargetsType, (int)AttributeTargets.All);
+            Assert.NotNull(field);
         }
 
 

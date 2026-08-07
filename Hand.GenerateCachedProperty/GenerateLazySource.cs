@@ -9,21 +9,21 @@ namespace Hand.GenerateCachedProperty;
 /// <summary>
 /// 构造延迟缓存源对象
 /// </summary>
-public abstract class GenerateLazySource(TypeDeclarationSyntax type, INamedTypeSymbol typeSymbol, string propertyName, INamedTypeSymbol propertySymbol, bool isStatic, string fieldName, string stateName, string lockName)
+public abstract class GenerateLazySource(TypeDeclarationSyntax type, INamedTypeSymbol typeSymbol, string propertyName, INamedTypeSymbol propertySymbol, bool isStatic, string fieldName, string stateName, TypeSyntax lockType, string lockName)
     : IGeneratorSource
 {
     /// <summary>
     /// 构造延迟缓存源对象
     /// </summary>
-    private GenerateLazySource(TypeDeclarationSyntax type, INamedTypeSymbol typeSymbol, string propertyName, string fieldName, INamedTypeSymbol propertySymbol, bool isStatic)
-        : this(type, typeSymbol, propertyName, propertySymbol, isStatic, fieldName, fieldName + "State", fieldName + "Lock")
+    private GenerateLazySource(TypeDeclarationSyntax type, INamedTypeSymbol typeSymbol, string propertyName, string fieldName, INamedTypeSymbol propertySymbol, bool isStatic, TypeSyntax lockType)
+        : this(type, typeSymbol, propertyName, propertySymbol, isStatic, fieldName, fieldName + "State", lockType, fieldName + "Lock")
     {
     }
     /// <summary>
     /// 构造延迟缓存源对象
     /// </summary>
-    public GenerateLazySource(TypeDeclarationSyntax type, INamedTypeSymbol typeSymbol, string propertyName, INamedTypeSymbol propertySymbol, bool isStatic)
-        : this(type, typeSymbol, propertyName, UnderWordRule.UnderLower(propertyName), propertySymbol, isStatic)
+    public GenerateLazySource(TypeDeclarationSyntax type, INamedTypeSymbol typeSymbol, string propertyName, INamedTypeSymbol propertySymbol, bool isStatic, TypeSyntax lockType)
+        : this(type, typeSymbol, propertyName, UnderWordRule.UnderLower(propertyName), propertySymbol, isStatic, lockType)
     {
     }
     #region 配置
@@ -36,6 +36,7 @@ public abstract class GenerateLazySource(TypeDeclarationSyntax type, INamedTypeS
     private readonly string _lockName = lockName;
     private readonly IdentifierNameSyntax _value = SyntaxFactory.IdentifierName(fieldName);
     private readonly IdentifierNameSyntax _state = SyntaxFactory.IdentifierName(stateName);
+    private readonly TypeSyntax _lockType = lockType;
     private readonly IdentifierNameSyntax _lock = SyntaxFactory.IdentifierName(lockName);
     private readonly TypeSyntax _propertyType = propertySymbol.ToSyntax();
     /// <summary>
@@ -80,7 +81,7 @@ public abstract class GenerateLazySource(TypeDeclarationSyntax type, INamedTypeS
             .Private();
         var _stateField = SyntaxGenerator.BoolType.Field(_state.Identifier, SyntaxGenerator.FalseLiteral)
             .Private();
-        var _lockField = SyntaxGenerator.LockType.Field(_lock.Identifier, SyntaxFactory.ImplicitObjectCreationExpression())
+        var _lockField = _lockType.Field(_lock.Identifier, SyntaxFactory.ImplicitObjectCreationExpression())
             .Private();
         var property = _propertyType.Property(_propertyName, CreateAccessor())
             .Public();
@@ -120,9 +121,9 @@ public abstract class GenerateLazySource(TypeDeclarationSyntax type, INamedTypeS
                     // return _value
                     .Return(_value)
                 // _value = GetValue()
-                .AddPatter(_value.Assign(GetValueExpression()))
+                .AddExpression(_value.Assign(GetValueExpression()))
                 // _state = true
-                .AddPatter(_state.Assign(SyntaxGenerator.TrueLiteral))
+                .AddExpression(_state.Assign(SyntaxGenerator.TrueLiteral))
                 // }
                 .End()
             // reurn _value

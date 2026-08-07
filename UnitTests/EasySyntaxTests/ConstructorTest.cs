@@ -13,7 +13,7 @@ public class ConstructorTest
         var original = SyntaxFactory.IdentifierName("original");
         var constructor = type.Constructor(SyntaxGenerator.IntType.Parameter(original.Identifier))
             .ToBuilder()
-            .AddPatter(SyntaxFactory.IdentifierName("_original").Assign(original))
+            .AddExpression(SyntaxFactory.IdentifierName("_original").Assign(original))
             .End();
         var code = constructor.NormalizeWhitespace().ToFullString();
         Assert.NotEmpty(code);

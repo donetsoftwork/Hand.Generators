@@ -183,9 +183,13 @@ public static partial class GenerateCoreServices
     /// <param name="originalSymbol"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static INamedTypeSymbol GetNullable(this Compilation compilation, ITypeSymbol originalSymbol)
-        => compilation.GetSpecialType(SpecialType.System_Nullable_T)
-        .Construct(originalSymbol);
+    public static INamedTypeSymbol GetNullable(this Compilation compilation, INamedTypeSymbol originalSymbol)
+    {
+        if (originalSymbol.IsValueType)
+            return compilation.GetSpecialType(SpecialType.System_Nullable_T)
+                .Construct(originalSymbol);
+        return (INamedTypeSymbol)originalSymbol.WithNullableAnnotation(NullableAnnotation.Annotated);
+    }
     /// <summary>
     /// 迭代类型
     /// </summary>
@@ -473,7 +477,7 @@ public static partial class GenerateCoreServices
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsGenericType(this INamedTypeSymbol symbol, INamedTypeSymbol definitionType)
-        => symbol.IsGenericType && SymbolTypeDescriptor.CheckEquals(definitionType, symbol.ConstructedFrom);
+        => symbol.IsGenericType && definitionType.Equals(symbol.ConstructedFrom, SymbolEqualityComparer.Default);
     #endregion
     #region HasGenericType
     /// <summary>

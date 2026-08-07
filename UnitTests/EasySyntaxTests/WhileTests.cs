@@ -25,7 +25,7 @@ public class WhileTests
             // while(reader.Read()){
             .While(reader.Access("Read").Invocation())
                 // list.Add(reader.GetFieldValue(0))
-                .AddPatter(list.Access("Add").Invocation([getFieldValue.Invocation([SyntaxGenerator.Literal(0)])]))
+                .AddExpression(list.Access("Add").Invocation([getFieldValue.Invocation([SyntaxGenerator.Literal(0)])]))
             // }
             .End()
             // return list
@@ -96,7 +96,7 @@ public class WhileTests
             // while(reader.Read()){
             .While(read.Invocation())
                 // list.Add(reader.GetFieldValue(0))
-                .AddPatter(add.Invocation([getFieldValue.Invocation([Literal(0)])]))
+                .AddExpression(add.Invocation([getFieldValue.Invocation([Literal(0)])]))
             // }
             .End()
             // return list
@@ -122,7 +122,7 @@ public class WhileTests
         var whileStatement = read.Invocation()
             .While()
                 // list.Add(reader.GetFieldValue(0))
-                .AddPatter(add.Invocation([getFieldValue.Invocation([Literal(0)])]))
+                .AddExpression(add.Invocation([getFieldValue.Invocation([Literal(0)])]))
             .Build();
         var body = SyntaxGenerator.Scope()
             // List<int> list = []

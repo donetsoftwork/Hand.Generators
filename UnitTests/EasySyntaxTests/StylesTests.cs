@@ -118,8 +118,8 @@ public class StylesTests
                 SyntaxGenerator.StringType.Parameter(name.Identifier))
             .Public()
             .ToBuilder()
-                .AddPatter(Id.Assign(id))
-                .AddPatter(Name.Assign(name))
+                .AddExpression(Id.Assign(id))
+                .AddExpression(Name.Assign(name))
             .End();
         var type = SyntaxFactory.ClassDeclaration("User")
              .Public()
@@ -154,8 +154,8 @@ public class StylesTests
                 SyntaxGenerator.StringType.Parameter(name.Identifier))
             .Public()
             .ToBuilder()
-                .AddPatter(_id.Assign(id))
-                .AddPatter(_name.Assign(name))
+                .AddExpression(_id.Assign(id))
+                .AddExpression(_name.Assign(name))
             .End();
         var type = SyntaxFactory.ClassDeclaration("User")
              .Public()

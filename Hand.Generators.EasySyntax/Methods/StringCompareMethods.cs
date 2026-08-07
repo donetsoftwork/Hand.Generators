@@ -24,8 +24,8 @@ public static class StringCompareMethods
     /// <param name="this"></param>
     /// <param name="value"></param>
     /// <returns></returns>
-    public static ExpressionSyntax Equals(this ExpressionSyntax @this, ExpressionSyntax value)
-        => SyntaxGenerator.StringType.Access("Equals")
+    public static ExpressionSyntax Equals(ExpressionSyntax @this, ExpressionSyntax value)
+        => SyntaxGenerator.StringType.Access(nameof(string.Equals))
         .Invocation([@this, value]);
     /// <summary>
     /// Equals
@@ -34,8 +34,8 @@ public static class StringCompareMethods
     /// <param name="value"></param>
     /// <param name="comparison"></param>
     /// <returns></returns>
-    public static ExpressionSyntax Equals(this ExpressionSyntax @this, ExpressionSyntax value, ExpressionSyntax comparison)
-        => SyntaxGenerator.StringType.Access("Equals")
+    public static ExpressionSyntax Equals(ExpressionSyntax @this, ExpressionSyntax value, ExpressionSyntax comparison)
+        => SyntaxGenerator.StringType.Access(nameof(string.Equals))
         .Invocation([@this, value, comparison]);
     #endregion
     #region StartsWith
@@ -45,8 +45,8 @@ public static class StringCompareMethods
     /// <param name="this"></param>
     /// <param name="value"></param>
     /// <returns></returns>
-    public static ExpressionSyntax StartsWith(this ExpressionSyntax @this, ExpressionSyntax value)
-        => @this.Access("StartsWith")
+    public static ExpressionSyntax StartsWith(ExpressionSyntax @this, ExpressionSyntax value)
+        => @this.Access(nameof(string.StartsWith))
         .Invocation([value]);
     /// <summary>
     /// StartsWith
@@ -55,8 +55,8 @@ public static class StringCompareMethods
     /// <param name="value"></param>
     /// <param name="comparison"></param>
     /// <returns></returns>
-    public static ExpressionSyntax StartsWith(this ExpressionSyntax @this, ExpressionSyntax value, ExpressionSyntax comparison)
-        => @this.Access("StartsWith")
+    public static ExpressionSyntax StartsWith(ExpressionSyntax @this, ExpressionSyntax value, ExpressionSyntax comparison)
+        => @this.Access(nameof(string.StartsWith))
         .Invocation([value, comparison]);
     #endregion
     #region EndsWith
@@ -66,8 +66,8 @@ public static class StringCompareMethods
     /// <param name="this"></param>
     /// <param name="value"></param>
     /// <returns></returns>
-    public static ExpressionSyntax EndsWith(this ExpressionSyntax @this, ExpressionSyntax value)
-        => @this.Access("EndsWith")
+    public static ExpressionSyntax EndsWith(ExpressionSyntax @this, ExpressionSyntax value)
+        => @this.Access(nameof(string.EndsWith))
         .Invocation([value]);
     /// <summary>
     /// EndsWith
@@ -76,8 +76,8 @@ public static class StringCompareMethods
     /// <param name="value"></param>
     /// <param name="comparison"></param>
     /// <returns></returns>
-    public static ExpressionSyntax EndsWith(this ExpressionSyntax @this, ExpressionSyntax value, ExpressionSyntax comparison)
-        => @this.Access("EndsWith")
+    public static ExpressionSyntax EndsWith(ExpressionSyntax @this, ExpressionSyntax value, ExpressionSyntax comparison)
+        => @this.Access(nameof(string.EndsWith))
         .Invocation([value, comparison]);
     #endregion
     /// <summary>
@@ -86,8 +86,8 @@ public static class StringCompareMethods
     /// <param name="this"></param>
     /// <param name="arguments"></param>
     /// <returns></returns>
-    public static ExpressionSyntax IndexOf(this ExpressionSyntax @this, params IEnumerable<ExpressionSyntax> arguments)
-        => @this.Access("IndexOf")
+    public static ExpressionSyntax IndexOf(ExpressionSyntax @this, params IEnumerable<ExpressionSyntax> arguments)
+        => @this.Access(nameof(string.IndexOf))
         .Invocation(arguments);
     /// <summary>
     /// LastIndexOf
@@ -95,7 +95,14 @@ public static class StringCompareMethods
     /// <param name="this"></param>
     /// <param name="arguments"></param>
     /// <returns></returns>
-    public static ExpressionSyntax LastIndexOf(this ExpressionSyntax @this, params IEnumerable<ExpressionSyntax> arguments)
-        => @this.Access("LastIndexOf")
+    public static ExpressionSyntax LastIndexOf(ExpressionSyntax @this, params IEnumerable<ExpressionSyntax> arguments)
+        => @this.Access(nameof(string.LastIndexOf))
         .Invocation(arguments);
+    /// <summary>
+    /// IsNullOrWhiteSpace
+    /// </summary>
+    /// <param name="this"></param>
+    /// <returns></returns>
+    public static ExpressionSyntax IsNullOrWhiteSpace(ExpressionSyntax @this)
+        => SyntaxGenerator.StringType.Access(nameof(string.IsNullOrWhiteSpace)).Invocation([@this]);
 }

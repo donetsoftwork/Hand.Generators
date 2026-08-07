@@ -12,8 +12,9 @@ namespace Hand.GenerateCachedProperty;
 /// <param name="propertyName"></param>
 /// <param name="propertySymbol"></param>
 /// <param name="isStatic"></param>
-public class LazyMethodSource(MethodDeclarationSyntax method, TypeDeclarationSyntax type, INamedTypeSymbol typeSymbol, string? propertyName, INamedTypeSymbol propertySymbol, bool isStatic)
-    : GenerateLazySource(type, typeSymbol, CheckPropertyName(propertyName, method.Identifier), propertySymbol, isStatic)
+/// <param name="lockType"></param>
+public class LazyMethodSource(MethodDeclarationSyntax method, TypeDeclarationSyntax type, INamedTypeSymbol typeSymbol, string? propertyName, INamedTypeSymbol propertySymbol, bool isStatic, TypeSyntax lockType)
+    : GenerateLazySource(type, typeSymbol, CheckPropertyName(propertyName, method.Identifier), propertySymbol, isStatic, lockType)
 {
     private readonly MethodDeclarationSyntax _method = method;
 

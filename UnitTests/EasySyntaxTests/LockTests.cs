@@ -37,7 +37,7 @@ public class LockTests
                     // return
                     .Return()
                 // _list.Add(value)
-                .AddPatter(_listAdd.Invocation([value]))
+                .AddExpression(_listAdd.Invocation([value]))
                 // }
                 .End()
             // }
@@ -77,7 +77,7 @@ public class LockTests
 
         var lockAdd = _list.Lock()
             .Add(containsReturn)
-            .AddPatter(_listAdd.Invocation([value]))
+            .AddExpression(_listAdd.Invocation([value]))
             .Build();
 
         var body = SyntaxGenerator.Scope()

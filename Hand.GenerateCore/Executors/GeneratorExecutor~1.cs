@@ -1,5 +1,6 @@
 ﻿using Hand.Sources;
 using Microsoft.CodeAnalysis;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Hand.Executors;
@@ -8,7 +9,8 @@ namespace Hand.Executors;
 /// 执行器基类
 /// </summary>
 /// <typeparam name="TSource"></typeparam>
-public class GeneratorExecutor<TSource> : IGeneratorExecutor<TSource>
+public class GeneratorExecutor<TSource>
+    : IGeneratorExecutor<TSource>, IGeneratorExecutor<IEnumerable<TSource>>
     where TSource : IGeneratorSource
 {
     /// <inheritdoc />
@@ -21,8 +23,14 @@ public class GeneratorExecutor<TSource> : IGeneratorExecutor<TSource>
         //        System.Diagnostics.Debugger.Launch();
         //#endif
         var builder = source.Generate();
-        var compilationUnit = builder.Build()
+        var unit = builder.Build()
             .WithGenerated();
-        context.AddSource(source.GenerateFileName, compilationUnit.GetText(Encoding.UTF8));
+        context.AddSource(source.GenerateFileName, unit.GetText(Encoding.UTF8));
+    }
+    /// <inheritdoc />
+    public virtual void Execute(SourceProductionContext context, IEnumerable<TSource> source)
+    {
+        foreach ( var item in source )
+            Execute(context, item);
     }
 }

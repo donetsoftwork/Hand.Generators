@@ -3,7 +3,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
 namespace Hand;
@@ -198,6 +197,14 @@ public static partial class GenerateServices
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PostfixUnaryExpressionSyntax PostDecrement(this ExpressionSyntax variable)
         => SyntaxFactory.PostfixUnaryExpression(SyntaxKind.PostDecrementExpression, variable);
+    /// <summary>
+    /// 忽略NULL警告
+    /// </summary>
+    /// <param name="variable"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static PostfixUnaryExpressionSyntax SuppressNull(this ExpressionSyntax variable)
+        => SyntaxFactory.PostfixUnaryExpression(SyntaxKind.SuppressNullableWarningExpression, variable);
     #endregion
     #region Access
     /// <summary>
@@ -207,8 +214,9 @@ public static partial class GenerateServices
     /// <param name="member"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static MemberAccessExpressionSyntax Access(this ExpressionSyntax owner, SimpleNameSyntax member)
-        => SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, owner, member);
+    public static ExpressionSyntax Access(this ExpressionSyntax owner, SimpleNameSyntax member)
+        => owner is ThisExpressionSyntax ? member : 
+        SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, owner, member);
     /// <summary>
     /// 定位到成员
     /// </summary>
@@ -216,8 +224,8 @@ public static partial class GenerateServices
     /// <param name="member"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static MemberAccessExpressionSyntax Access(this ExpressionSyntax owner, string member)
-        => SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, owner, SyntaxFactory.IdentifierName(member));
+    public static ExpressionSyntax Access(this ExpressionSyntax owner, string member)
+        => Access(owner, SyntaxFactory.IdentifierName(member));
     /// <summary>
     /// 定位到路径
     /// </summary>
@@ -401,6 +409,14 @@ public static partial class GenerateServices
     /// <returns></returns>
     public static IsPatternExpressionSyntax Is(this ExpressionSyntax variable, PatternSyntax pattern)
         => SyntaxFactory.IsPatternExpression(variable, pattern);
+    /// <summary>
+    /// is模式
+    /// </summary>
+    /// <param name="variable"></param>
+    /// <param name="pattern"></param>
+    /// <returns></returns>
+    public static IsPatternExpressionSyntax Is(this ExpressionSyntax variable, ExpressionSyntax pattern)
+        => SyntaxFactory.IsPatternExpression(variable, SyntaxFactory.ConstantPattern(pattern));
     /// <summary>
     /// 判断类型
     /// </summary>
@@ -592,23 +608,6 @@ public static partial class GenerateServices
     public static AccessorDeclarationSyntax? GetInitAccessor(this PropertyDeclarationSyntax property)
         => GetAccessor(property, SyntaxKind.InitAccessorDeclaration);
     #endregion
-    /// <summary>
-    /// 转化常量为特性参数
-    /// </summary>
-    /// <param name="argument"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static AttributeArgumentSyntax ToAttributeArgument(this ExpressionSyntax argument)
-        => SyntaxFactory.AttributeArgument(argument);
-    /// <summary>
-    /// 转化常量为特性参数
-    /// </summary>
-    /// <param name="argument"></param>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static AttributeArgumentSyntax ToAttributeArgument(this ExpressionSyntax argument, string name)
-        => SyntaxFactory.AttributeArgument(SyntaxFactory.NameEquals(SyntaxFactory.IdentifierName(name)), default, argument);
     ///// <summary>
     ///// 转化为构造表达式(attribute.Name可能不是类名,此方案不可行)
     ///// </summary>

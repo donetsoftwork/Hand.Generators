@@ -144,6 +144,8 @@ namespace Services;
 >* SyntaxFactory.ObjectCreationExpression(SyntaxFactory.IdentifierName("Object"))
 >* SyntaxFactory.ImplicitObjectCreationExpression()
 >* SyntaxFactory.CollectionExpression()
+>* SyntaxFactory.CollectionExpression(SyntaxFactory.SeparatedList<CollectionElementSyntax>([SyntaxFactory.ExpressionElement(SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(1))), SyntaxFactory.ExpressionElement(SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(2)))]))
+>* SyntaxFactory.TupleExpression(SyntaxFactory.SeparatedList([SyntaxFactory.Argument(SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(1))), SyntaxFactory.Argument(SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(2)))]))
 
 #### 3.2 简化方式
 >* SyntaxGenerator.Literal(1)
@@ -160,6 +162,10 @@ namespace Services;
 >* SyntaxGenerator.NullLiteral
 >* SyntaxGenerator.DefaultLiteral
 >* SyntaxFactory.IdentifierName("Object").New()
+>* SyntaxGenerator.New()
+>* SyntaxGenerator.Collection()
+>* SyntaxGenerator.Collection([SyntaxGenerator.Literal(1), SyntaxGenerator.Literal(2)])
+>* SyntaxGenerator.Tuple([SyntaxGenerator.Literal(1), SyntaxGenerator.Literal(2)])
 
 #### 3.3 生成的代码
 >* 1
@@ -178,6 +184,8 @@ namespace Services;
 >* new Object()
 >* new()
 >* []
+>* [1, 2]
+>* (1, 2)
 
 ### 4. 运算
 #### 4.1 原始方式
@@ -193,15 +201,25 @@ namespace Services;
 >* SyntaxFactory.BinaryExpression(SyntaxKind.ExclusiveOrExpression, left, right)
 >* SyntaxFactory.BinaryExpression(SyntaxKind.LogicalAndExpression, left, right)
 >* SyntaxFactory.BinaryExpression(SyntaxKind.LogicalOrExpression, left, right)
+>* SyntaxFactory.BinaryExpression(SyntaxKind.CoalesceExpression, a, b)
+>* SyntaxFactory.BinaryExpression(SyntaxKind.SubtractExpression, a, SyntaxFactory.ParenthesizedExpression(SyntaxFactory.BinaryExpression(SyntaxKind.SubtractExpression, b, c)))
 >* SyntaxFactory.PrefixUnaryExpression(SyntaxKind.PreIncrementExpression, variable)
 >* SyntaxFactory.PrefixUnaryExpression(SyntaxKind.PreDecrementExpression, variable)
 >* SyntaxFactory.PostfixUnaryExpression(SyntaxKind.PostIncrementExpression, variable)
 >* SyntaxFactory.PostfixUnaryExpression(SyntaxKind.PostDecrementExpression, variable)
+>* SyntaxFactory.PrefixUnaryExpression(SyntaxKind.UnaryPlusExpression, variable)
+>* SyntaxFactory.PrefixUnaryExpression(SyntaxKind.UnaryMinusExpression, variable)
 >* SyntaxFactory.PrefixUnaryExpression(SyntaxKind.BitwiseNotExpression, variable)
 >* SyntaxFactory.PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, variable)
+>* SyntaxFactory.TypeOfExpression(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)))
+>* SyntaxFactory.CastExpression(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)), obj)
+>* SyntaxFactory.IsPatternExpression(variable, SyntaxFactory.TypePattern(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword))))
+>* SyntaxFactory.IsPatternExpression(variable, SyntaxFactory.TypePattern(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword))), SyntaxFactory.SingleVariableDesignation(SyntaxFactory.Identifier("i"))))
 >* SyntaxFactory.QualifiedName(prefix, name)
 >* SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, owner, member)
 >* SyntaxFactory.ConditionalAccessExpression(owner, SyntaxFactory.MemberBindingExpression(SyntaxFactory.IdentifierName(member)))
+>* SyntaxFactory.ConditionalExpression(condition, trueExpression, falseExpression)
+>* SyntaxFactory.BinaryExpression(SyntaxKind.CoalesceExpression, left, right)
 
 #### 4.2 简化方式(扩展方法)
 >* left.Add(right)
@@ -216,15 +234,25 @@ namespace Services;
 >* left.XOr(right)
 >* left.LogicalAnd(right)
 >* left.LogicalOr(right)
+>* left.Coalesce(right)
+>* a.Subtract(b.Subtract(c).Parenthesized())
 >* variable.PreIncrement()
 >* variable.PreDecrement()
 >* variable.PostIncrement()
 >* variable.PostDecrement()
+>* variable.PrePlus()
+>* variable.PreMinus()
 >* variable.Not()
 >* variable.LogicalNot()
+>* SyntaxGenerator.IntType.TypeOf()
+>* SyntaxGenerator.IntType.Cast(obj)
+>* obj.IsType(SyntaxGenerator.IntType)
+>* obj.IsType(SyntaxGenerator.IntType, "i")
 >* name.Qualified(prefix)
 >* owner.Access(member)
 >* owner.ConditionalAccess(member)
+>* condition.Conditional(trueExpression, falseExpression)
+>* left.NullCoalesce(right)
 
 #### 4.3 生成的代码
 >* left + right
@@ -239,15 +267,24 @@ namespace Services;
 >* left ^ right
 >* left && right
 >* left || right
+>* a-(b-c)
 >* ++variable
 >* --variable
 >* variable++
 >* variable--
+>* +variable
+>* -variable
 >* ~variable
 >* !variable
+>* typeof(int)
+>* (int)obj
+>* obj is int
+>* obj is int i
 >* prefix.name
 >* owner.member
 >* owner?.member
+>* condition ? trueExpression : falseExpression
+>* left ?? right
 
 ### 5. 定义变量
 #### 5.1 原始方式

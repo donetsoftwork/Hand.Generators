@@ -103,10 +103,12 @@ class User
                     SyntaxFactory.Trivia(
                         SyntaxFactory.DocumentationComment(
                             SyntaxFactory.XmlSummaryElement(
-                                //NewLineAndLineStart(),
-                                SyntaxFactory.XmlText("用户名")
-                                //NewLineAndLineStart()
-                            )
+                                SyntaxFactory.XmlText(SyntaxFactory.XmlTextNewLine("\r\n", true)),
+                                SyntaxFactory.XmlText(" "),
+                                SyntaxFactory.XmlText("用户名"),
+                                SyntaxFactory.XmlText(SyntaxFactory.XmlTextNewLine("\r\n", true))
+                            ),
+                            SyntaxFactory.XmlText(SyntaxFactory.XmlTextNewLine("\r\n", true)).WithoutTrailingTrivia()
                         )
                     )
                 )

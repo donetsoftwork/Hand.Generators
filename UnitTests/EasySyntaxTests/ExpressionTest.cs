@@ -287,6 +287,13 @@ public class ExpressionTest
         Assert.Equal("typeof(int)", code);
     }
     [Fact]
+    public void SuppressNull()
+    {
+        var expression = SyntaxGenerator.DefaultLiteral.SuppressNull();
+        var code = expression.NormalizeWhitespace().ToFullString();
+        Assert.Equal("default!", code);
+    }
+    [Fact]
     public void Interpolation()
     {
         var interpolation = SyntaxGenerator.Interpolation()

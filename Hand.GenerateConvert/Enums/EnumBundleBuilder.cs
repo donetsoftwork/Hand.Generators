@@ -1,5 +1,5 @@
 ﻿using Hand.Cache;
-using Hand.Symbols;
+using Hand.Reflection;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
@@ -80,7 +80,7 @@ public class EnumBundleBuilder(ICacher<INamedTypeSymbol, IEnumBundle> cacher, Co
         var name = field.Name;
         var under = field.ConstantValue!;
         var member = GetEnumMemberName(field);
-        var flag = Convert.ToUInt64(under);
+        var flag = System.Convert.ToUInt64(under);
         return new FlagEnumField(name, member/*, enumType.Access(name)*/, SyntaxGenerator.Literal(underType, under), flag);
     }
     /// <summary>
@@ -130,7 +130,7 @@ public class EnumBundleBuilder(ICacher<INamedTypeSymbol, IEnumBundle> cacher, Co
     /// <param name="compilation"></param>
     /// <returns></returns>
     public static INamedTypeSymbol? GetFlagsAttributeType(Compilation compilation)
-        => compilation.GetTypeByMetadataName("System.Runtime.Serialization.FlagsAttribute");
+        => compilation.GetTypeByMetadataName("System.FlagsAttribute");
     /// <summary>
     /// 获取EnumMember特性类型
     /// </summary>

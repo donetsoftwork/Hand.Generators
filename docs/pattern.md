@@ -32,11 +32,12 @@ public static bool IsPalindrome(ReadOnlySpan<char> input)
 >* 匹配任何表达式并将其结果分配给声明的变量
 
 ### 6. 丢弃模式
+>* 也叫弃元模式
 >* 匹配任何表达式
 
 ### 7. 逻辑模式
 >* 测试表达式是否与模式的逻辑组合匹配
->* 通过not、or、and及括号进行组合
+>* 通过not、or及and进行组合
 
 ### 8. 带括号模式
 >* 可在任何模式两边加上括号
@@ -66,6 +67,7 @@ public static bool IsPalindrome(ReadOnlySpan<char> input)
 >* switch 表达式
 
 ## 四、简单的模式匹配
+
 ### 1. 类型模式
 #### 1.1 类型模式的Case
 ~~~csharp
@@ -86,6 +88,8 @@ var statement = fruit.IsType(appleType)
 ~~~
 
 #### 1.3 Roslyn原始语法
+>* 使用SyntaxFactory.TypePattern构造类型模式
+
 ~~~csharp
 var fruit = SyntaxFactory.IdentifierName("fruit");
 var appleType = SyntaxFactory.IdentifierName("Apple");
@@ -96,7 +100,7 @@ var statement = SyntaxFactory.IfStatement(
         SyntaxFactory.Literal("I like Apple!"))));
 ~~~
 
-#### 1.4 参看官方阅读
+#### 1.4 参考官方阅读
 >* https://learn.microsoft.com/zh-cn/dotnet/csharp/language-reference/operators/patterns#declaration-and-type-patterns
 
 ### 2. 声明模式
@@ -107,7 +111,7 @@ if (fruit is Apple apple)
 ~~~
 
 #### 2.2 EasySyntax 语法实现
->* 使用VariablePattern扩展方法
+>* 使用VariablePattern扩展方法构造声明模式
 
 ~~~csharp
 var fruit = SyntaxFactory.IdentifierName("fruit");
@@ -121,6 +125,8 @@ var statement = fruit.Is(appleType.VariablePattern(apple.Identifier))
 ~~~
 
 #### 2.3 Roslyn原始语法
+>* 使用SyntaxFactory.DeclarationPattern构造声明模式
+
 ~~~csharp
 var fruit = SyntaxFactory.IdentifierName("fruit");
 var appleType = SyntaxFactory.IdentifierName("Apple");
@@ -134,11 +140,11 @@ var statement = SyntaxFactory.IfStatement(
             SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(apple))))));
 ~~~
 
-#### 2.4 参看官方阅读
+#### 2.4 参考官方阅读
 >* https://learn.microsoft.com/zh-cn/dotnet/csharp/language-reference/operators/patterns#declaration-and-type-patterns
 
 ### 3. 常量模式
-#### 3.1 声明模式的Case
+#### 3.1 常量模式的Case
 ~~~csharp
 obj is null
 ~~~
@@ -152,6 +158,8 @@ var expression = obj.Is(SyntaxGenerator.NullLiteral.ToPattern();
 ~~~
 
 #### 3.3 Roslyn原始语法
+>* 使用SyntaxFactory.ConstantPattern把表达式转化为常量模式
+
 ~~~csharp
 var obj = SyntaxFactory.IdentifierName("obj");
 var expression = SyntaxFactory.IsPatternExpression(obj, 
@@ -159,11 +167,11 @@ var expression = SyntaxFactory.IsPatternExpression(obj,
         SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression)));
 ~~~
 
-#### 3.4 参看官方阅读
+#### 3.4 参考官方阅读
 >* https://learn.microsoft.com/zh-cn/dotnet/csharp/language-reference/operators/patterns#constant-pattern
 
 ### 4. 关系模式
-#### 4.1 声明模式的Case
+#### 4.1 关系模式的Case
 ~~~csharp
 != 3
 ~~~
@@ -181,14 +189,17 @@ var expression = SyntaxFactory.IsPatternExpression(obj,
 ~~~
 
 #### 4.3 Roslyn原始语法
+>* 使用SyntaxFactory.RelationalPattern构造关系模式
+
 ~~~csharp
 var pattern = SyntaxFactory.RelationalPattern(
-    SyntaxFactory.Token(SyntaxKind.ExclamationEqualsToken), 
-    SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, 
+    SyntaxFactory.Token(SyntaxKind.ExclamationEqualsToken),
+    SyntaxFactory.LiteralExpression(
+        SyntaxKind.NumericLiteralExpression,
         SyntaxFactory.Literal(3)));
 ~~~
 
-#### 4.4 参看官方阅读
+#### 4.4 参考官方阅读
 >* https://learn.microsoft.com/zh-cn/dotnet/csharp/language-reference/operators/patterns#relational-patterns
 
 ### 5. var模式
@@ -198,12 +209,7 @@ GetScores(id) is var scores && scores.Average() >= 60
 ~~~
 
 #### 5.2 EasySyntax 语法实现
->* GreaterThanPattern扩展方法
->* GreaterOrEqualPattern扩展方法
->* LessThanPattern扩展方法
->* LessOrEqualPattern扩展方法
->* EqualPattern扩展方法
->* NotEqualPattern扩展方法
+>* 使用SyntaxGenerator.VarPattern构造var模式
 
 ~~~csharp
 var getScoresMethod = SyntaxFactory.IdentifierName("GetScores");
@@ -215,6 +221,8 @@ var expression = getScoresMethod.Invocation([id])
 ~~~
 
 ### 5.3 Roslyn原始语法
+>* 使用SyntaxFactory.VarPattern构造var模式
+
 ~~~csharp
 var getScoresMethod = SyntaxFactory.IdentifierName("GetScores");
 var scores = SyntaxFactory.IdentifierName("scores");
@@ -233,14 +241,14 @@ var expression0 = SyntaxFactory.BinaryExpression(SyntaxKind.LogicalAndExpression
             SyntaxFactory.Literal(60))));
 ~~~
 
-#### 5.4 参看官方阅读
+#### 5.4 参考官方阅读
 >* https://learn.microsoft.com/zh-cn/dotnet/csharp/language-reference/operators/patterns#var-pattern
 
 ### 6. 丢弃模式
 >* 丢弃模式常用于switch表达式
 >* 也可用于列表和位置模式
 
-#### 6.1 声明模式的Case
+#### 6.1 丢弃模式的Case
 ~~~csharp
 date.Day switch
 {
@@ -275,15 +283,15 @@ var expression = date.Access("Day")
     .Build();
 ~~~
 
-#### 6.4 参看官方阅读
+#### 6.4 参考官方阅读
 >* https://learn.microsoft.com/zh-cn/dotnet/csharp/language-reference/operators/patterns#discard-pattern
 
 ## 五、逻辑模式
 >* 逻辑模式嵌套了其他模式
->* 逻辑模式通过and、or和not及括号组装其他模式
+>* 逻辑模式通过and、or及not组装其他模式
 
 ### 1. 逻辑模式的Case
->* 该Case通过and组装了两个关系模式
+>* 该Case通过and组装了1个常量模式和1个关系模式
 
 ~~~csharp
 0 and < 10
@@ -300,6 +308,8 @@ var pattern = SyntaxGenerator.GreaterThanPattern(0)
 ~~~
 
 ### 3. Roslyn原始语法
+>* 使用SyntaxFactory.BinaryPattern构造逻辑模式
+
 ~~~csharp
 var pattern = SyntaxFactory.BinaryPattern(SyntaxKind.AndPattern,
     SyntaxFactory.RelationalPattern(SyntaxFactory.Token(SyntaxKind.GreaterThanToken),
@@ -311,15 +321,15 @@ var pattern = SyntaxFactory.BinaryPattern(SyntaxKind.AndPattern,
             SyntaxFactory.Literal(10))));
 ~~~
 
-### 4. 参看官方阅读
+### 4. 参考官方阅读
 >* https://learn.microsoft.com/zh-cn/dotnet/csharp/language-reference/operators/patterns#logical-patterns
 
 ## 六、带括号模式
 >* 可在任何模式两边加上括号
 >* 用来强调或更改逻辑模式中的优先级
 
-### 1 逻辑模式的Case
->* 该Case通过and组装了两个关系模式
+### 1 带括号模式的Case
+>* 该Case通过括号确保2个类型模式组成的or逻辑模式是一个整体
 
 ~~~csharp
 input is not (float or double)
@@ -338,6 +348,8 @@ var expression = input.Is(pattern);
 ~~~
 
 ### 3 Roslyn原始语法
+>* 使用SyntaxFactory.ParenthesizedPattern构造带括号模式
+
 ~~~csharp
 var input = SyntaxFactory.IdentifierName("input");
 var pattern = SyntaxFactory.UnaryPattern(
@@ -352,7 +364,7 @@ var pattern = SyntaxFactory.UnaryPattern(
 var expression = SyntaxFactory.IsPatternExpression(input, pattern);
 ~~~
 
-### 4. 参看官方阅读
+### 4. 参考官方阅读
 >* https://learn.microsoft.com/zh-cn/dotnet/csharp/language-reference/operators/patterns#parenthesized-pattern
 
 ## 七、列表模式
@@ -370,6 +382,8 @@ name is ['曾', '国', _ ]
 
 ### 2.EasySyntax语法实现
 >* 使用ListPatternBuilder组装多个模式
+>* 使用Add方法增加了'曾'和'国'两个常量模式
+>* 再使用Add方法增加了一个丢弃模式
 
 ~~~csharp
 var name = SyntaxFactory.IdentifierName("name");
@@ -382,6 +396,8 @@ var expression = name.Is(pattern);
 ~~~
 
 ### 3.Roslyn原始语法
+>* 使用SyntaxFactory.ListPattern构造列表模式
+
 ~~~csharp
 var name = SyntaxFactory.IdentifierName("name");
 var pattern = SyntaxFactory.ListPattern(SyntaxFactory.SeparatedList<PatternSyntax>([
@@ -393,7 +409,7 @@ var pattern = SyntaxFactory.ListPattern(SyntaxFactory.SeparatedList<PatternSynta
 var expression = name.Is(pattern);
 ~~~
 
-### 4. 参看官方阅读
+### 4. 参考官方阅读
 >* https://learn.microsoft.com/zh-cn/dotnet/csharp/language-reference/operators/patterns#list-patterns
 
 ## 八、切片模式
@@ -416,6 +432,8 @@ static bool IsPalindrome(ReadOnlySpan<char> input)
 ### 2.EasySyntax语法实现
 >* 使用Slice扩展方法定义切片模式
 >* 用于把原模式转化为切片模式
+>* 使用Add方法增加了first和last的var模式
+>* 使用Add方法增加了middle的切片模式
 
 ~~~csharp
 var input = SyntaxFactory.IdentifierName("input");
@@ -440,20 +458,21 @@ var method = SyntaxGenerator.BoolType.Method(isPalindromeMethod.Identifier, inpu
 ~~~
 
 ### 3.Roslyn原始语法实现切片模式
+>* 使用SyntaxFactory.SlicePattern构造切片模式
 >* 以下代码等效EasySyntax语法的SyntaxGenerator.VarPattern(middle.Identifier).Slice()
 
 ~~~csharp
 SyntaxFactory.SlicePattern(SyntaxGenerator.VarPattern(middle.Identifier));
 ~~~
 
-### 4. 参看官方阅读
+### 4. 参考官方阅读
 >* https://learn.microsoft.com/zh-cn/dotnet/csharp/language-reference/operators/patterns#list-patterns
 
 ## 九、属性模式
 >* 由属性名(或字段名)及其模式组成
 >* 可以同时定义多个属性(或字段)
 
-### 1.逻辑模式的Case
+### 1.属性模式的Case
 >* 该Case包含了两个属性
 >* Month使用常量模式
 >* Day使用关系模式
@@ -464,6 +483,8 @@ SyntaxFactory.SlicePattern(SyntaxGenerator.VarPattern(middle.Identifier));
 
 ### 2.EasySyntax语法实现
 >* 使用PropertyPatternBuilder组装多个属性(或字段)
+>* 使用Add方法增加了属性Month的常量模式
+>* 使用Add方法增加了属性Day的关系模式
 
 ~~~csharp
 var nationalDays = new PropertyPatternBuilder(null)
@@ -473,6 +494,8 @@ var nationalDays = new PropertyPatternBuilder(null)
 ~~~
 
 ### 3.Roslyn原始语法
+>* 使用SyntaxFactory.RecursivePattern构造属性模式
+
 ~~~csharp
 var nationalDays = SyntaxFactory.RecursivePattern(
     null, 
@@ -498,6 +521,7 @@ var nationalDays = SyntaxFactory.RecursivePattern(
 #### 4.1 EasySyntax的Case
 >* 该case的类型参数为Food
 >* 该case的变量名为food
+>* 使用Add方法增加了属性ExpirationDate的关系模式
 
 ~~~csharp
 var thing = SyntaxFactory.IdentifierName("thing");
@@ -510,7 +534,7 @@ var pattern = new PropertyPatternBuilder(foodType, food.Identifier)
 var method = foodType.Nullable().Method("FindFoot", SyntaxGenerator.ObjectType.Parameter(thing.Identifier))
     .ToBuilder()
     .If(thing.Is(pattern))
-    .Return(food)
+        .Return(food)
     .Return(SyntaxGenerator.NullLiteral);
 ~~~
 
@@ -528,7 +552,7 @@ Food? FindFoot(object thing)
 }
 ~~~
 
-### 5. 参看官方阅读
+### 5. 参考官方阅读
 >* https://learn.microsoft.com/zh-cn/dotnet/csharp/language-reference/operators/patterns#property-pattern
 
 ## 十、位置模式
@@ -542,7 +566,8 @@ point is (0, 0)
 ~~~
 
 ### 2.EasySyntax语法实现
->* 使用PropertyPatternBuilder组装多个属性(或字段)
+>* 使用PositionalPatternBuilder组装参数
+>* 使用Add方法增加了2个参数的关系模式
 
 ~~~csharp
 var point = SyntaxFactory.IdentifierName("point");
@@ -554,22 +579,25 @@ var isOrigin = point.Is(pattern);
 ~~~
 
 ### 3.Roslyn原始语法
+>* 使用SyntaxFactory.RecursivePattern构造位置模式
+
 ~~~csharp
-var nationalDays = SyntaxFactory.RecursivePattern(
-    null, 
-    null, 
-    SyntaxFactory.PropertyPatternClause(SyntaxFactory.SeparatedList([
+var point = SyntaxFactory.IdentifierName("point");
+var pattern = SyntaxFactory.RecursivePattern(null,
+    SyntaxFactory.PositionalPatternClause(SyntaxFactory.SeparatedList([
         SyntaxFactory.Subpattern(
-            SyntaxFactory.NameColon("Month"), 
-            SyntaxFactory.ConstantPattern(SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, 
-                SyntaxFactory.Literal(10)))),
+            SyntaxFactory.ConstantPattern(
+                SyntaxFactory.LiteralExpression(
+                    SyntaxKind.NumericLiteralExpression, 
+                    SyntaxFactory.Literal(0)))),
         SyntaxFactory.Subpattern(
-            SyntaxFactory.NameColon("Day"), 
-            SyntaxFactory.RelationalPattern(
-                SyntaxFactory.Token(SyntaxKind.LessThanEqualsToken), 
-                SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, 
-                    SyntaxFactory.Literal(7))))])),
+            SyntaxFactory.ConstantPattern(
+                SyntaxFactory.LiteralExpression(
+                    SyntaxKind.NumericLiteralExpression,
+                    SyntaxFactory.Literal(0))))])),
+    null,
     null);
+var isOrigin = SyntaxFactory.IsPatternExpression(point, pattern0);
 ~~~
 
 ### 4. 位置模式可选参数
@@ -579,6 +607,9 @@ var nationalDays = SyntaxFactory.RecursivePattern(
 #### 4.1 EasySyntax的Case
 >* 该case的类型参数为Point2D和Point3D
 >* 该case的变量名为p
+>* pattern1是二维点,使用Add方法增加了2个参数的关系模式
+>* pattern2是三维点,使用Add方法增加了3个参数的关系模式
+>* 最后用Default定义丢弃模式
 
 ~~~csharp
 var point2DType = SyntaxFactory.IdentifierName("Point2D");
@@ -625,6 +656,7 @@ string PrintIfAllCoordinatesArePositive(object point) => point switch
 >* 使用NamedPositionalPatternBuilder来支持属性名
 >* NamedPositionalPatternBuilder也支持type和name可选参数
 >* 使用NamedPositionalPatternBuilder也可以轻松重写4.的Case,限与篇幅就不举例了
+>* 使用Add方法增加X和Y两个参数的常量模式
 
 ~~~csharp
 var point = SyntaxFactory.IdentifierName("point");
@@ -646,7 +678,9 @@ point is (X: 0, Y: 0)
 >* 不是嵌套,是属性模式作为位置模式的可选参数
 
 #### 6.1 例如以下代码
->* WeightedPoint是结构体,另外还有一个属性Weight
+>* WeightedPoint是record,支持解构,另外还有一个属性Weight
+>* Weight属性不能通过解构函数提取
+>* 这种情况需要特殊的位置模式来匹配
 
 ~~~csharp
 public record WeightedPoint(int X, int Y)
@@ -656,9 +690,11 @@ public record WeightedPoint(int X, int Y)
 ~~~
 
 #### 6.2 EasySyntax的Case
->* 使用RecursivePatternBuilder来定义含属性模式的位置模式
+>* 使用RecursivePatternBuilder来定义含属性的位置模式
 >* RecursivePatternBuilder也支持type和name可选参数
 >* NamedRecursivePatternBuilder能实现位置参数属性名表示及属性模式,限与篇幅本文不展开
+>* 使用builder.Positional增加两个位置模式
+>* 使用builder.Property增加一个属性模式
 
 ~~~csharp
 var point = SyntaxFactory.IdentifierName("point");
@@ -674,7 +710,7 @@ var isInDomain = point.Is(builder.Build());
 point is (>= 0, >= 0) { Weight: > 0 }
 ~~~
 
-### 7. 参看官方阅读
+#### 6.4 参考官方阅读
 >* https://learn.microsoft.com/zh-cn/dotnet/csharp/language-reference/operators/patterns#positional-pattern
 
 

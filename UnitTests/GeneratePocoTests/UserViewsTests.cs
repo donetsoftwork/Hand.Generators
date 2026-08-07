@@ -1,6 +1,7 @@
-﻿using Hand.Entities;
+﻿using GeneratePocoTests.Supports;
+using Hand.Entities;
 
-namespace GeneratePocoTests.Supports;
+namespace GeneratePocoTests;
 
-[GeneratePoco(typeof(UserEntity), Rules = ["Prefix User"])]
+[GeneratePoco<User>(Rules = ["Prefix User"])]
 public partial class UserViewsTests;

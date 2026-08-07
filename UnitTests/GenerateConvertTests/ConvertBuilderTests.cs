@@ -1,10 +1,12 @@
-﻿using GenerateConvertTests.Supports;
+﻿using GenerateConvertTests.DTO;
+using GenerateConvertTests.Supports;
+using GeneratePocoTests.Supports;
 using Hand;
 using Hand.Builders;
 using Hand.Converters;
 using Hand.Enums;
 using Microsoft.CodeAnalysis;
-using System.Reflection.Metadata;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace GenerateConvertTests;
 
@@ -19,19 +21,6 @@ public class ConvertBuilderTests
             .Using("System");
         _compilation = driver.Compile(source);
         _builder = new ConvertBuilder(_compilation);
-    }
-    /// <summary>
-    /// 添加引用
-    /// </summary>
-    /// <typeparam name="type"></typeparam>
-    /// <returns></returns>
-    public static Compilation WithReference(Compilation compilation, Type type)
-    {
-        var references = type.Assembly.ToReferences()
-            .ToArray();
-        if (references.Length > 0)
-            return compilation.AddReferences(references);
-        return compilation;
     }
     [Theory]
     [InlineData(SpecialType.System_Boolean)]
@@ -57,9 +46,8 @@ public class ConvertBuilderTests
         Assert.NotNull(converter);
         if (converter is not PassConverter)
             Assert.Fail();
-        var nullable = _compilation.GetSpecialType(SpecialType.System_Nullable_T)
-            .Construct(type);
-        var converter2 = _builder.Get(type, type);
+        var nullable = _compilation.GetNullable(type);
+        var converter2 = _builder.Get(nullable, nullable);
         Assert.NotNull(converter2);
         if (converter2 is not PassConverter)
             Assert.Fail();
@@ -151,7 +139,7 @@ public class ConvertBuilderTests
     {
         // 枚举显式转化数值类型
         var typeName = type.FullName;
-        var compilation = WithReference(_compilation, type);
+        var compilation = _compilation.WithReference(type);
         var sourceType = compilation.GetTypeByMetadataName(typeName!);
         Assert.NotNull(sourceType);
         var destType = compilation.GetSpecialType(numeric);
@@ -176,7 +164,7 @@ public class ConvertBuilderTests
     {
         // 枚举显式转化数值类型
         var typeName = type.FullName;
-        var compilation = WithReference(_compilation, type);
+        var compilation = _compilation.WithReference(type);
         var sourceType = compilation.GetSpecialType(numeric);
         var destType = compilation.GetTypeByMetadataName(typeName!);
         Assert.NotNull(destType);
@@ -189,7 +177,7 @@ public class ConvertBuilderTests
     public void EnumFromString()
     {
         var type = typeof(ConsoleColor);
-        var compilation = WithReference(_compilation, type);
+        var compilation = _compilation.WithReference(type);
         var sourceType = compilation.GetStringSymbol();
         var destType = compilation.GetTypeByMetadataName(type.FullName!);
         Assert.NotNull(destType);
@@ -201,8 +189,41 @@ public class ConvertBuilderTests
     [Fact]
     public void FlagEnumFromString()
     {
+        var type = typeof(ColumnType);
+        var compilation = _compilation.WithReference(type);
+        var sourceType = compilation.GetStringSymbol();
+        var destType = compilation.GetTypeByMetadataName(type.FullName!);
+        Assert.NotNull(destType);
+        var converter = _builder.Get(sourceType, destType);
+        Assert.NotNull(converter);
+        if (converter is not EnumParseConverter)
+            Assert.Fail();
+    }
+    [Fact]
+    public void EnumFromMemberString()
+    {
+        var type = typeof(MyColorDTO);
+        var compilation = _compilation.WithReference(type);
+        var sourceType = compilation.GetStringSymbol();
+        var destType = compilation.GetTypeByMetadataName(type.FullName!);
+        Assert.NotNull(destType);
+        var converter = _builder.Get(sourceType, destType);
+        Assert.NotNull(converter);
+        if (converter is not StaticMethodConverter)
+            Assert.Fail();
+        var last = _builder.Sources.LastOrDefault();
+        Assert.NotNull(last);
+        var code = last.Generate()
+            .Build()
+            .NormalizeWhitespace()
+            .ToFullString();
+        Assert.Contains("ToMyColorDTO", code);
+    }
+    [Fact]
+    public void FlagEnumFromMemberString()
+    {
         var type = typeof(MyColor);
-        var compilation = WithReference(_compilation, type);
+        var compilation = _compilation.WithReference(type);
         var sourceType = compilation.GetStringSymbol();
         var destType = compilation.GetTypeByMetadataName(type.FullName!);
         Assert.NotNull(destType);
@@ -219,11 +240,38 @@ public class ConvertBuilderTests
         Assert.Contains("ToMyColor", code);
     }
     [Fact]
+    public void FlagToFlag()
+    {
+        var sourceType = typeof(ColumnType);
+        var destType = typeof(ColumnTypeDTO);
+        var compilation = _compilation.WithReference(typeof(FlagsAttribute))
+            .WithReference(sourceType)
+            .WithReference(destType);
+        var sourceSymbol = compilation.GetTypeByMetadataName(sourceType.FullName!);
+        Assert.NotNull(sourceSymbol);
+        var destSymbol = compilation.GetTypeByMetadataName(destType.FullName!);
+        Assert.NotNull(destSymbol);
+        var converter = _builder.Get(sourceSymbol, destSymbol);
+        Assert.NotNull(converter);
+        if (converter is not StaticMethodConverter)
+            Assert.Fail();
+        var last = _builder.Sources.LastOrDefault();
+        Assert.NotNull(last);
+        var code = last.Generate()
+            .Build()
+            .NormalizeWhitespace()
+            .ToFullString();
+        Assert.Contains("ToDTO", code);
+    }
+    [Fact]
     public void FlagToEnum()
     {
         var sourceType = typeof(MyColor);
         var destType = typeof(ConsoleColor);
-        var compilation = WithReference(WithReference(_compilation, sourceType), destType);
+        //var compilation = WithReference(WithReference(WithReference(_compilation, typeof(FlagsAttribute)), sourceType), destType);
+        var compilation = _compilation.WithReference(typeof(FlagsAttribute))
+            .WithReference(sourceType)
+            .WithReference(destType);
         var sourceSymbol = compilation.GetTypeByMetadataName(sourceType.FullName!);
         Assert.NotNull(sourceSymbol);
         var destSymbol = compilation.GetTypeByMetadataName(destType.FullName!);
@@ -245,7 +293,8 @@ public class ConvertBuilderTests
     {
         var sourceType = typeof(ConsoleColor);
         var destType = typeof(MyColor);
-        var compilation = WithReference(WithReference(_compilation, sourceType), destType);
+        var compilation = _compilation.WithReference(sourceType)
+            .WithReference(destType);
         var sourceSymbol = compilation.GetTypeByMetadataName(sourceType.FullName!);
         Assert.NotNull(sourceSymbol);
         var destSymbol = compilation.GetTypeByMetadataName(destType.FullName!);
@@ -261,5 +310,95 @@ public class ConvertBuilderTests
             .NormalizeWhitespace()
             .ToFullString();
         Assert.Contains("ToMyColor", code);
+    }
+    [Fact]
+    public void ToEntityBySingle()
+    {
+        var sourceType = typeof(long);
+        var destType = typeof(UserId);
+        var compilation = _compilation.WithReference(sourceType)
+            .WithReference(destType);
+        var sourceSymbol = compilation.GetLongSymbol();
+        Assert.NotNull(sourceSymbol);
+        var destSymbol = compilation.GetTypeByMetadataName(destType.FullName!);
+        Assert.NotNull(destSymbol);
+        var converter = _builder.Get(sourceSymbol, destSymbol);
+        Assert.NotNull(converter);
+        if (converter is not ConstructorConverter)
+            Assert.Fail();
+    }
+    [Fact]
+    public void ToDTO()
+    {
+        var sourceType = typeof(User);
+        var destType = typeof(UserDTO);
+        var compilation = _compilation.WithReference(sourceType)
+            .WithReference(destType);
+        var sourceSymbol = compilation.GetTypeByMetadataName(sourceType.FullName!);
+        Assert.NotNull(sourceSymbol);
+        var destSymbol = compilation.GetTypeByMetadataName(destType.FullName!);
+        Assert.NotNull(destSymbol);
+        var converter = _builder.Get(sourceSymbol, destSymbol);
+        Assert.NotNull(converter);
+        if (converter is not StaticMethodConverter)
+            Assert.Fail();
+        //var source = SyntaxFactory.IdentifierName("user");
+        //var dest = converter.Convert(source);
+        //var code = dest.NormalizeWhitespace()
+        //    .ToFullString();
+        //Assert.Contains("UserDTO", code);
+        var last = _builder.Sources.LastOrDefault();
+        Assert.NotNull(last);
+        var code = last.Generate()
+            .Build()
+            .NormalizeWhitespace()
+            .ToFullString();
+        Assert.Contains("ToDTO", code);
+    }
+    [Fact]
+    public void ToUser()
+    {
+        var sourceType = typeof(UserDTO);
+        var destType = typeof(User);
+        var compilation = _compilation.WithReference(sourceType)
+            .WithReference(destType);
+        var sourceSymbol = compilation.GetTypeByMetadataName(sourceType.FullName!);
+        Assert.NotNull(sourceSymbol);
+        var destSymbol = compilation.GetTypeByMetadataName(destType.FullName!);
+        Assert.NotNull(destSymbol);
+        var converter = _builder.Get(sourceSymbol, destSymbol);
+        Assert.NotNull(converter);
+        if (converter is not StaticMethodConverter)
+            Assert.Fail();
+        var last = _builder.Sources.LastOrDefault();
+        Assert.NotNull(last);
+        var code = last.Generate()
+            .Build()
+            .NormalizeWhitespace()
+            .ToFullString();
+        Assert.Contains("ToUser", code);
+    }
+    [Fact]
+    public void ToEntity()
+    {
+        var sourceType = typeof(User);
+        var destType = typeof(UserEntity);
+        var compilation = _compilation.WithReference(sourceType)
+            .WithReference(destType);
+        var sourceSymbol = compilation.GetTypeByMetadataName(sourceType.FullName!);
+        Assert.NotNull(sourceSymbol);
+        var destSymbol = compilation.GetTypeByMetadataName(destType.FullName!);
+        Assert.NotNull(destSymbol);
+        var converter = _builder.Get(sourceSymbol, destSymbol);
+        Assert.NotNull(converter);
+        if (converter is not StaticMethodConverter)
+            Assert.Fail();
+        var last = _builder.Sources.LastOrDefault();
+        Assert.NotNull(last);
+        var code = last.Generate()
+            .Build()
+            .NormalizeWhitespace()
+            .ToFullString();
+        Assert.Contains("ToEntity", code);
     }
 }

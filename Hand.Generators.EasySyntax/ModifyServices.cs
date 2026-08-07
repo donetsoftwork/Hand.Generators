@@ -199,6 +199,14 @@ public static partial class GenerateServices
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_static);
     /// <summary>
+    /// 静态
+    /// </summary>
+    /// <param name="function"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LocalFunctionStatementSyntax Static(this LocalFunctionStatementSyntax function)
+        => function.WithModifiers(function.Modifiers.Add(_static));
+    /// <summary>
     /// 只读
     /// </summary>
     /// <param name="field"></param>

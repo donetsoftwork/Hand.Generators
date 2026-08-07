@@ -48,7 +48,15 @@ class User
         var c = SyntaxFactory.IdentifierName("var").Variable("c", SyntaxGenerator.Literal(1));
         Assert.NotNull(c);
     }
-
+    [Fact]
+    public void SuppressNull()
+    {
+        var source = "string name = default!";
+        var syntaxTree = CSharpSyntaxTree.ParseText(source);
+        Assert.NotNull(syntaxTree);
+        var expression = syntaxTree.GetRoot().DescendantNodes().OfType<PostfixUnaryExpressionSyntax>().FirstOrDefault();
+        Assert.NotNull(expression);
+    }
     [Fact]
     public void StructRecord()
     {

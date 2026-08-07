@@ -1,4 +1,5 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Generic;
 
 namespace Hand.Builders;
@@ -17,7 +18,7 @@ public class NamespaceBuilder(BaseNamespaceDeclarationSyntax ns, List<UsingDirec
     : SyntaxGenerator(usings, type, constructors, fields, properties, methods)
 {
     #region 配置
-    private readonly BaseNamespaceDeclarationSyntax _ns = ns;
+    private BaseNamespaceDeclarationSyntax _ns = ns;
     /// <summary>
     /// 命名空间
     /// </summary>
@@ -29,5 +30,11 @@ public class NamespaceBuilder(BaseNamespaceDeclarationSyntax ns, List<UsingDirec
     /// </summary>
     /// <returns></returns>
     public override CompilationUnitSyntax Build()
-        => Build(_ns, _usings, _type, [.. _baseTypes], [.. _parameters], [.. _constructors, .. _fields, .. _properties, .. _methods, .. _others]);
+        => Build(_ns, _usings, _type, [.. _constructors, .. _fields, .. _properties, .. _methods, .. _others]);
+    /// <summary>
+    /// 应用命名空间修改
+    /// </summary>
+    /// <param name="modify"></param>
+    public void Apply(Func<BaseNamespaceDeclarationSyntax, BaseNamespaceDeclarationSyntax> modify)
+        => _ns = modify(_ns);
 }

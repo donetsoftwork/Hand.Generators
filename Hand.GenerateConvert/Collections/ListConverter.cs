@@ -31,10 +31,10 @@ public class ListConverter(SimpleNameSyntax methodName, IConverter itemConverter
         => _itemConverter;
     #endregion
     /// <inheritdoc />
-    protected override IEnumerable<ExpressionSyntax> CreateArguments()
+    protected override IEnumerable<ArgumentSyntax> CreateArguments()
     {
         var item = SyntaxFactory.IdentifierName("item");
         var lambda = SyntaxFactory.SimpleLambdaExpression(SyntaxFactory.Parameter(item.Identifier), _itemConverter.Convert(item));
-        return [lambda];
+        return [SyntaxFactory.Argument(lambda)];
     }
 }

@@ -18,7 +18,7 @@ public class TypeNameInfo(TypeSyntax type, string typeName, string @namespace)
     /// <param name="typeName"></param>
     /// <param name="namespace"></param>
     public TypeNameInfo(string typeName, string @namespace)
-        : this(SyntaxFactory.IdentifierName(typeName), typeName, @namespace)
+        : this(SyntaxFactory.IdentifierName($"global::{@namespace}.{typeName}"), typeName, @namespace)
     {
     }
     #region 配置

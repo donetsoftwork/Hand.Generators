@@ -1,6 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -46,17 +49,37 @@ public static class SyntaxScriptingServices
             .ExecuteAsync(globals, cancellation);
     }
     /// <summary>
+    /// 添加引用
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="type"></param>
+    /// <param name="withDocument"></param>
+    /// <returns></returns>
+    public static Compilation WithReference(this Compilation compilation, Type type, bool withDocument = false)
+    {
+        var fullName = type.FullName;
+        if (fullName is null || compilation.GetTypeByMetadataName(fullName) is not null)
+            return compilation;
+        var references = type.Assembly.ToReferences(withDocument)
+            .ToArray();
+        if (references.Length > 0)
+            return compilation.AddReferences(references);
+        return compilation;
+    }
+    /// <summary>
     /// 转化为程序集引用
     /// </summary>
     /// <param name="assembly"></param>
+    /// <param name="withDocument"></param>
     /// <returns></returns>
-    public static IEnumerable<MetadataReference> ToReferences(this Assembly assembly)
+    public static IEnumerable<MetadataReference> ToReferences(this Assembly assembly, bool withDocument = false)
     {
         if (assembly.IsDynamic)
             yield break;
         var location = assembly.Location;
         if (string.IsNullOrEmpty(location))
             yield break;
-        yield return MetadataReference.CreateFromFile(assembly.Location);
+        DocumentationProvider? documentation = withDocument ? XmlDocumentationProvider.CreateFromFile(Path.ChangeExtension(location, "xml")) : null;
+        yield return MetadataReference.CreateFromFile(assembly.Location, documentation: documentation);
     }
 }

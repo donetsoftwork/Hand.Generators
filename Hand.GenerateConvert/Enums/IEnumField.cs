@@ -24,7 +24,7 @@ public interface IEnumField
     /// </summary>
     /// <param name="enumType"></param>
     /// <returns></returns>
-    public MemberAccessExpressionSyntax GetExpression(TypeSyntax enumType);
+    public ExpressionSyntax GetExpression(TypeSyntax enumType);
     /// <summary>
     /// 基础值
     /// </summary>

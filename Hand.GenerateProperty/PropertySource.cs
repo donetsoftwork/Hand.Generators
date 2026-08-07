@@ -1,4 +1,5 @@
 using Hand.Builders;
+using Hand.Reflection;
 using Hand.Sources;
 using Hand.Symbols;
 using Microsoft.CodeAnalysis;
@@ -80,7 +81,7 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
             var constructor = _type.Constructor(_originalType.Parameter(original.Identifier))
                 .Public()
                 .ToBuilder()
-                .AddPatter(member.Assign(original))
+                .AddExpression(member.Assign(original))
                 .End();
             builder.AddOther(constructor);
         }
@@ -118,7 +119,7 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
                 // set => _original = value;
                 accessorList.Add(SyntaxGenerator.PropertySetDeclaration()
                         .ToBuilder()
-                        .AddPatter(_original.AssignValue())
+                        .AddExpression(_original.AssignValue())
                         .End());
             }
             var property = _originalType.Property(Original.Identifier, accessorList.ToArray())

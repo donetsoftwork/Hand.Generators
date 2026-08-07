@@ -1,4 +1,5 @@
 using Hand;
+using Hand.Members;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -11,20 +12,23 @@ public class BuilderTests
     {
         var type = SyntaxFactory.ClassDeclaration("UserId")
             .Public()
-            .Partial();
+            .Partial()
+            .WithSummary("UserId");
         var original = SyntaxFactory.IdentifierName("original");
         var _original = SyntaxFactory.IdentifierName("_original");
         var field = SyntaxGenerator.IntType.Field(_original.Identifier)
             .Private()
             .ReadOnly();
         var property = SyntaxGenerator.IntType.Property("Original", _original)
-            .Public();
+            .Public()
+            .WithSummary("Original");
 
         var constructor = type.Constructor(SyntaxGenerator.IntType.Parameter(original.Identifier))
             .Public()
             .ToBuilder()
-            .AddPatter(_original.Assign(original))
-            .End();
+            .AddExpression(_original.Assign(original))
+            .End()
+            .WithSummary("UserId");
 
         var builder = SyntaxGenerator.Create("Models", type, [constructor], [field], [property], []);
         var result = builder.Build();
@@ -39,11 +43,13 @@ public class BuilderTests
             .Private()
             .ReadOnly();
         var property = SyntaxGenerator.IntType.Property("Original", _original)
-            .Public();
+            .Public()
+            .WithSummary("Original");
         var type = SyntaxFactory.ClassDeclaration("UserId")
             .Public()
             .Partial()
-            .AddParameterListParameters(SyntaxGenerator.IntType.Parameter(original.Identifier));
+            .AddParameterListParameters(SyntaxGenerator.IntType.Parameter(original.Identifier))
+            .WithSummary("UserId");
         var builder = SyntaxGenerator.Create("Models", type, [], [field], [property], []);
         var result = builder.Build();
         Assert.NotEmpty(result.ToFullString());        
@@ -53,11 +59,13 @@ public class BuilderTests
     {
         var original = SyntaxFactory.IdentifierName("original");
         var property = SyntaxGenerator.IntType.Property("Original", original)
-            .Public();
+            .Public()
+            .WithSummary("Original");
         var type = SyntaxFactory.ClassDeclaration("UserId")
             .Public()
             .Partial()
-            .AddParameterListParameters(SyntaxGenerator.IntType.Parameter(original.Identifier));
+            .AddParameterListParameters(SyntaxGenerator.IntType.Parameter(original.Identifier))
+            .WithSummary("UserId");
         var builder = SyntaxGenerator.Create("Models", type);
         builder.AddProperty(property);
         var result = builder.Build();
@@ -66,11 +74,17 @@ public class BuilderTests
     [Fact]
     public void ListParameterForRecord()
     {
+        var comment = new Comment()
+        {
+            Summary = "UserId",
+            Params = new() { { "Original", "原始标识" } }
+        };
         var type = SyntaxGenerator.RecordStructDeclaration("UserId")
             .Public()
             .Partial()
             .AddParameterListParameters(SyntaxGenerator.IntType.Parameter("Original"))
-            .WithSemicolonToken();
+            .WithSemicolonToken()
+            .WithComment(comment);
         var builder = SyntaxGenerator.Create("Models", type);
         var result = builder.Build();
         Assert.NotEmpty(result.ToFullString());
@@ -171,12 +185,18 @@ public class BuilderTests
     [Fact]
     public void CreateStructRecordBySyntaxTree()
     {
+        var comment = new Comment()
+        {
+            Summary = "Person",
+            Params = new() { { "Name", "Name" } }
+        };
         var recordDeclaration = SyntaxGenerator.RecordStructDeclaration("Person")
             .Public()
             .AddParameterListParameters(
                 SyntaxGenerator.StringType.Parameter("Name")
             )
-            .WithSemicolonToken();
+            .WithSemicolonToken()
+            .WithComment(comment);
         // 将记录声明转换为字符串查看结果
         var tree = SyntaxFactory.CompilationUnit()
             .AddMembers(recordDeclaration);

@@ -11,9 +11,18 @@ namespace Hand.Enums;
 /// </summary>
 /// <param name="enumType"></param>
 /// <param name="ignoreCase"></param>
-public sealed class EnumParseConverter(TypeSyntax enumType, LiteralExpressionSyntax ignoreCase)
+public sealed class EnumParseConverter(TypeSyntax enumType, ArgumentSyntax ignoreCase)
     : StaticMethodConverter(SyntaxGenerator.Generic(_parse, enumType))
 {
+    /// <summary>
+    /// 字符串转化为枚举
+    /// </summary>
+    /// <param name="enumType"></param>
+    /// <param name="ignoreCase"></param>
+    public EnumParseConverter(TypeSyntax enumType, LiteralExpressionSyntax ignoreCase)
+        : this(enumType, SyntaxFactory.Argument(ignoreCase))
+    {
+    }
     /// <summary>
     /// 字符串转化为枚举
     /// </summary>
@@ -27,7 +36,7 @@ public sealed class EnumParseConverter(TypeSyntax enumType, LiteralExpressionSyn
     #region 配置
     private static readonly SyntaxToken _parse = SyntaxFactory.Identifier("System.Enum.Parse");
     private readonly TypeSyntax _enumType = enumType;
-    private readonly LiteralExpressionSyntax _ignoreCase = ignoreCase;
+    private readonly ArgumentSyntax _ignoreCase = ignoreCase;
 
     /// <summary>
     /// 枚举类型
@@ -37,7 +46,7 @@ public sealed class EnumParseConverter(TypeSyntax enumType, LiteralExpressionSyn
     /// <summary>
     /// 忽略大小写
     /// </summary>
-    public LiteralExpressionSyntax IgnoreCase 
+    public ArgumentSyntax IgnoreCase 
         => _ignoreCase;
     #endregion
     ///// <summary>
@@ -57,6 +66,6 @@ public sealed class EnumParseConverter(TypeSyntax enumType, LiteralExpressionSyn
     /// </summary>
     /// <param name="source"></param>
     /// <returns></returns>
-    protected override IEnumerable<ExpressionSyntax> CreateArguments(ExpressionSyntax source)
-        => [source, _ignoreCase];
+    protected override IEnumerable<ArgumentSyntax> CreateArguments(ExpressionSyntax source)
+        => [SyntaxFactory.Argument(source), _ignoreCase];
 }

@@ -2,7 +2,6 @@ using Hand.Filters;
 using Hand.Transform;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
 using System.Collections.Generic;
 
 namespace Hand.Generators;

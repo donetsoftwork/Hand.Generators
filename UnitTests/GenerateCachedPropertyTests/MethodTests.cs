@@ -8,7 +8,7 @@ namespace GenerateCachedPropertyTests;
 
 public partial class MethodTests
 {
-    [GenerateLazy("LazyTime")]
+    [GenerateLazy("LazyTime", LockType = "object")]
     public DateTime CreateTime()
     {
         return DateTime.Now;

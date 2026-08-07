@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 
 namespace Hand.Converters;
@@ -35,8 +36,8 @@ public class ConstructorConverter(TypeSyntax targetType)
     /// </summary>
     /// <param name="source"></param>
     /// <returns></returns>
-    protected virtual IEnumerable<ExpressionSyntax> CreateArguments(ExpressionSyntax source)
-        => [source];
+    protected virtual IEnumerable<ArgumentSyntax> CreateArguments(ExpressionSyntax source)
+        => [SyntaxFactory.Argument(source)];
     ///// <inheritdoc />
     //public IConverter Nullable(ExpressionSyntax? defaultExpression)
     //    => this.CheckNull(defaultExpression);

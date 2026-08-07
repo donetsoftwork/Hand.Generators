@@ -20,15 +20,15 @@ public class DoTests
             // string? thing
             .Declare(SyntaxGenerator.StringType.Nullable().Variable(thing.Identifier))
             // Console.WriteLine("Enter some things:")
-            .AddPatter(writeLine.Invocation([SyntaxGenerator.Literal("Enter some things:")]))
+            .AddExpression(writeLine.Invocation([SyntaxGenerator.Literal("Enter some things:")]))
             // do ... while(thing!="exit"){
             .Do(thing.NotEqual(SyntaxGenerator.Literal("exit")))
                 // thing=Console.ReadLine()
-                .AddPatter(thing.Assign(console.Access("ReadLine").Invocation()))
+                .AddExpression(thing.Assign(console.Access("ReadLine").Invocation()))
                 // Console.Write("Do ")
-                .AddPatter(console.Access("Write").Invocation([SyntaxGenerator.Literal("Do ")]))
+                .AddExpression(console.Access("Write").Invocation([SyntaxGenerator.Literal("Do ")]))
                 // Console.WriteLine(thing)
-                .AddPatter(writeLine.Invocation([thing]))
+                .AddExpression(writeLine.Invocation([thing]))
                 // }
                 .End()
             // }
@@ -89,15 +89,15 @@ public class DoTests
             // string? thing
             .Declare(StringType.Nullable().Variable(thing.Identifier))
             // Console.WriteLine("Enter some things:")
-            .AddPatter(writeLine.Invocation([Literal("Enter some things:")]))
+            .AddExpression(writeLine.Invocation([Literal("Enter some things:")]))
             // do ... while(thing!="exit"){
             .Do(thing.NotEqual(Literal("exit")))
                 // thing=Console.ReadLine()
-                .AddPatter(thing.Assign(readLine.Invocation()))
+                .AddExpression(thing.Assign(readLine.Invocation()))
                 // Console.Write("Do ")
-                .AddPatter(write.Invocation([Literal("Do ")]))
+                .AddExpression(write.Invocation([Literal("Do ")]))
                 // Console.WriteLine(thing)
-                .AddPatter(writeLine.Invocation([thing]))
+                .AddExpression(writeLine.Invocation([thing]))
                 // }
                 .End()
             // }
@@ -118,11 +118,11 @@ public class DoTests
             // do ... while(thing!="exit"){
             .Do()
                 // thing=Console.ReadLine()
-                .AddPatter(thing.Assign(readLine.Invocation()))
+                .AddExpression(thing.Assign(readLine.Invocation()))
                 // Console.Write("Do ")
-                .AddPatter(write.Invocation([Literal("Do ")]))
+                .AddExpression(write.Invocation([Literal("Do ")]))
                 // Console.WriteLine(thing)
-                .AddPatter(writeLine.Invocation([thing]))
+                .AddExpression(writeLine.Invocation([thing]))
                 // }
             .Build();
 
@@ -130,7 +130,7 @@ public class DoTests
             // string? thing
             .Declare(StringType.Nullable().Variable(thing.Identifier))
             // Console.WriteLine("Enter some things:")
-            .AddPatter(writeLine.Invocation([Literal("Enter some things:")]))
+            .AddExpression(writeLine.Invocation([Literal("Enter some things:")]))
             // do ... while
             .Add(@do)
             // }

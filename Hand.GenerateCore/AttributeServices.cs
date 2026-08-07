@@ -15,6 +15,26 @@ namespace Hand;
 public static partial class GenerateCoreServices
 {
     /// <summary>
+    /// 生成特性标记
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="member"></param>
+    /// <param name="attributes"></param>
+    /// <returns></returns>
+    public static TMember GenerateAttribute<TMember>(this SyntaxGenerator builder, TMember member, AttributeData[] attributes)
+        where TMember : CSharpSyntaxNode
+    {
+        if (attributes.Length == 0)
+            return member;
+        List<string> namespaces = [];
+        if (member is MemberDeclarationSyntax memberDeclaration)
+            member = (TMember)(CSharpSyntaxNode)memberDeclaration.WithAttributeLists(SyntaxFactory.List(attributes.ToSyntax(namespaces)));
+        else if (member is ParameterSyntax parameterSyntax)
+            member = (TMember)(CSharpSyntaxNode)parameterSyntax.WithAttributeLists(SyntaxFactory.List(attributes.ToSyntax(namespaces)));
+        builder.Using(namespaces);
+        return member;
+    }
+    /// <summary>
     /// 转化特性数据为特性语法
     /// </summary>
     /// <param name="data"></param>

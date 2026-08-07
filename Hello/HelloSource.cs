@@ -41,7 +41,7 @@ public class HelloSource(ClassDeclarationSyntax type, INamedTypeSymbol symbol)
             .Public()
             .Static()
             .ToBuilder()
-            .AddPatter(SyntaxFactory.IdentifierName("Console").Access("WriteLine").Invocation([expression]))
+            .AddExpression(SyntaxFactory.IdentifierName("Console").Access("WriteLine").Invocation([expression]))
             .End();
     }
 }

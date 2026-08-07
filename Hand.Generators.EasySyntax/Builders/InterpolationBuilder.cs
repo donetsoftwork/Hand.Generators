@@ -54,14 +54,7 @@ public class InterpolationBuilder(SyntaxKind start, SyntaxKind end)
     /// <param name="expression"></param>
     /// <returns></returns>
     public InterpolationBuilder Add(ExpressionSyntax expression)
-    {
-//        var interpolation = SyntaxFactory.InterpolatedStringExpression(
-//    SyntaxFactory.SingletonSeparatedList<InterpolatedStringContentSyntax>(
-//        SyntaxFactory.Interpolation(expression)
-//    )
-//);
-        return Add(SyntaxFactory.Interpolation(expression));
-    }
+        => Add(SyntaxFactory.Interpolation(expression));
     /// <summary>
     /// 添加格式化表达式
     /// </summary>

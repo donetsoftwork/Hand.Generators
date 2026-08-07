@@ -38,7 +38,6 @@ public class SyntaxTreeScriptTests
         var result = await script.ExecuteAsync(globals: new Globals() { x = 2, y = 3 });
         Assert.Equal(5, result);
     }
-
 }
 
 public class Globals

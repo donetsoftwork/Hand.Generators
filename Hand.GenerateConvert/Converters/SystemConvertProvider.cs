@@ -1,5 +1,6 @@
 ﻿using Hand.Cache;
 using Hand.Members;
+using Hand.Reflection;
 using Hand.Symbols;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -108,7 +109,7 @@ public class SystemConvertProvider(INamedTypeSymbol convertType)
     /// <inheritdoc />
     protected override SystemConverter? CreateNew(in PairTypeSymbolKey key)
     {
-        var methodName = GetConvertMethodName(key.LeftSymbol, key.RightSymbol);
+        var methodName = GetConvertMethodName(key.Left, key.Right);
         if (methodName is null)
             return null;
         return new SystemConverter(SyntaxFactory.IdentifierName(methodName));

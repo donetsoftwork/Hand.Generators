@@ -22,10 +22,10 @@ public class CollectionStaticMethodConverter(ExpressionSyntax method, IConverter
         => _itemConverter;
     #endregion
     /// <inheritdoc />
-    protected override IEnumerable<ExpressionSyntax> CreateArguments(ExpressionSyntax source)
+    protected override IEnumerable<ArgumentSyntax> CreateArguments(ExpressionSyntax source)
     {
         var item = SyntaxFactory.IdentifierName("item");
         var lambda = SyntaxFactory.SimpleLambdaExpression(SyntaxFactory.Parameter(item.Identifier), _itemConverter.Convert(item));
-        return [source, lambda];
+        return [SyntaxFactory.Argument(source), SyntaxFactory.Argument(lambda)];
     }
 }

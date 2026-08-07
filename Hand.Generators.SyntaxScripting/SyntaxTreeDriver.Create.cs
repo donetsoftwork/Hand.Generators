@@ -14,7 +14,7 @@ namespace Hand;
 public partial class SyntaxTreeDriver(CSharpParseOptions options, string path, List<UsingDirectiveSyntax> usings, List<MetadataReference> references)
 {
     #region 配置
-    private readonly CSharpParseOptions _options = options;
+    private CSharpParseOptions _options = options;
     private readonly string _path = path;
     private readonly List<UsingDirectiveSyntax> _usings = usings;
     private readonly List<MetadataReference> _references = references;
@@ -39,6 +39,16 @@ public partial class SyntaxTreeDriver(CSharpParseOptions options, string path, L
     public IReadOnlyCollection<MetadataReference> References
         => _references;
     #endregion
+    /// <summary>
+    /// 解析文档模式
+    /// </summary>
+    /// <param name="mode"></param>
+    /// <returns></returns>
+    public SyntaxTreeDriver WithDocumentationComments(DocumentationMode mode = DocumentationMode.Parse)
+    {
+        _options = _options.WithDocumentationMode(mode);
+        return this;
+    }
     #region Using
     /// <summary>
     /// 添加using
@@ -79,19 +89,29 @@ public partial class SyntaxTreeDriver(CSharpParseOptions options, string path, L
     /// 添加引用
     /// </summary>
     /// <param name="assembly"></param>
+    /// <param name="withDocument"></param>
     /// <returns></returns>
-    public SyntaxTreeDriver Reference(Assembly assembly)
+    public SyntaxTreeDriver Reference(Assembly assembly, bool withDocument = false)
     {
-        _references.AddRange(assembly.ToReferences());
+        _references.AddRange(assembly.ToReferences(withDocument));
         return this;
     }
     /// <summary>
     /// 添加引用
     /// </summary>
     /// <typeparam name="T"></typeparam>
+    /// <param name="withDocument"></param>
     /// <returns></returns>
-    public SyntaxTreeDriver Reference<T>()
-        => Reference(typeof(T).Assembly);
+    public SyntaxTreeDriver Reference<T>(bool withDocument = false)
+        => Reference(typeof(T).Assembly, withDocument);
+    /// <summary>
+    /// 添加引用
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="withDocument"></param>
+    /// <returns></returns>
+    public SyntaxTreeDriver Reference(Type type, bool withDocument = false)
+        => Reference(type.Assembly, withDocument);
     #endregion
     #region Create
     /// <summary>

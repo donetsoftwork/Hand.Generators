@@ -6,7 +6,7 @@ namespace GenerateCachedPropertyTests;
 
 public partial class PropertyTests
 {
-    [GenerateLazy("LazyTime")]
+    [GenerateLazy("LazyTime", LockType = "object")]
     public static DateTime Now { get; } = DateTime.Now;
 
     [Fact]

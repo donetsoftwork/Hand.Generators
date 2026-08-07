@@ -17,7 +17,7 @@ public class ForEachTests
             .ToBuilder()
             .Declare(SyntaxGenerator.VarType.Variable(count.Identifier, SyntaxGenerator.Literal(0)))
             .ForEach(SyntaxGenerator.VarType, item.Identifier, list)
-                .AddPatter(count.AddAssign(item))
+                .AddExpression(count.AddAssign(item))
             .End()
             .Return(count);
         var code = method.NormalizeWhitespace().ToFullString();
@@ -64,7 +64,7 @@ public class ForEachTests
             // foreach(item in list)
             .ForEach(item.Identifier, list)
                 //count += item
-                .AddPatter(count.AddAssign(item))
+                .AddExpression(count.AddAssign(item))
             .End()
             .Return(count);
         var code = method.NormalizeWhitespace().ToFullString();
@@ -80,7 +80,7 @@ public class ForEachTests
         // foreach(item in list)
         var forEach = list.ForEach(item.Identifier)
             //count += item
-            .AddPatter(count.AddAssign(item))
+            .AddExpression(count.AddAssign(item))
             .Build();
         var body = SyntaxGenerator.Scope()
             // var count = 0

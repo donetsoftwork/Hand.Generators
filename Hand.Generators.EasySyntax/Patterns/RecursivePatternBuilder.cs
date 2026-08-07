@@ -12,7 +12,7 @@ namespace Hand.Patterns;
 /// <param name="type"></param>
 /// <param name="name"></param>
 public class RecursivePatternBuilder(PositionalClauseBuilder positional, PropertyClauseBuilder property, TypeSyntax? type, SyntaxToken? name = null)
-    : RecursivePatternBuilder<PositionalClauseBuilder>(positional, property, type, name)
+    : RecursivePatternBuilder<PositionalClauseBuilder>(positional, property, type, name), IPatternCollection, INamedPatternCollection
 {
     /// <summary>
     /// 递归模式构造器
@@ -32,4 +32,10 @@ public class RecursivePatternBuilder(PositionalClauseBuilder positional, Propert
         : this(new([]), new([]), type, SyntaxFactory.Identifier(name))
     {
     }
+    /// <inheritdoc />
+    void IPatternCollection.AddPattern(PatternSyntax pattern)
+        => _positional.Add(pattern);
+    /// <inheritdoc />
+    void INamedPatternCollection.AddPattern(NameColonSyntax name, PatternSyntax pattern)
+        => _property.Add(name, pattern);
 }

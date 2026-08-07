@@ -12,5 +12,5 @@ public interface IPatternCollection
     /// </summary>
     /// <param name="pattern"></param>
     /// <returns></returns>
-    void AddPattern(PatternSyntax pattern);
+    void AddPattern(PatternSyntax pattern); 
 }

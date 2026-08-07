@@ -317,6 +317,6 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     {
         if (other.Kind == SymbolKind.ErrorType && other is IErrorTypeSymbol error)
             return string.Equals(symbol.MetadataName, error.MetadataName);
-        return SymbolEqualityComparer.IncludeNullability.Equals(symbol, other);
+        return symbol.Equals( other, SymbolEqualityComparer.IncludeNullability);
     }
 }

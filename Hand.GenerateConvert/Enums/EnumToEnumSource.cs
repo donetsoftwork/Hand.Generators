@@ -1,7 +1,7 @@
 ﻿using Hand.Builders;
 using Hand.Converters;
-using Hand.Extensions;
-using Hand.Members;
+using Hand.Reflection;
+using Hand.Sources;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -16,41 +16,41 @@ namespace Hand.Enums;
 /// </summary>
 /// <param name="compilation"></param>
 /// <param name="sourceType"></param>
-/// <param name="destType"></param>
-/// <param name="extensionInfo"></param>
+/// <param name="destInfo"></param>
 /// <param name="methodName"></param>
 /// <param name="sourceBundle"></param>
 /// <param name="destBundle"></param>
-public class EnumToEnumSource(Compilation compilation, TypeSyntax sourceType, TypeSyntax destType, TypeNameInfo extensionInfo, string methodName, IEnumBundle sourceBundle, IEnumBundle destBundle)
-    : ExtensionSource(compilation, extensionInfo, true, methodName, sourceType, destType)
+public class EnumToEnumSource(Compilation compilation, TypeSyntax sourceType, TypeSymbolInfo destInfo, string methodName, IEnumBundle sourceBundle, IEnumBundle destBundle)
+    : MethodSource(compilation, methodName, sourceType, destInfo.Symbol.ToSyntax())
 {
     #region 配置
+    private readonly TypeSymbolInfo _destInfo = destInfo;
     private readonly IEnumBundle _sourceBundle = sourceBundle;
     private readonly IEnumBundle _destBundle = destBundle;
-    //private readonly CastConverter _castConverter = new(destType);
     #endregion
 
     /// <inheritdoc />
-    protected override MethodDeclarationSyntax BuildBody(MethodBodyBuilder<MethodDeclarationSyntax> builder, ExpressionSyntax @this)
-    {
-        if(_sourceBundle.HasFlag && _sourceBundle is FlagEnumBundle sourceFlagBundle)
+    public override MethodDeclarationSyntax BuildBody(MethodDeclarationSyntax method, ExpressionSyntax @this)
+    {        
+        if (_sourceBundle.HasFlag && _sourceBundle is FlagEnumBundle sourceFlagBundle)
         {
             if (_destBundle.HasFlag && _destBundle is FlagEnumBundle destFlagBundle)
-                return FlagToFlag(builder, @this, sourceFlagBundle, destFlagBundle);
-            return FlagToEnum(builder, @this, sourceFlagBundle.Fields, _destBundle.Fields);
+                return FlagToFlag(method, @this, sourceFlagBundle, destFlagBundle);
+            return FlagToEnum(method, @this, sourceFlagBundle.Fields, _destBundle.Fields);
         }
-        return EnumToEnum(builder, @this, [.. _sourceBundle.Fields], _destBundle.Fields);
+        return EnumToEnum(method, @this, [.. _sourceBundle.Fields], _destBundle.Fields);
     }
     /// <summary>
     /// 位域转位域
     /// </summary>
-    /// <param name="builder"></param>
+    /// <param name="method"></param>
     /// <param name="this"></param>
     /// <param name="sourceBundle"></param>
     /// <param name="destBundle"></param>
     /// <returns></returns>
-    public MethodDeclarationSyntax FlagToFlag(MethodBodyBuilder<MethodDeclarationSyntax> builder, ExpressionSyntax @this, FlagEnumBundle sourceBundle, FlagEnumBundle destBundle)
+    public MethodDeclarationSyntax FlagToFlag(MethodDeclarationSyntax method, ExpressionSyntax @this, FlagEnumBundle sourceBundle, FlagEnumBundle destBundle)
     {
+        var builder = method.ToBuilder();
         var result = SyntaxFactory.IdentifierName("result");
         // ulong result = 0UL;
         builder.Declare(SyntaxGenerator.ULongType.Variable(result.Identifier, SyntaxGenerator.Literal(0UL)));
@@ -68,23 +68,25 @@ public class EnumToEnumSource(Compilation compilation, TypeSyntax sourceType, Ty
             // if(this & source.Expression == source.Expression)
             //      result |= dest.Expression;
             var expression = sourceField.GetExpression(_thisType);
-            builder.If(@this.And(expression).Equal(expression))
-                 .AddPatter(result.OrAssign(SyntaxGenerator.Literal(flag)))
+            builder.If(@this.And(expression).Parenthesized().Equal(expression))
+                 .AddExpression(result.OrAssign(SyntaxGenerator.Literal(flag)))
                  .End();
         }
         // return (TEnum)result;
-        return builder.Return(CastConverter.Convert(result, _returnType));
+        return builder.Return(CastConverter.Convert(result, _returnType))
+            .WithSummary(ConvertBuilder.GetMethodSummary(_destInfo));
     }
     /// <summary>
-    /// 
+    /// 位域转枚举
     /// </summary>
-    /// <param name="builder"></param>
+    /// <param name="method"></param>
     /// <param name="this"></param>
     /// <param name="sourceFields"></param>
     /// <param name="destFields"></param>
     /// <returns></returns>
-    public MethodDeclarationSyntax FlagToEnum(MethodBodyBuilder<MethodDeclarationSyntax> builder, ExpressionSyntax @this, List<FlagEnumField> sourceFields, IEnumerable<IEnumField> destFields)
+    public MethodDeclarationSyntax FlagToEnum(MethodDeclarationSyntax method, ExpressionSyntax @this, List<FlagEnumField> sourceFields, IEnumerable<IEnumField> destFields)
     {
+        var builder = method.ToBuilder();
         var memberCheck = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var members = new List<FlagEnumField>(sourceFields.Count);
         foreach (var sourceField in sourceFields)
@@ -97,7 +99,7 @@ public class EnumToEnumSource(Compilation compilation, TypeSyntax sourceType, Ty
                 // if(this & source.Expression == source.Expression)
                 //      return dest.Expression;
                 var expression = sourceField.GetExpression(_thisType);
-                builder.If(@this.And(expression).Equal(expression))
+                builder.If(@this.And(expression).Parenthesized().Equal(expression))
                      .Return(destField.GetExpression(_returnType));
                 memberCheck.Add(name);
                 continue;
@@ -117,24 +119,25 @@ public class EnumToEnumSource(Compilation compilation, TypeSyntax sourceType, Ty
                 // if(this & source.Expression == source.Expression)
                 //      return dest.Expression;
                 var expression = sourceField.GetExpression(_thisType);
-                builder.If(@this.And(expression).Equal(expression))
+                builder.If(@this.And(expression).Parenthesized().Equal(expression))
                      .Return(destField.GetExpression(_returnType));
                 memberCheck.Add(member);
                 continue;
             }
         }
         // return default;
-        return builder.Return(SyntaxGenerator.DefaultLiteral);
+        return builder.Return(SyntaxGenerator.DefaultLiteral)
+            .WithSummary(ConvertBuilder.GetMethodSummary(_destInfo));
     }
     /// <summary>
     /// 枚举转枚举
     /// </summary>
-    /// <param name="builder"></param>
+    /// <param name="method"></param>
     /// <param name="this"></param>
     /// <param name="sourceFields"></param>
     /// <param name="destFields"></param>
     /// <returns></returns>
-    public MethodDeclarationSyntax EnumToEnum(MethodBodyBuilder<MethodDeclarationSyntax> builder, ExpressionSyntax @this, IEnumField[] sourceFields, IEnumerable<IEnumField> destFields)
+    public MethodDeclarationSyntax EnumToEnum(MethodDeclarationSyntax method, ExpressionSyntax @this, IEnumField[] sourceFields, IEnumerable<IEnumField> destFields)
     {
         var memberCheck = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var members = new List<IEnumField>(sourceFields.Length);
@@ -146,7 +149,7 @@ public class EnumToEnumSource(Compilation compilation, TypeSyntax sourceType, Ty
             if (destFields.FirstOrDefault(item => item.Match(name)) is IEnumField destField)
             {
                 // sourceField.Expression => destField.Expression,
-                @switch.Case(sourceField.GetExpression(_thisType).ToPattern(), destField.GetExpression(_returnType));
+                @switch.Case(sourceField.GetExpression(_thisType), destField.GetExpression(_returnType));
                 memberCheck.Add(name);
                 continue;
             }
@@ -163,7 +166,7 @@ public class EnumToEnumSource(Compilation compilation, TypeSyntax sourceType, Ty
             if (destFields.FirstOrDefault(item => item.MatchMember(member)) is IEnumField destField)
             {
                 // sourceField.Expression => destField.Expression,
-                @switch.Case(sourceField.GetExpression(_thisType).ToPattern(), destField.GetExpression(_returnType));
+                @switch.Case(sourceField.GetExpression(_thisType), destField.GetExpression(_returnType));
                 memberCheck.Add(member);
                 continue;
             }
@@ -171,17 +174,18 @@ public class EnumToEnumSource(Compilation compilation, TypeSyntax sourceType, Ty
         // _ => default }
         var expression = @switch.Default(SyntaxGenerator.DefaultLiteral)
             .Build();
-        return builder.Return(expression);
+        return method.WithExpressionBody(expression)
+            .WithSummary(ConvertBuilder.GetMethodSummary(_destInfo));
     }
 
-    /// <summary>
-    /// 按源字段映射到目标字段(优先Member)
-    /// </summary>
-    /// <param name="sourceField"></param>
-    /// <param name="destBundle"></param>
-    /// <returns></returns>
-    private static IEnumField? Map(IEnumField sourceField, IEnumBundle destBundle)
-        => destBundle.GetFieldByName(sourceField.Name) ?? destBundle.GetFieldByMemberName(sourceField.Member);
+    ///// <summary>
+    ///// 按源字段映射到目标字段(优先Member)
+    ///// </summary>
+    ///// <param name="sourceField"></param>
+    ///// <param name="destBundle"></param>
+    ///// <returns></returns>
+    //private static IEnumField? Map(IEnumField sourceField, IEnumBundle destBundle)
+    //    => destBundle.GetFieldByName(sourceField.Name) ?? destBundle.GetFieldByMemberName(sourceField.Member);
     /// <summary>
     /// 按源字段映射到位域字段
     /// </summary>

@@ -15,9 +15,14 @@ public class RecursivePatternBuilder<TPositional>(TPositional positional, Proper
     where TPositional : PositionalBaseBuilder
 {
     #region 配置
-    private readonly TPositional _positional = positional;
-    private readonly PropertyClauseBuilder _property = property;
-
+    /// <summary>
+    /// 位置模式
+    /// </summary>
+    protected readonly TPositional _positional = positional;
+    /// <summary>
+    /// 属性模式
+    /// </summary>
+    protected readonly PropertyClauseBuilder _property = property;
     /// <summary>
     /// 位置模式
     /// </summary>

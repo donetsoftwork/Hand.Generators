@@ -33,7 +33,7 @@ public class EnumField(string name, string member/*, MemberAccessExpressionSynta
         => _under;
     #endregion
     /// <inheritdoc />
-    public MemberAccessExpressionSyntax GetExpression(TypeSyntax enumType)
+    public ExpressionSyntax GetExpression(TypeSyntax enumType)
         => enumType.Access(_name);
     /// <inheritdoc />
     public bool Match(string name)

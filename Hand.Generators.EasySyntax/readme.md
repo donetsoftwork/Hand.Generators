@@ -94,7 +94,7 @@ namespace Services;
 >* SyntaxFactory.LiteralExpression(SyntaxKind.DefaultLiteralExpression)
 >* SyntaxFactory.ImplicitObjectCreationExpression()
 >* SyntaxFactory.CollectionExpression()
->* SyntaxFactory.CollectionExpression(SyntaxFactory.SeparatedList<CollectionElementSyntax>([SyntaxFactory.ExpressionElement(SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(1))), SyntaxFactory.ExpressionElement(SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(2)))]))
+>* SyntaxFactory.CollectionExpression(SyntaxFactory.SeparatedList\<CollectionElementSyntax\>([SyntaxFactory.ExpressionElement(SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(1))), SyntaxFactory.ExpressionElement(SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(2)))]))
 >* SyntaxFactory.TupleExpression(SyntaxFactory.SeparatedList([SyntaxFactory.Argument(SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(1))), SyntaxFactory.Argument(SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(2)))]))
 
 ### 2. 简化方式
@@ -519,6 +519,7 @@ AttributeUsage(AttributeTargets.Method, Inherited = false)
 >* SyntaxFactory.ConditionalAccessExpression(owner, SyntaxFactory.MemberBindingExpression(SyntaxFactory.IdentifierName(member)))
 >* SyntaxFactory.ConditionalExpression(condition, trueExpression, falseExpression)
 >* SyntaxFactory.BinaryExpression(SyntaxKind.CoalesceExpression, left, right)
+>* SyntaxFactory.PostfixUnaryExpression(SyntaxKind.SuppressNullableWarningExpression, variable)
 
 ### 2. 简化方式(扩展方法)
 >* left.Add(right)
@@ -552,6 +553,7 @@ AttributeUsage(AttributeTargets.Method, Inherited = false)
 >* owner.ConditionalAccess(member)
 >* condition.Conditional(trueExpression, falseExpression)
 >* left.NullCoalesce(right)
+>* variable.SuppressNull()
 
 ### 3. 生成的代码
 >* left + right
@@ -584,6 +586,7 @@ AttributeUsage(AttributeTargets.Method, Inherited = false)
 >* owner?.member
 >* condition ? trueExpression : falseExpression
 >* left ?? right
+>* variable!
 
 ## 九、定义变量
 ### 1. 原始方式

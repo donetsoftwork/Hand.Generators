@@ -11,4 +11,8 @@ public class GenerateLazyAttribute(string propertyName = "")
     /// 指定属性名
     /// </summary>
     public string PropertyName { get; } = propertyName;
+    /// <summary>
+    /// 指定锁类型
+    /// </summary>
+    public string LockType { get; set; }
 }

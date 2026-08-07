@@ -15,7 +15,7 @@ namespace Hand.Providers;
 /// <param name="isPartial"></param>
 /// <param name="isExtension"></param>
 public class SourceProvider(TypeNameInfo typeInfo, string symbolName, IMethodProvider original, bool isPartial, bool isExtension = false)
-    : ISourceProvider, IMethodProvider
+    : IMethodProvider
 {
     #region 配置
     private readonly Dictionary<PairTypeSymbolKey, IGeneratorSource> _sources = [];
@@ -39,11 +39,22 @@ public class SourceProvider(TypeNameInfo typeInfo, string symbolName, IMethodPro
     /// 是否扩展类
     /// </summary>
     private readonly bool _isExtension = isExtension;
+
+    /// <summary>
+    /// 当前类名
+    /// </summary>
+    public string SymbolName 
+        => _symbolName;
     #endregion
     #region ISourceProvider
     /// <inheritdoc />
     public ConvertSourceInfo ConvertTo(string dest)
-        => new(_typeInfo, ConvertMethodInfo.Create(dest, _symbolName, _isExtension, "To"), _isPartial, _isExtension);
+    {
+        //string destName = dest.Name;
+        //var info = ConvertMethodInfo.Create(dest, _symbolName, _isExtension, "To");
+        //GetConvertMethod(info, dest)
+        return new(this, _typeInfo, ConvertMethodInfo.Create(dest, _symbolName, _isExtension, "To"), _isPartial, _isExtension);
+    }
     ///// <inheritdoc />
     //public ConvertSourceInfo ConvertFrom(string source)
     //    => new(_typeInfo, ConvertMethodInfo.Create(source, _symbolName, "From"), _isPartial, true);
@@ -60,7 +71,22 @@ public class SourceProvider(TypeNameInfo typeInfo, string symbolName, IMethodPro
     }
     #endregion
     #region IMethodProvider
-    /// <inheritdoc />
+    ///// <summary>
+    ///// 获取构造方法
+    ///// </summary>
+    ///// <param name="dest"></param>
+    ///// <returns></returns>
+    //public IMethodSymbol? GetConvertMethod(INamedTypeSymbol dest)
+    //{
+    //    var convertToInfo = ConvertTo(dest.Name);
+    //    return GetConvertMethod(convertToInfo.MethodInfo, dest);
+    //}
+    /// <summary>
+    /// 获取构造方法
+    /// </summary>
+    /// <param name="info"></param>
+    /// <param name="dest"></param>
+    /// <returns></returns>
     public IMethodSymbol? GetConvertMethod(ConvertMethodInfo info, INamedTypeSymbol dest)
         => _original.GetConvertMethod(info, dest);
     #endregion

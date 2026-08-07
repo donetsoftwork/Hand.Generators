@@ -1,5 +1,4 @@
-﻿using Hand.Members;
-using Hand.Symbols;
+﻿using Hand.Reflection;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -15,9 +14,9 @@ public class DefaultValueProvider
     /// </summary>
     /// <param name="info"></param>
     /// <returns></returns>
-    public static ExpressionSyntax GetDefault(MemberSymbolInfo info)
+    public static ExpressionSyntax GetDefault(TypeSymbolInfo info)
     {
-        var category = info.Category;
+        var category = info.Kind;
         var symbol = info.Symbol;
         if (category.IsNullable() || symbol.IsValueType)
             return SyntaxGenerator.DefaultLiteral;

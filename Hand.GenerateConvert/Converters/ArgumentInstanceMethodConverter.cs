@@ -1,5 +1,7 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Hand.Converters;
 
@@ -8,18 +10,27 @@ namespace Hand.Converters;
 /// </summary>
 /// <param name="methodName"></param>
 /// <param name="arguments"></param>
-public class ArgumentInstanceMethodConverter(SimpleNameSyntax methodName, params ExpressionSyntax[] arguments)
+public class ArgumentInstanceMethodConverter(SimpleNameSyntax methodName, IEnumerable<ArgumentSyntax> arguments)
      : InstanceMethodConverter(methodName)
 {
+    /// <summary>
+    /// 实例方法转化器
+    /// </summary>
+    /// <param name="methodName"></param>
+    /// <param name="arguments"></param>
+    public ArgumentInstanceMethodConverter(SimpleNameSyntax methodName, IEnumerable<ExpressionSyntax> arguments)
+        : this(methodName, arguments.Select(SyntaxFactory.Argument))
+    {
+    }
     #region 配置
-    private readonly ExpressionSyntax[] _arguments = arguments;
+    private readonly IEnumerable<ArgumentSyntax> _arguments = arguments;
     /// <summary>
     /// 参数
     /// </summary>
-    public ExpressionSyntax[] Arguments
+    public IEnumerable<ArgumentSyntax> Arguments
         => _arguments;
     #endregion
     /// <inheritdoc />
-    protected override IEnumerable<ExpressionSyntax> CreateArguments()
+    protected override IEnumerable<ArgumentSyntax> CreateArguments()
         => _arguments;
 }
