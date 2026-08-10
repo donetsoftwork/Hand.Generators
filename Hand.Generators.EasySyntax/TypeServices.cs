@@ -277,7 +277,7 @@ public static partial class GenerateServices
     /// <param name="type"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TypeSyntax Nullable(this TypeSyntax type)
+    public static NullableTypeSyntax Nullable(this TypeSyntax type)
         => SyntaxFactory.NullableType(type);
     /// <summary>
     /// typeof
@@ -926,10 +926,17 @@ public static partial class GenerateServices
     private static readonly SymbolDisplayFormat _globalStyle = SymbolDisplayFormat.FullyQualifiedFormat
         .WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Included‌);
     /// <summary>
-    /// 自动包含包含样式(不包含全局命名空间)
+    /// 最简模式(不包含命名空间)
     /// </summary>
-    private static readonly SymbolDisplayFormat _containingStyle = SymbolDisplayFormat.FullyQualifiedFormat
-      .WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining);
+    private static readonly SymbolDisplayFormat _miniStyle = SymbolDisplayFormat.MinimallyQualifiedFormat;
+    /// <summary>
+    /// 自动包含命名
+    /// </summary>
+    /// <param name="symbol"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypeSyntax ToDisplayName(this ITypeSymbol symbol)
+        => SyntaxFactory.ParseTypeName(symbol.ToDisplayString());
     /// <summary>
     /// 全局命名
     /// </summary>
@@ -939,13 +946,13 @@ public static partial class GenerateServices
     public static TypeSyntax ToGlobalName(this ITypeSymbol symbol)
         => SyntaxFactory.ParseTypeName(symbol.ToDisplayString(_globalStyle));
     /// <summary>
-    /// 自动包含命名
+    /// 最简命名
     /// </summary>
     /// <param name="symbol"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IdentifierNameSyntax ToContainingName(this ITypeSymbol symbol)
-        => SyntaxFactory.IdentifierName(symbol.ToDisplayString(_containingStyle));
+    public static IdentifierNameSyntax ToMiniName(this ITypeSymbol symbol)
+        => SyntaxFactory.IdentifierName(symbol.ToDisplayString(_miniStyle));
     #region IsNullable
     /// <summary>
     /// 是否可空类型
@@ -1015,33 +1022,40 @@ public static partial class GenerateServices
     /// 类型符号转化为类型语法
     /// </summary>
     /// <param name="symbol"></param>
-    /// <returns></returns>
-    public static TypeSyntax ToSyntax(this INamedTypeSymbol symbol)
-    {
-        if (symbol.IsGenericType(SpecialType.System_Nullable_T) && symbol.TypeArguments[0] is INamedTypeSymbol namedType)
-            return SyntaxFactory.NullableType(ToSyntaxCore(namedType));
-        if (symbol.NullableAnnotation == NullableAnnotation.Annotated)
-            return SyntaxFactory.NullableType(ToSyntaxCore(symbol.ConstructedFrom));
-        return ToSyntaxCore(symbol);
-    }
-    /// <summary>
-    /// 类型符号转化为类型语法
-    /// </summary>
-    /// <param name="symbol"></param>
     /// <param name="nullable"></param>
     /// <returns></returns>
     public static TypeSyntax ToSyntax(this INamedTypeSymbol symbol, bool nullable)
     {
         if (nullable)
-            return CheckNullable(ToSyntaxCore(symbol));
-        return ToSyntaxCore(symbol);
+            return CheckNullable(ToSyntax((ITypeSymbol)symbol));
+        return ToSyntax((ITypeSymbol)symbol);
     }
+    /// <summary>
+    /// 类型符号转化为类型语法
+    /// </summary>
+    /// <param name="symbol"></param>
+    /// <returns></returns>
+    public static TypeSyntax ToSyntax(this INamedTypeSymbol symbol)
+    {
+        if (symbol.IsGenericType && symbol.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T)
+            return SyntaxFactory.NullableType(ToSyntax(symbol.TypeArguments[0]));
+        if (symbol.NullableAnnotation == NullableAnnotation.Annotated)
+            return SyntaxFactory.NullableType(ToSyntax(symbol.ConstructedFrom));
+        return ToDisplayName(symbol);
+    }
+    /// <summary>
+    /// IArrayTypeSymbol转TypeSyntax
+    /// </summary>
+    /// <param name="arraySymbol"></param>
+    /// <returns></returns>
+    public static TypeSyntax ToSyntax(this IArrayTypeSymbol arraySymbol)
+        => ToSyntax(arraySymbol.ElementType).Array();
     /// <summary>
     /// 类型符号转化为类型语法(不处理Nullable)
     /// </summary>
     /// <param name="symbol"></param>
     /// <returns></returns>
-    private static TypeSyntax ToSyntaxCore(ITypeSymbol symbol)
+    public static TypeSyntax ToSyntax(this ITypeSymbol symbol)
     {
         return symbol.SpecialType switch
         {
@@ -1059,12 +1073,54 @@ public static partial class GenerateServices
             SpecialType.System_Decimal => SyntaxGenerator.DecimalType,
             SpecialType.System_String => SyntaxGenerator.StringType,
             SpecialType.System_Char => SyntaxGenerator.CharType,
-            SpecialType.System_Object => SyntaxGenerator.ObjectType,
-            SpecialType.System_Void => SyntaxGenerator.VoidType,
             SpecialType.System_DateTime => SyntaxGenerator.DateTimeType,
-            SpecialType.System_IDisposable => SyntaxGenerator.IDisposableType,
-            _ => ToGlobalName(symbol)
+            SpecialType.System_Object => SyntaxGenerator.ObjectType,
+            SpecialType.System_ValueType => SyntaxFactory.IdentifierName("ValueType").Qualified("System"),
+            SpecialType.System_Void => SyntaxGenerator.VoidType,  
+            SpecialType.System_IntPtr => SyntaxFactory.IdentifierName("IntPtr").Qualified("System"),
+            SpecialType.System_UIntPtr => SyntaxFactory.IdentifierName("UIntPtr").Qualified("System"),
+            SpecialType.System_Array => SyntaxFactory.IdentifierName("Array").Qualified("System"),
+            SpecialType.System_Delegate => SyntaxFactory.IdentifierName("Delegate").Qualified("System"),
+            SpecialType.System_MulticastDelegate => SyntaxFactory.IdentifierName("MulticastDelegate").Qualified("System"),
+            SpecialType.System_Enum => SyntaxFactory.IdentifierName("Enum").Qualified("System"),
+            SpecialType.System_IDisposable => SyntaxFactory.IdentifierName("IDisposable").Qualified("System"),
+            SpecialType.System_IAsyncResult => SyntaxFactory.IdentifierName("System.IAsyncResult"),
+            SpecialType.System_Collections_IEnumerable => SyntaxFactory.IdentifierName("IEnumerable").Qualified("System.Collections"),
+            SpecialType.System_Collections_IEnumerator => SyntaxFactory.IdentifierName("IEnumerator").Qualified("System.Collections"),
+            SpecialType.System_AsyncCallback => SyntaxFactory.IdentifierName("AsyncCallback").Qualified("System"),
+            SpecialType.System_ArgIterator => SyntaxFactory.IdentifierName("ArgIterator").Qualified("System"),
+            SpecialType.System_TypedReference => SyntaxFactory.IdentifierName("TypedReference").Qualified("System"),
+            SpecialType.System_RuntimeArgumentHandle => SyntaxFactory.IdentifierName("RuntimeArgumentHandle").Qualified("System"),
+            SpecialType.System_RuntimeFieldHandle => SyntaxFactory.IdentifierName("RuntimeFieldHandle").Qualified("System"),
+            SpecialType.System_RuntimeMethodHandle => SyntaxFactory.IdentifierName("RuntimeMethodHandle").Qualified("System"),
+            SpecialType.System_RuntimeTypeHandle => SyntaxFactory.IdentifierName("RuntimeTypeHandle").Qualified("System"),
+            SpecialType.System_Runtime_CompilerServices_IsVolatile => SyntaxFactory.IdentifierName("IsVolatile").Qualified("System.Runtime.CompilerServices"),
+            SpecialType.System_Runtime_CompilerServices_RuntimeFeature => SyntaxFactory.IdentifierName(".RuntimeFeature").Qualified("System.Runtime.CompilerServices"),
+            SpecialType.System_Runtime_CompilerServices_PreserveBaseOverridesAttribute => SyntaxFactory.IdentifierName("PreserveBaseOverridesAttribute").Qualified("System.Runtime.CompilerServices"),
+            SpecialType.System_Runtime_CompilerServices_InlineArrayAttribute => SyntaxFactory.IdentifierName("InlineArrayAttribute").Qualified("System.Runtime.CompilerServices"),
+            SpecialType.None => OthersToSyntax(symbol),
+            SpecialType.System_Nullable_T => SyntaxGenerator.OmitGeneric("System.Nullable"),
+            SpecialType.System_Collections_Generic_IEnumerable_T => SyntaxGenerator.OmitGeneric("System.Collections.Generic.IEnumerable"),
+            SpecialType.System_Collections_Generic_IEnumerator_T => SyntaxGenerator.OmitGeneric("System.Collections.Generic.IEnumerator"),
+            SpecialType.System_Collections_Generic_IList_T => SyntaxGenerator.OmitGeneric("System.Collections.Generic.IList"),
+            SpecialType.System_Collections_Generic_ICollection_T => SyntaxGenerator.OmitGeneric("System.Collections.Generic.ICollection"),
+            SpecialType.System_Collections_Generic_IReadOnlyList_T => SyntaxGenerator.OmitGeneric("System.Collections.Generic.IReadOnlyList"),
+            SpecialType.System_Collections_Generic_IReadOnlyCollection_T => SyntaxGenerator.OmitGeneric("System.Collections.Generic.IReadOnlyCollection"),
+            _ => throw new NotSupportedException(),
         };
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="symbol"></param>
+    /// <returns></returns>
+    private static TypeSyntax OthersToSyntax(this ITypeSymbol symbol)
+    {
+        if (symbol is INamedTypeSymbol namedType)
+            return ToSyntax(namedType);
+        if (symbol is IArrayTypeSymbol arraySymbol)
+            return ToSyntax(arraySymbol);
+        return ToDisplayName(symbol);
     }
     /// <summary>
     /// 生成器特性

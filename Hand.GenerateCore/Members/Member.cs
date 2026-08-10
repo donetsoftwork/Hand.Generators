@@ -60,8 +60,8 @@ public abstract class Member(string name, TypeSymbolInfo symbolInfo, Lazy<string
     #endregion
 
     /// <inheritdoc />
-    public bool Equals(Member other)
-        => string.Equals(_name, other._name, StringComparison.OrdinalIgnoreCase);
+    public bool Equals(Member? other)
+        => other is not null && string.Equals(_name, other._name, StringComparison.OrdinalIgnoreCase);
     ///// <summary>
     ///// 获取成员名
     ///// </summary>

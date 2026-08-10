@@ -1,5 +1,4 @@
 ﻿using Hand;
-using Microsoft.CodeAnalysis.CSharp;
 using System.Drawing;
 
 namespace SyntaxScriptingTests;

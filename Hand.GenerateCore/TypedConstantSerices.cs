@@ -97,7 +97,7 @@ public static partial class GenerateCoreServices
         var value = constant.Value;
         if(value is null)
             return defaultValue;
-        return (TEnum)Enum.ToObject(typeof(TEnum), constant.Value);
+        return (TEnum)Enum.ToObject(typeof(TEnum), constant.Value!);
     }
     /// <summary>
     /// 获取数组

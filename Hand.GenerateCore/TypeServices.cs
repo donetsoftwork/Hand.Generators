@@ -1,6 +1,6 @@
 ﻿using Hand.Members;
-using Hand.Symbols;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
@@ -41,7 +41,116 @@ public static partial class GenerateCoreServices
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static INamedTypeSymbol? GetSymbol(this Compilation compilation, Type type)
-        => compilation.GetTypeByMetadataName(type.FullName);
+        => compilation.GetTypeByMetadataName(type.FullName!);
+    /// <summary>
+    /// 把PredefinedTypeSyntax转INamedTypeSymbol
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="predefinedType"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    public static INamedTypeSymbol GetSymbol(this Compilation compilation, PredefinedTypeSyntax predefinedType)
+    {
+        return predefinedType.Keyword.Kind() switch
+        {
+            SyntaxKind.BoolKeyword => compilation.GetSpecialType(SpecialType.System_Boolean),
+            SyntaxKind.ByteKeyword => compilation.GetSpecialType(SpecialType.System_Byte),
+            SyntaxKind.SByteKeyword => compilation.GetSpecialType(SpecialType.System_SByte),
+            SyntaxKind.IntKeyword => compilation.GetSpecialType(SpecialType.System_Int32),
+            SyntaxKind.UIntKeyword => compilation.GetSpecialType(SpecialType.System_UInt32),
+            SyntaxKind.ShortKeyword => compilation.GetSpecialType(SpecialType.System_Int16),
+            SyntaxKind.UShortKeyword => compilation.GetSpecialType(SpecialType.System_UInt16),
+            SyntaxKind.LongKeyword => compilation.GetSpecialType(SpecialType.System_Int64),
+            SyntaxKind.ULongKeyword => compilation.GetSpecialType(SpecialType.System_UInt64),
+            SyntaxKind.FloatKeyword => compilation.GetSpecialType(SpecialType.System_Single),
+            SyntaxKind.DoubleKeyword => compilation.GetSpecialType(SpecialType.System_Double),
+            SyntaxKind.DecimalKeyword => compilation.GetSpecialType(SpecialType.System_Decimal),
+            SyntaxKind.StringKeyword => compilation.GetSpecialType(SpecialType.System_String),
+            SyntaxKind.CharKeyword => compilation.GetSpecialType(SpecialType.System_Char),
+            SyntaxKind.ObjectKeyword => compilation.GetSpecialType(SpecialType.System_Object),
+            SyntaxKind.VoidKeyword => compilation.GetSpecialType(SpecialType.System_Void),
+            _ => throw new ArgumentException($"Kind of {predefinedType} is Invalid", nameof(predefinedType)),
+        };
+    }
+    /// <summary>
+    /// 把NullableTypeSyntax转INamedTypeSymbol
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="nullableType"></param>
+    /// <returns></returns>
+    public static INamedTypeSymbol? GetSymbol(this Compilation compilation, NullableTypeSyntax nullableType)
+    {
+        var elementSymbol = GetSymbol(compilation, nullableType.ElementType);
+        if (elementSymbol is null)
+            return null;
+        return compilation.GetSpecialType(SpecialType.System_Nullable_T)
+            .Construct(elementSymbol);
+    }
+    /// <summary>
+    /// 把ArrayTypeSyntax转INamedTypeSymbol
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="arrayType"></param>
+    /// <returns></returns>
+    public static IArrayTypeSymbol? GetSymbol(this Compilation compilation, ArrayTypeSyntax arrayType)
+    {
+        var elementSymbol = GetSymbol(compilation, arrayType.ElementType);
+        if (elementSymbol is null)
+            return null;
+        return compilation.CreateArrayTypeSymbol(elementSymbol);
+    }
+    /// <summary>
+    /// 把TypeSyntax转INamedTypeSymbol
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    public static ITypeSymbol? GetSymbol(this Compilation compilation, TypeSyntax type)
+    {
+        if (type is PredefinedTypeSyntax predefinedType)
+            return GetSymbol(compilation, predefinedType);
+        if (type is NullableTypeSyntax nullableType)
+            return GetSymbol(compilation, nullableType);
+        if(type is ArrayTypeSyntax arrayType)
+            return GetSymbol(compilation, arrayType);
+        if (type is GenericNameSyntax genericType)
+            return GetSymbol(compilation, genericType);
+        if (type is QualifiedNameSyntax qualifiedType && qualifiedType.Right is GenericNameSyntax genericRight)
+            return GetSymbol(compilation, genericRight, qualifiedType.Left);
+        return compilation.GetTypeByMetadataName(type.ToFullString());
+    }
+    /// <summary>
+    /// 把GenericNameSyntax转INamedTypeSymbol
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="genericType"></param>
+    /// <param name="qualified"></param>
+    /// <returns></returns>
+    public static ITypeSymbol? GetSymbol(this Compilation compilation, GenericNameSyntax genericType, NameSyntax? qualified = null)
+    {
+        var arguments = genericType.TypeArgumentList.Arguments;
+        int count = arguments.Count;
+        string genericName;
+        if (qualified is null)
+            genericName = genericType.Identifier.ValueText + "`" + count;
+        else
+            genericName = qualified.ToFullString() + "." + genericType.Identifier.ValueText + "`" + count;
+        var genericSymbol = compilation.GetTypeByMetadataName(genericName);
+        if (genericSymbol is null)
+            return null;
+        var argumentTypes = new ITypeSymbol[count];
+        for (int i = 0; i < count; i++)
+        {
+            var argument = arguments[i];
+            if (argument.IsKind(SyntaxKind.OmittedTypeArgument))
+                return genericSymbol;
+            var argumentType = GetSymbol(compilation, argument);
+            if (argumentType is null)
+                return genericSymbol;
+            argumentTypes[i] = argumentType;
+        }
+        return genericSymbol.Construct(argumentTypes);
+    }
     /// <summary>
     /// bool
     /// </summary>
@@ -186,8 +295,10 @@ public static partial class GenerateCoreServices
     public static INamedTypeSymbol GetNullable(this Compilation compilation, INamedTypeSymbol originalSymbol)
     {
         if (originalSymbol.IsValueType)
-            return compilation.GetSpecialType(SpecialType.System_Nullable_T)
+        {
+            originalSymbol = compilation.GetSpecialType(SpecialType.System_Nullable_T)
                 .Construct(originalSymbol);
+        }
         return (INamedTypeSymbol)originalSymbol.WithNullableAnnotation(NullableAnnotation.Annotated);
     }
     /// <summary>

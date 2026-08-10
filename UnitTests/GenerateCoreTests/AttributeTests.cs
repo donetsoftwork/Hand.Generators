@@ -26,6 +26,10 @@ public class MyAttribute : Attribute;
         Assert.Null(type1);
         var type2 = compilation.GetTypeByMetadataName("ExampleNamespace.MyAttribute");
         Assert.NotNull(type2);
+        //type2.TypeKind = TypeKind.Error;
+        //Microsoft.CodeAnalysis.CSharp.Symbols.PublicModel.NonErrorNamedTypeSymbol typeSymbol = type2;
+        //Microsoft.CodeAnalysis.CSharp.Symbols.PublicModel.ErrorTypeSymbol
+        //Microsoft.CodeAnalysis.CSharp.Symbols.PublicModel.ArrayTypeSymbol
         var syntaxTree = compilation.SyntaxTrees.FirstOrDefault();
         Assert.NotNull(syntaxTree);
         var attribute = syntaxTree.GetRoot().DescendantNodes().OfType<AttributeSyntax>().FirstOrDefault();

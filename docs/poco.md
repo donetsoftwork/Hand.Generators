@@ -321,7 +321,7 @@ namespace CommentModels
 >* https://github.com/donetsoftwork/GeneratePocoDemo
 >* gitee同步跟新: https://gitee.com/donetsoftwork/GeneratePocoDemo
 
-## 2. 影子编程
+## 2. 更多生成器的应用
 
 ### 2.1 GeneratePoco生成构造函数
 #### 2.1.1 生成构造函数默认样式
@@ -605,4 +605,88 @@ partial class UserDto
 ### 2.2 GenerateTable生成器
 >* GenerateTable生成器按实体类型生成表结构类
 >* 生成的表结构类可以用于生成数据库表,也可以用于对数据表进行增删改查等操作
+>* 一年前网友秦时明留言建议做源生成器,现在才补上会不会有点亡羊补牢的感觉
+>* 可以参看[ShadowSql.net之正确使用方式](https://www.cnblogs.com/xiangji/p/18909458)
+
+#### 2.2.1 GenerateTable配置代码
+>* 通过Attribute配置表结构
+>* Table配置表名
+>* DatabaseGeneratedOption.Identity配置自增列
+>* Key配置主键
+>* Column配置了列名或数据库原始类型
+>* Unique配置唯一索引(支持多列组合唯一)
+
+~~~csharp
+[Table("Products")]
+public class Product(int id, string name)
+{
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id { get; } = id;
+    [Unique]
+    [Column("ProductName")]
+    public string Name { get; } = name;
+    [Unique("CategoryModel")]
+    public int CategoryId { get; set; }
+    [Unique("CategoryModel")]
+    public string Model { get; set; }
+}
+[GenerateTable<Product>]
+public partial class ProductTable;
+~~~
+
+#### 2.2.2 GenerateTable生成代码
+~~~csharp
+partial class ProductTable : global::ShadowSql.Identifiers.Table
+{
+    public ProductTable(string tableName = "Products") : base(tableName)
+    {
+        Id = DefineColumn("Id");
+        Name = DefineColumn("Name", "ProductName");
+        CategoryId = DefineColumn("CategoryId");
+        Model = DefineColumn("Model");
+        AddInsertIgnore(Id);
+        AddUpdateIgnore(Id);
+    }
+
+    public global::ShadowSql.Identifiers.IColumn Id { get; }
+    public new global::ShadowSql.Identifiers.IColumn Name { get; }
+    public global::ShadowSql.Identifiers.IColumn CategoryId { get; }
+    public global::ShadowSql.Identifiers.IColumn Model { get; }
+}
+~~~
+
+#### 2.2.2 GenerateTable项目信息
+>* nuget dotnet add package ShadowSql.GenerateTable --version 0.9.1-alpha
+>* github https://github.com/donetsoftwork/Shadow/tree/master/Generators/ShadowSql.GenerateTable
+>* gitee https://gitee.com/donetsoftwork/Shadowtree/master/Generators/ShadowSql.GenerateTable
+
+## 3. 部分其他源生成器开源项目
+### 3.1 AutoDto
+>* 生成DTO属性
+>* https://github.com/Ohorodnikov/AutoDto
+
+### 3.2 mapperly
+>* 生成类型转化方法、
+>* https://github.com/riok/mapperly
+
+### 3.3 MVVM Toolkit
+>* MVVM模式开发桌面应用工具包
+>* https://github.com/CommunityToolkit/dotnet
+
+## 4. 影子编程
+>* 源生成器可以生成一个类的辅助类型(DTO、序列化、表结构等)
+>* 这些辅助类型就相当于源类型的影子
+>* 把周边功能影子化不仅减少了代码量,还提高了代码的可预测性和内聚性,也提高了代码的可读性。
+
+## 5. 源生成器开发技巧总结
+
+### 5.1 Roslyn简易语法
+>* 参看: https://www.cnblogs.com/xiangji/p/19688804
+
+### 5.2 源生成器partial范式及单元测试
+>* https://www.cnblogs.com/xiangji/p/19737143
+
+### 5.3 源生成器nuget打包
+>* https://www.cnblogs.com/xiangji/p/19781120
 

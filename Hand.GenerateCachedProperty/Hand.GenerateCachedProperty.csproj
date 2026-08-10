@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<Nullable>enable</Nullable>
-		<Version>$(VersionBase).4</Version>
+		<Version>$(VersionBase).5</Version>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<EnableNETAnalyzers>True</EnableNETAnalyzers>
 		<IsRoslynComponent>true</IsRoslynComponent>

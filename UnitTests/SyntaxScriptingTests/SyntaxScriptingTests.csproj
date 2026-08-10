@@ -29,6 +29,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\Hand.GenerateCore\Hand.GenerateCore.csproj" />
 		<ProjectReference Include="..\..\Hand.Generators.SyntaxScripting\Hand.Generators.SyntaxScripting.csproj" />
 	</ItemGroup>
 

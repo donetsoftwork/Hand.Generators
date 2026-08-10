@@ -8,7 +8,7 @@ namespace EasySyntaxTests;
 public class BuilderTests
 {
     [Fact]
-    public void BySyntaxTree()
+    public void Class()
     {
         var type = SyntaxFactory.ClassDeclaration("UserId")
             .Public()
@@ -35,7 +35,7 @@ public class BuilderTests
         Assert.NotEmpty(result.ToFullString());
     }
     [Fact]
-    public void ListParameters()
+    public void Struct()
     {
         var original = SyntaxFactory.IdentifierName("original");
         var _original = SyntaxFactory.IdentifierName("_original");
@@ -45,14 +45,63 @@ public class BuilderTests
         var property = SyntaxGenerator.IntType.Property("Original", _original)
             .Public()
             .WithSummary("Original");
-        var type = SyntaxFactory.ClassDeclaration("UserId")
+        var type = SyntaxFactory.StructDeclaration("UserId")
             .Public()
             .Partial()
             .AddParameterListParameters(SyntaxGenerator.IntType.Parameter(original.Identifier))
             .WithSummary("UserId");
         var builder = SyntaxGenerator.Create("Models", type, [], [field], [property], []);
         var result = builder.Build();
-        Assert.NotEmpty(result.ToFullString());        
+        Assert.NotEmpty(result.ToFullString());
+    }
+    [Fact]
+    public void Interface()
+    {
+        var property = SyntaxGenerator.LongType.GetOnlyProperty("Original");
+        var type = SyntaxFactory.InterfaceDeclaration("IEntityId")
+            .Public();
+        var builder = SyntaxGenerator.Create("Models", type);
+        builder.AddProperty(property);
+        var result = builder.Build();
+        Assert.NotEmpty(result.ToFullString());
+    }
+    [Fact]
+    public void Record()
+    {
+        var type = SyntaxGenerator.RecordDeclaration("UserId")
+           .AddParameterListParameters(
+                SyntaxGenerator.LongType.Parameter("Original")
+            )
+            .Public()
+            .WithSemicolonToken();
+        var result = type.NormalizeWhitespace().ToFullString();
+        Assert.NotEmpty(result);
+    }
+    [Fact]
+    public void ExtensionBlock() 
+    {
+        var userIdType = SyntaxFactory.IdentifierName("UserId");
+        var userId = SyntaxFactory.IdentifierName("userId");
+        var incrementMethod = userIdType.Method("Increment")
+            .ToBuilder()
+            .Return(userIdType.New([userId.Access("Original").Add(SyntaxGenerator.Literal(1))]))
+            .Public();
+        var decreaseMethod = userIdType.Method("Decrease")
+            .ToBuilder()
+            .Return(userIdType.New([userId.Access("Original").Subtract(SyntaxGenerator.Literal(1))]))
+            .Public();
+
+        var extension = SyntaxFactory.ExtensionBlockDeclaration()
+            .AddParameterListParameters(userIdType.Parameter(userId.Identifier))
+            .AddMembers(incrementMethod, decreaseMethod)
+            .WithOpenBraceToken(SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
+            .WithCloseBraceToken(SyntaxFactory.Token(SyntaxKind.CloseBraceToken));
+        var type = SyntaxFactory.ClassDeclaration("UserIdExtension")
+            .Public()
+            .Static()
+            .AddMembers(extension);
+        var result = type.NormalizeWhitespace().ToFullString();
+        Assert.NotEmpty(result);
     }
     [Fact]
     public void ListParameterForProperty()

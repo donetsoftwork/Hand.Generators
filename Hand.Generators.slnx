@@ -3,6 +3,8 @@
     <Project Path="Benchmarks/SyntaxBench/SyntaxBench.csproj" />
   </Folder>
   <Folder Name="/docs/">
+    <File Path="docs/attribute.md" />
+    <File Path="docs/documentation.md" />
     <File Path="docs/notes.md" />
     <File Path="docs/pack.md" />
     <File Path="docs/partial.md" />
@@ -12,6 +14,7 @@
     <File Path="docs/spirit.md" />
     <File Path="docs/styles.md" />
     <File Path="docs/tree.md" />
+    <File Path="docs/type.md" />
   </Folder>
   <Folder Name="/UnitTests/">
     <Project Path="UnitTests/EasySyntaxTests/EasySyntaxTests.csproj" />

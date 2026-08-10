@@ -70,7 +70,7 @@ public partial class SyntaxGenerator
     /// <summary>
     /// DateTime
     /// </summary>
-    public static IdentifierNameSyntax DateTimeType => SyntaxFactory.IdentifierName("DateTime");
+    public static QualifiedNameSyntax DateTimeType => SyntaxFactory.IdentifierName("DateTime").Qualified("System");
     /// <summary>
     /// object
     /// </summary>
@@ -83,10 +83,10 @@ public partial class SyntaxGenerator
     /// var
     /// </summary>
     public static IdentifierNameSyntax VarType => SyntaxFactory.IdentifierName("var");
-    /// <summary>
-    /// IDisposable
-    /// </summary>
-    public static IdentifierNameSyntax IDisposableType => SyntaxFactory.IdentifierName("IDisposable");
+    ///// <summary>
+    ///// IDisposable
+    ///// </summary>
+    //public static IdentifierNameSyntax IDisposableType => SyntaxFactory.IdentifierName("IDisposable");
     /// <summary>
     /// Lock
     /// </summary>
@@ -134,5 +134,46 @@ public partial class SyntaxGenerator
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GenericNameSyntax Generic(string name, params TypeSyntax[] argumentTypes)
         => Generic(SyntaxFactory.Identifier(name), argumentTypes);
+    #endregion
+    #region OmitGeneric
+    /// <summary>
+    /// 匿名泛型
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static GenericNameSyntax OmitGeneric(SyntaxToken name)
+        => Generic(name, SyntaxFactory.OmittedTypeArgument());
+    /// <summary>
+    /// 匿名泛型
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static GenericNameSyntax OmitGeneric(string name)
+        => Generic(name, SyntaxFactory.OmittedTypeArgument());
+    /// <summary>
+    /// 匿名泛型
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="argumentCount"></param>
+    /// <returns></returns>
+    public static GenericNameSyntax OmitGeneric(SyntaxToken name, int argumentCount)
+    {
+        var argument = SyntaxFactory.OmittedTypeArgument();
+        var arguments = new TypeSyntax[argumentCount];
+        for (int i = 0; i < argumentCount; i++)
+            arguments[i] = argument;
+        return Generic(name, arguments);
+    }
+    /// <summary>
+    /// 匿名泛型
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="argumentCount"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static GenericNameSyntax OmitGeneric(string name, int argumentCount)
+        => OmitGeneric(SyntaxFactory.Identifier(name), argumentCount);
     #endregion
 }
