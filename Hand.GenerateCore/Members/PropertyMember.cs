@@ -20,7 +20,7 @@ public class PropertyMember(IPropertySymbol original, TypeSymbolInfo symbolInfo)
     /// <summary>
     /// 原始属性
     /// </summary>
-    public IPropertySymbol Original { get; } = original;
+    public new IPropertySymbol Original { get; } = original;
     #endregion
     /// <summary>
     /// 处理属性成员，加入成员参数列表

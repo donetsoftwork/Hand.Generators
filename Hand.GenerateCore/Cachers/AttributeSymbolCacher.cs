@@ -1,5 +1,4 @@
 ﻿using Hand.Cache;
-using Hand.Members;
 using Hand.Reflection;
 using Microsoft.CodeAnalysis;
 using System;
@@ -30,7 +29,21 @@ public class AttributeSymbolCacher(Compilation compilation)
             return new(key, default, false);
         return new(key, GetTargets(attribute), GetAllowMultiple(attribute));
     }
-
+    /// <summary>
+    /// 判断应用的范围
+    /// </summary>
+    /// <param name="symbol"></param>
+    /// <param name="target"></param>
+    /// <param name="attribute"></param>
+    /// <returns></returns>
+    public bool VerifyTarget(ISymbol symbol, AttributeTargets target, AttributeData attribute)
+    {
+        var attributeClass = attribute.AttributeClass;
+        if (attributeClass is null)
+            return false;
+        var info = Get(attributeClass);
+        return info.VerifyTarget(symbol, target);
+    }
     /// <summary>
     /// 判断应用的范围
     /// </summary>
@@ -43,7 +56,77 @@ public class AttributeSymbolCacher(Compilation compilation)
         if (attributeClass is null)
             return false;
         var info = Get(attributeClass);
-        return info.VerifyTarget(target);
+        return info.Targets.HasFlag(target);
+    }
+    /// <summary>
+    /// 判断类型
+    /// </summary>
+    /// <param name="class"></param>
+    /// <param name="attribute"></param>
+    /// <returns></returns>
+    public bool Verify(INamedTypeSymbol @class, AttributeData attribute)
+    {
+        if (@class.IsEnum())
+            return VerifyTarget(@class, AttributeTargets.Enum, attribute);
+        if (@class.IsValueType)
+            return VerifyTarget(@class, AttributeTargets.Struct, attribute);
+        return VerifyTarget(@class, AttributeTargets.Class, attribute);
+    }
+    /// <summary>
+    /// 判断方法
+    /// </summary>
+    /// <param name="method"></param>
+    /// <param name="attribute"></param>
+    /// <returns></returns>
+    public bool Verify(IMethodSymbol method, AttributeData attribute)
+    {
+        return method.MethodKind switch
+        {
+            MethodKind.Constructor or MethodKind.StaticConstructor
+                => VerifyTarget(method, AttributeTargets.Constructor, attribute),
+            MethodKind.DeclareMethod or MethodKind.Ordinary or MethodKind.ReducedExtension or MethodKind.LocalFunction
+                => VerifyTarget(method, AttributeTargets.Method, attribute),
+            _ => false,
+        };
+    }
+    /// <summary>
+    /// 判断属性
+    /// </summary>
+    /// <param name="property"></param>
+    /// <param name="attribute"></param>
+    /// <returns></returns>
+    public bool Verify(IPropertySymbol property, AttributeData attribute)
+        => VerifyTarget(property, AttributeTargets.Property, attribute);
+    /// <summary>
+    /// 判断字段
+    /// </summary>
+    /// <param name="field"></param>
+    /// <param name="attribute"></param>
+    /// <returns></returns>
+    public bool Verify(IFieldSymbol field, AttributeData attribute)
+        => VerifyTarget(field, AttributeTargets.Field, attribute);
+    /// <summary>
+    /// 判断参数
+    /// </summary>
+    /// <param name="parameter"></param>
+    /// <param name="attribute"></param>
+    /// <returns></returns>
+    public bool Verify(IParameterSymbol parameter, AttributeData attribute)
+        => VerifyTarget(parameter, AttributeTargets.Parameter, attribute);
+    /// <summary>
+    /// 按范围过滤特性
+    /// </summary>
+    /// <param name="symbol"></param>
+    /// <param name="attributes"></param>
+    /// <param name="target"></param>
+    /// <returns></returns>
+    public IEnumerable<AttributeData> CheckByTarget(ISymbol symbol, IEnumerable<AttributeData> attributes, AttributeTargets target)
+    {
+        foreach (var attribute in attributes)
+        {
+            if(VerifyTarget(symbol, target, attribute))
+                yield return attribute;
+        }
     }
     /// <summary>
     /// 按范围过滤特性
@@ -51,26 +134,40 @@ public class AttributeSymbolCacher(Compilation compilation)
     /// <param name="attributes"></param>
     /// <param name="target"></param>
     /// <returns></returns>
-    public IEnumerable<AttributeData> FilterByTarget(IEnumerable<AttributeData> attributes, AttributeTargets target)
+    public IEnumerable<AttributeData> CheckByTarget(IEnumerable<AttributeData> attributes, AttributeTargets target)
     {
         foreach (var attribute in attributes)
         {
-            if(VerifyTarget(target, attribute))
+            if (VerifyTarget(target, attribute))
                 yield return attribute;
         }
     }
     /// <summary>
     /// 获取特性标记
     /// </summary>
-    /// <param name="sourseMember"></param>
+    /// <param name="sourse"></param>
+    /// <param name="dest"></param>
     /// <param name="target"></param>
     /// <returns></returns>
-    public AttributeData[] GetAttributes(SymbolMember sourseMember, AttributeTargets target)
+    public AttributeData[] GetAttributes(ISymbol sourse, ISymbol dest, AttributeTargets target)
     {
-        var attributes = sourseMember.GetAttributes();
+        var attributes = sourse.GetAttributes();
         if (attributes.Length == 0)
             return [];
-        return [.. FilterByTarget(attributes, target)];
+        return [.. CheckByTarget(dest, attributes, target)];
+    }
+    /// <summary>
+    /// 获取特性标记
+    /// </summary>
+    /// <param name="sourse"></param>
+    /// <param name="target"></param>
+    /// <returns></returns>
+    public AttributeData[] GetAttributes(ISymbol sourse, AttributeTargets target)
+    {
+        var attributes = sourse.GetAttributes();
+        if (attributes.Length == 0)
+            return [];
+        return [.. CheckByTarget(attributes, target)];
     }
     /// <summary>
     /// 获取可应用的范围

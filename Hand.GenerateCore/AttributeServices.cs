@@ -43,7 +43,9 @@ public static partial class GenerateCoreServices
     public static AttributeSyntax ToSyntax(this AttributeData data, List<string> namespaces)
     {
         var type = data.AttributeClass!;
-        namespaces.Add(type.ContainingNamespace.ToDisplayString());
+        var @amespace = type.ContainingNamespace.ToDisplayString();
+        if (!string.IsNullOrWhiteSpace(@amespace))
+            namespaces.Add(@amespace);
         var name = type.Name;
         if (name.EndsWith("Attribute"))
             name = name.Substring(0, name.Length - "Attribute".Length);

@@ -12,7 +12,7 @@ public static partial class GenerateServices
 {
     #region ToArgument
     /// <summary>
-    /// 转化常量为特性参数
+    /// 转化为参数
     /// </summary>
     /// <param name="argument"></param>
     /// <returns></returns>
@@ -20,7 +20,7 @@ public static partial class GenerateServices
     public static ArgumentSyntax ToArgument(this ExpressionSyntax argument)
         => SyntaxFactory.Argument(argument);
     /// <summary>
-    /// 转化常量为特性参数
+    /// 转化为命名参数
     /// </summary>
     /// <param name="argument"></param>
     /// <param name="name"></param>
@@ -39,7 +39,7 @@ public static partial class GenerateServices
     public static AttributeArgumentSyntax ToAttributeArgument(this ExpressionSyntax argument)
         => SyntaxFactory.AttributeArgument(argument);
     /// <summary>
-    /// 转化常量为特性参数
+    /// 转化常量为命名特性参数
     /// </summary>
     /// <param name="argument"></param>
     /// <param name="name"></param>

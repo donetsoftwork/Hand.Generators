@@ -1,6 +1,7 @@
 ﻿using Hand;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace EasySyntaxTests;
 
@@ -17,6 +18,16 @@ public class AttributeTest
         Assert.Equal("[Fact]", code);
     }
     [Fact]
+    public void AddAttributeLists()
+    {
+        var attribute = SyntaxFactory.IdentifierName("Fact").Attribute();
+        var method = SyntaxGenerator.VoidType.Method("Simple")
+            .WithBody(SyntaxFactory.Block())
+            .AddAttributeLists(attribute.ToSingletonList());
+        var code = method.NormalizeWhitespace().ToFullString();
+        Assert.Contains("[Fact]", code);
+    }
+    [Fact]
     public void Simple0()
     {
         var attribute = SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Fact"));
@@ -27,7 +38,7 @@ public class AttributeTest
     public void ConstructorArguments()
     {
         var attributeName = SyntaxFactory.IdentifierName("InlineData");
-        var argument = SyntaxGenerator.Literal(1);
+        var argument = SyntaxFactory.AttributeArgument(SyntaxGenerator.Literal(1));
         var attribute = attributeName.Attribute([argument]);
         var code = attribute.ToFullString();
         Assert.Equal("InlineData(1)", code);
@@ -81,5 +92,34 @@ public class AttributeTest
                     inherited)])));
         var code = attribute.NormalizeWhitespace().ToFullString();
         Assert.Equal("AttributeUsage(AttributeTargets.Method, Inherited = false)", code);
+    }
+    [Fact]
+    public void Attributes()
+    {
+        var source = @"public class Product
+            {
+                [Key, Unique]
+                public int ProductId { get; set; }
+                [Unique]
+                [StringLength(100, MinimumLength = 6)]
+                public string ProductName { get; set; }
+            }";
+        var syntaxTree = CSharpSyntaxTree.ParseText(source);
+        var properties = syntaxTree.GetRoot().DescendantNodes().OfType<PropertyDeclarationSyntax>();
+        foreach (var property in properties)
+        {
+            var attributeLists = property.AttributeLists;
+            foreach (var attributeList in attributeLists)
+            {
+                var attributes = attributeList.Attributes;
+                foreach (AttributeSyntax attribute in attributes)
+                {
+                    var name = attribute.Name.ToFullString();
+                    Assert.NotEmpty(name);
+                }
+                Assert.True(attributes.Any());
+            }
+            Assert.True(attributeLists.Any());
+        }
     }
 }

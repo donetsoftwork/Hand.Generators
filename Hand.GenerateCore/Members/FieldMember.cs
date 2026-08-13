@@ -22,7 +22,7 @@ public class FieldMember(string name, IFieldSymbol original, TypeSymbolInfo symb
     /// <summary>
     /// 原始字段
     /// </summary>
-    public IFieldSymbol Original { get; } = original;
+    public new IFieldSymbol Original { get; } = original;
     #endregion
     /// <summary>
     /// 处理字段成员，加入成员参数列表

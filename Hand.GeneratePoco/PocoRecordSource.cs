@@ -57,7 +57,7 @@ public class PocoRecordSource(TypeDeclarationSyntax type, ConvertBuilder convert
         var memberType = CheckMemberNullAble(name, symbolInfo.CheckPoco().ToSyntax());
         var parameter = CreateParameter(memberType, name, symbolInfo);
         if (_generateAttribute)
-            parameter = builder.GenerateAttribute(parameter, _attributeCacher.GetAttributes(sourseMember, AttributeTargets.Parameter));
+            parameter = builder.GenerateAttribute(parameter, _attributeCacher.GetAttributes(sourseMember.Original, AttributeTargets.Parameter));
         comment.AddParam(name, sourseMember.Summary);
         builder.AddParameter(parameter);
         string summaryFunc() => sourseMember.Summary;

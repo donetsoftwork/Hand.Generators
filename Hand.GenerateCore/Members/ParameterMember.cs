@@ -21,7 +21,7 @@ public class ParameterMember(string name, IParameterSymbol original, TypeSymbolI
     /// <summary>
     /// 原始参数
     /// </summary>
-    public IParameterSymbol Original { get; } = original;
+    public new IParameterSymbol Original { get; } = original;
 
     /// <summary>
     /// 获取方法参数成员

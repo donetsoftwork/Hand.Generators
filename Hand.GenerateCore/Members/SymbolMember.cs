@@ -33,7 +33,11 @@ public abstract class SymbolMember(string name, ISymbol original, TypeSymbolInfo
 
     #region 配置
     private readonly ISymbol _original = original;
-
+    /// <summary>
+    /// 原始成员
+    /// </summary>
+    public ISymbol Original 
+        => _original;
     /// <summary>
     /// 获取特性标记
     /// </summary>

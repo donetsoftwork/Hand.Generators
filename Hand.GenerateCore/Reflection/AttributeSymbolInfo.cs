@@ -39,26 +39,49 @@ public class AttributeSymbolInfo(INamedTypeSymbol attributeSymbol, AttributeTarg
     /// <summary>
     /// 判断应用的范围
     /// </summary>
+    /// <param name="symbol"></param>
     /// <param name="target"></param>
     /// <returns></returns>
-    public bool VerifyTarget(AttributeTargets target)
-        => (target & _targets) == target;
+    public bool VerifyTarget(ISymbol symbol, AttributeTargets target)
+    {
+        if(!_targets.HasFlag(target))
+            return false;
+        if (_allowMultiple)
+            return true;
+        return !SymbolAttributeHelper.GetAttributesByType(symbol, _attributeSymbol).Any();
+    }
     /// <summary>
     /// 判断类型
     /// </summary>
-    /// <param name="symbol"></param>
+    /// <param name="class"></param>
     /// <returns></returns>
-    public bool VerifyClass(INamedTypeSymbol symbol)
+    public bool VerifyClass(INamedTypeSymbol @class)
     {
-        if ((AttributeTargets.Class & _targets) == AttributeTargets.Class)
-        {
-            if (_allowMultiple)
-                return true;
-            if (SymbolAttributeHelper.GetAttributesByType(symbol, _attributeSymbol).Any())
-                return false;
-            return true;
-        }
-        return false;
+        if (@class.IsEnum())
+            return VerifyTarget(@class, AttributeTargets.Enum);
+        if (@class.IsValueType)
+            return VerifyTarget(@class, AttributeTargets.Struct);
+        return VerifyTarget(@class, AttributeTargets.Class);
     }
-
+    /// <summary>
+    /// 判断属性
+    /// </summary>
+    /// <param name="property"></param>
+    /// <returns></returns>
+    public bool VerifyProperty(IPropertySymbol property)
+        => VerifyTarget(property, AttributeTargets.Property);
+    /// <summary>
+    /// 判断字段
+    /// </summary>
+    /// <param name="field"></param>
+    /// <returns></returns>
+    public bool VerifyField(IFieldSymbol field)
+        => VerifyTarget(field, AttributeTargets.Field);
+    /// <summary>
+    /// 判断参数
+    /// </summary>
+    /// <param name="parameter"></param>
+    /// <returns></returns>
+    public bool VerifyParameter(IParameterSymbol parameter)
+        => VerifyTarget(parameter, AttributeTargets.Parameter);
 }

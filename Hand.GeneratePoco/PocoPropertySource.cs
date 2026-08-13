@@ -73,7 +73,7 @@ public class PocoPropertySource(TypeDeclarationSyntax type, ConvertBuilder conve
         var property = memberType.Property(name, getDeclaration, accessorDeclaration)
             .Public();
         if (_generateAttribute)
-            property = builder.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember, AttributeTargets.Property));
+            property = builder.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember.Original, AttributeTargets.Property));
         var summary = sourseMember.Element;
         if (summary is not null)
             property = property.WithSummary(summary);
@@ -100,7 +100,7 @@ public class PocoPropertySource(TypeDeclarationSyntax type, ConvertBuilder conve
         var property = CreateProperty(memberType, name, kind, memberSymbolInfo)
             .Public();
         if (_generateAttribute)
-            property = builder.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember, AttributeTargets.Property));
+            property = builder.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember.Original, AttributeTargets.Property));
         var summary = sourseMember.Element;
         if (summary is not null)
             property = property.WithSummary(summary);

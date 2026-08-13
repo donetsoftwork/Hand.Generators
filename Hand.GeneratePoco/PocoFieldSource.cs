@@ -53,7 +53,7 @@ public class PocoFieldSource(TypeDeclarationSyntax type, ConvertBuilder convertB
         var field = CreateField(memberType, name, memberSymbolInfo)
             .Public();
         if (_generateAttribute)
-            field = builder.GenerateAttribute(field, _attributeCacher.GetAttributes(sourseMember, AttributeTargets.Field));
+            field = builder.GenerateAttribute(field, _attributeCacher.GetAttributes(sourseMember.Original, AttributeTargets.Field));
         var summary = sourseMember.Element;
         if (summary is not null)
             field = field.WithSummary(summary);

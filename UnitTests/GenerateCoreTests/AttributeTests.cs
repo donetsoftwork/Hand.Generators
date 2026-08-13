@@ -1,4 +1,5 @@
 ﻿using Hand;
+using Hand.Reflection;
 using Hand.Symbols;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -57,6 +58,110 @@ public class MyAttribute : Attribute;
         Assert.Equal(reference.SyntaxTree, targetSyntaxTree);
     }
     [Fact]
+    public void HasAttribute()
+    {
+        var sourceCode = @"
+            using System;
+
+            namespace ExampleNamespace;
+
+            [My]
+            public class MyClass;
+            [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+            public class MyAttribute : Attribute;
+            ";
+        var compilation = SyntaxTreeDriver.DefaultDriver.Compile(sourceCode);
+        var attributeSymbol = compilation.GetTypeByMetadataName("ExampleNamespace.MyAttribute");
+        Assert.NotNull(attributeSymbol);
+        var syntaxTree = compilation.SyntaxTrees.FirstOrDefault();
+        Assert.NotNull(syntaxTree);
+        var classDeclaration = syntaxTree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+        Assert.NotNull(classDeclaration);
+        var semanticModel = compilation.GetSemanticModel(syntaxTree);
+        var symbol = semanticModel.GetDeclaredSymbol(classDeclaration);
+        Assert.NotNull(symbol);
+        var attributeData = symbol.GetAttributes().FirstOrDefault();
+        Assert.NotNull(attributeData);
+        Assert.True(attributeSymbol.Equals(attributeData.AttributeClass, SymbolEqualityComparer.Default));
+    }
+    [Fact]
+    public void IsGenericType()
+    {
+        var sourceCode = @"
+            using System;
+
+            namespace ExampleNamespace;
+
+            [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class)]
+            public class MapAttribute<TFrom> : Attribute
+            {
+                public Type From { get; } = typeof(TFrom);
+            }
+            public readonly record struct User(string Name);
+            [Map<User>]
+            public partial class UserDTO;
+            ";
+        var compilation = SyntaxTreeDriver.DefaultDriver.Compile(sourceCode);
+        var attributeSymbol = compilation.GetTypeByMetadataName("ExampleNamespace.MapAttribute`1");
+        Assert.NotNull(attributeSymbol);
+        var syntaxTree = compilation.SyntaxTrees.FirstOrDefault();
+        Assert.NotNull(syntaxTree);
+        var classDeclaration = syntaxTree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>().LastOrDefault();
+        Assert.NotNull(classDeclaration);
+        var semanticModel = compilation.GetSemanticModel(syntaxTree);
+        var symbol = semanticModel.GetDeclaredSymbol(classDeclaration);
+        Assert.NotNull(symbol);
+        var attributeData = symbol.GetAttributes().FirstOrDefault();
+        Assert.NotNull(attributeData);
+        var attributeClass = attributeData.AttributeClass;
+        Assert.NotNull(attributeClass);
+        Assert.True(attributeClass.IsGenericType(attributeSymbol));
+        var attributeTypeArgument = attributeClass.TypeArguments.FirstOrDefault();
+        Assert.NotNull(attributeTypeArgument);
+    }
+    [Fact]
+    public void GetAttributesByType()
+    {
+        var sourceCode = @"
+            using System;
+
+            namespace ExampleNamespace;
+
+            [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class)]
+            public class MapAttribute(Type from) : Attribute
+            {
+                public Type From { get; } = from;
+            }
+            [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class)]
+            public class MapAttribute<TFrom> : Attribute
+            {
+                public Type From { get; } = typeof(TFrom);
+            }
+            public readonly record struct User(string Name);
+            [Map<User>]
+            [Map(typeof(User))]
+            public partial class UserDTO;
+            ";
+        var compilation = SyntaxTreeDriver.DefaultDriver.Compile(sourceCode);
+        var attributeSymbol = compilation.GetTypeByMetadataName("ExampleNamespace.MapAttribute");
+        Assert.NotNull(attributeSymbol);
+        var attributeGenericSymbol = compilation.GetTypeByMetadataName("ExampleNamespace.MapAttribute`1");
+        Assert.NotNull(attributeGenericSymbol);
+        var syntaxTree = compilation.SyntaxTrees.FirstOrDefault();
+        Assert.NotNull(syntaxTree);
+        var classDeclaration = syntaxTree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>().LastOrDefault();
+        Assert.NotNull(classDeclaration);
+        var semanticModel = compilation.GetSemanticModel(syntaxTree);
+        var symbol = semanticModel.GetDeclaredSymbol(classDeclaration);
+        Assert.NotNull(symbol);
+        var attributeData = SymbolAttributeHelper.GetAttributesByType(symbol, attributeSymbol)
+            .FirstOrDefault();
+        Assert.NotNull(attributeData);
+        var attributeGenericData = SymbolAttributeHelper.GetAttributesByType(symbol, attributeGenericSymbol)
+            .FirstOrDefault();
+        Assert.NotNull(attributeGenericData);
+    }
+    [Fact]
     public async Task AttributeData()
     {
         string sourceCode = @"
@@ -69,7 +174,7 @@ public class MyAttribute2(int val) : Attribute
 }
 ";
         var driver = SyntaxTreeDriver.ScriptDriver;
-        var compilation = driver.ScriptCompile(driver.Parse(sourceCode));
+        var compilation = driver.ScriptCompile(sourceCode);
         var syntaxTree = compilation.SyntaxTrees.FirstOrDefault();
         Assert.NotNull(syntaxTree);
         var attribute = syntaxTree.GetRoot().DescendantNodes().OfType<AttributeSyntax>().FirstOrDefault();
@@ -93,16 +198,71 @@ public class MyAttribute2(int val) : Attribute
         Assert.NotNull(tree2);
     }
     [Fact]
-    public void EqualsTest()
+    public void Attributes()
     {
-        int a = 10;
-        object objA = a; // 装箱
-
-        int b = 10;
-        object objB = b; // 装箱
-        // 使用引用比较，结果为false
-        Assert.False(objA == objB);
-        // 使用值比较，结果为true
-        Assert.True(objA.Equals(objB));
+        var source = @"public class Product
+            {
+                [Key, Unique]
+                public int ProductId { get; set; }
+                [Unique]
+                [StringLength(100, MinimumLength = 6)]
+                public string ProductName { get; set; }
+            }";
+        var driver = SyntaxTreeDriver.CreateDefaultDriver();
+        var compilation = driver.Compile(source);
+        var productType = compilation.GetTypeByMetadataName("Product");
+        Assert.NotNull(productType);
+        var properties = SymbolReflection.GetProperties(productType);
+        foreach (var property in properties)
+        {
+            var attributes = property.GetAttributes();
+            foreach (AttributeData attribute in attributes)
+            {
+                var name = attribute.AttributeClass!.Name;
+                Assert.NotEmpty(name);
+            }
+            Assert.True(attributes.Any());
+        }
     }
+    [Fact]
+    public void ToSyntax()
+    {
+        var sourceCode = @"
+            using System;
+            namespace GenerateCoreTests;
+
+            [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class))]
+            public class MyAttribute(int value) : Attribute
+            {
+                public int Value { get; } = value;
+            }
+            [My(3)]
+            public readonly record struct User(string Name);
+            public partial class UserDTO;
+            ";
+        var compilation = SyntaxTreeDriver.DefaultDriver.Compile(sourceCode);
+        var sourceType = compilation.GetTypeByMetadataName("GenerateCoreTests.User");
+        Assert.NotNull(sourceType);
+        AttributeData? attribute = sourceType.GetAttributes().FirstOrDefault();
+        Assert.NotNull(attribute);
+        List<string> namespaces = [];
+        AttributeSyntax attributeSyntax = attribute.ToSyntax(namespaces);
+        var code = attributeSyntax.ToFullString();
+        Assert.Equal("My(3)", code);
+        Assert.Single(namespaces);
+        Assert.Equal("GenerateCoreTests", namespaces[0]);
+    }
+    //[Fact]
+    //public void EqualsTest()
+    //{
+    //    int a = 10;
+    //    object objA = a; // 装箱
+
+    //    int b = 10;
+    //    object objB = b; // 装箱
+    //    // 使用引用比较，结果为false
+    //    Assert.False(objA == objB);
+    //    // 使用值比较，结果为true
+    //    Assert.True(objA.Equals(objB));
+    //}
 }

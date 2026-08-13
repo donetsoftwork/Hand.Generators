@@ -8,6 +8,27 @@ namespace GenerateCoreTests;
 public class TypedConstantTests
 {
     [Fact]
+    public void GetArgumentConstant()
+    {
+        string sourceCode = @"
+using System;
+
+namespace ExampleNamespace;
+
+[AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+public class MyAttribute : Attribute;
+";
+        var compilation = SyntaxTreeDriver.DefaultDriver.Compile(sourceCode);
+        var type = compilation.GetTypeByMetadataName("ExampleNamespace.MyAttribute");
+        Assert.NotNull(type);
+        var attribute = type.GetAttributes().FirstOrDefault();
+        Assert.NotNull(attribute);
+        var validOn = SymbolAttributeHelper.GetArgumentConstant(attribute, 0);
+        Assert.NotNull(validOn);
+        var llowMultiple = SymbolAttributeHelper.GetArgumentConstant(attribute, "AllowMultiple");
+        Assert.NotNull(llowMultiple);
+    }
+    [Fact]
     public void GetPrimitive()
     {
         string sourceCode = @"
@@ -37,13 +58,13 @@ public record Product(int ProductId, string ProductName);
     public void GetEnum()
     {
         string sourceCode = @"
-using System;
+            using System;
 
-namespace ExampleNamespace;
+            namespace ExampleNamespace;
 
-[AttributeUsage(AttributeTargets.All)]
-public class MyAttribute : Attribute;
-";
+            [AttributeUsage(AttributeTargets.All)]
+            public class MyAttribute : Attribute;
+            ";
         var compilation = SyntaxTreeDriver.DefaultDriver.Compile(sourceCode);
         var type = compilation.GetTypeByMetadataName("ExampleNamespace.MyAttribute");
         Assert.NotNull(type);
@@ -60,19 +81,19 @@ public class MyAttribute : Attribute;
     public void GetValues()
     {
         string sourceCode = @"
-using System;
+            using System;
 
-namespace ExampleNamespace;
+            namespace ExampleNamespace;
 
-[AttributeUsage(AttributeTargets.Class)]
-public class RecognizeAttribute : Attribute
-{
-    public string[] Rules { get; set; } = [];
-}
-public record Product(int Id, string Name);
-[Recognize(Rules = [""Id:ProductId"", ""Name:ProductName""])]
-public record ProductDto(int ProductId, string ProductName);
-";
+            [AttributeUsage(AttributeTargets.Class)]
+            public class RecognizeAttribute : Attribute
+            {
+                public string[] Rules { get; set; } = [];
+            }
+            public record Product(int Id, string Name);
+            [Recognize(Rules = [""Id:ProductId"", ""Name:ProductName""])]
+            public record ProductDto(int ProductId, string ProductName);
+            ";
         var compilation = SyntaxTreeDriver.DefaultDriver.Compile(sourceCode);
         var type = compilation.GetTypeByMetadataName("ExampleNamespace.ProductDto");
         Assert.NotNull(type);

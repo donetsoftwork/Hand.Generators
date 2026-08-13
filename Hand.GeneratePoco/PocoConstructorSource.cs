@@ -65,8 +65,8 @@ public class PocoConstructorSource(TypeDeclarationSyntax type, ConvertBuilder co
             property = property.WithSummary(summary);
         if (_generateAttribute)
         {
-            parameter = builder.GenerateAttribute(parameter, _attributeCacher.GetAttributes(sourseMember, AttributeTargets.Parameter));
-            property = builder.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember, AttributeTargets.Property));
+            parameter = builder.GenerateAttribute(parameter, _attributeCacher.GetAttributes(sourseMember.Original, AttributeTargets.Parameter));
+            property = builder.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember.Original, AttributeTargets.Property));
         }
         builder.AddParameter(parameter);
         builder.AddProperty(property);
@@ -139,8 +139,8 @@ public class PocoConstructorSource(TypeDeclarationSyntax type, ConvertBuilder co
             property = property.WithSummary(summary);
         if (_generateAttribute)
         {
-            parameter = builder.GenerateAttribute(parameter, _attributeCacher.GetAttributes(sourseMember, AttributeTargets.Parameter));
-            property = builder.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember, AttributeTargets.Property));
+            parameter = builder.GenerateAttribute(parameter, _attributeCacher.GetAttributes(sourseMember.Original, AttributeTargets.Parameter));
+            property = builder.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember.Original, AttributeTargets.Property));
         }
         builder.AddParameter(parameter);
         builder.AddField(field);
