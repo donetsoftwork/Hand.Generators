@@ -1,4 +1,5 @@
 ﻿using Hand.Members;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
@@ -27,7 +28,7 @@ public partial class SyntaxGenerator
     /// </summary>
     /// <param name="summary"></param>
     /// <returns></returns>
-    private static List<XmlTextSyntax> CheckSummaryContents(string summary)
+    private static SyntaxList<XmlNodeSyntax> CheckSummaryContents(string summary)
     {
         if (string.IsNullOrEmpty(summary))
             return [];
@@ -91,7 +92,7 @@ public partial class SyntaxGenerator
     /// </summary>
     /// <param name="lines"></param>
     /// <returns></returns>
-    private static List<XmlTextSyntax> CheckSummaryContents(string[] lines)
+    private static SyntaxList<XmlNodeSyntax> CheckSummaryContents(string[] lines)
     {
         var count = lines.Length;
         switch (count)
@@ -99,14 +100,14 @@ public partial class SyntaxGenerator
             case 0: return [];
             case 1: return CheckSummaryContents(lines[0]);
         }
-        var contents = new List<XmlTextSyntax>(count + 2)
+        var contents = new List<XmlNodeSyntax>(count + 2)
         {
             XmlNewLine(true)
         };
         foreach (var summary in lines)
             contents.Add(SyntaxFactory.XmlText(summary));
         contents.Add(XmlNewLine(true));
-        return contents;
+        return SyntaxFactory.List(contents);
     }
     /// <summary>
     /// 构造摘要备注
@@ -118,7 +119,7 @@ public partial class SyntaxGenerator
         var texts = CheckSummaryContents(lines);
         if (texts.Count == 0)
             return null;
-        return SyntaxFactory.XmlSummaryElement(SyntaxFactory.List<XmlNodeSyntax>(texts));
+        return SyntaxFactory.XmlSummaryElement(texts);
     }
     /// <summary>
     /// 构造摘要文档

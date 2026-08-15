@@ -81,5 +81,5 @@ public partial record UserName : IEntityProperty<string>;
         Assert.Contains("GetHashCode()", code);
     }
 }
-//[GenerateProperty]
-//public partial record UserName : IEntityProperty<string>;
+[GenerateProperty]
+public partial record UserName : IEntityProperty<string>;

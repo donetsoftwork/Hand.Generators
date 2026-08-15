@@ -4,7 +4,7 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<RootNamespace>Hand</RootNamespace>
-		<Version>$(VersionBase).4-alpha</Version>
+		<Version>$(VersionBase).5-alpha</Version>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<EnableNETAnalyzers>True</EnableNETAnalyzers>
 		<IsRoslynComponent>true</IsRoslynComponent>

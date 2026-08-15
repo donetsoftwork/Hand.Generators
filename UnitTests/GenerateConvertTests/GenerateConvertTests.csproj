@@ -33,6 +33,7 @@
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.6.0" PrivateAssets="all" />
 	</ItemGroup>
 	<ItemGroup>
+		<ProjectReference Include="..\..\Hand.Generators.EasySyntax\Hand.Generators.EasySyntax.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
 		<ProjectReference Include="..\..\Hand.GenerateConvert\Hand.GenerateConvert.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
 		<ProjectReference Include="..\..\Hand.GenerateCore\Hand.GenerateCore.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
 		<ProjectReference Include="..\..\Hand.Generators.Attributes\Hand.Generators.Attributes.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />

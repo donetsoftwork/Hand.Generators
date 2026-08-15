@@ -57,7 +57,7 @@ public class PatternMatchingVariableDeclarationHelperTests
     [Fact]
     public void NullTest()
     {
-        VariableDesignationSyntax designation = null;
+        VariableDesignationSyntax designation = null!;
         ImmutableHashSet<string> vars = new HashSet<string>() { "x" }.ToImmutableHashSet();
         Assert.False(AnyDeclaredVariablesMatch(designation, vars));
     }

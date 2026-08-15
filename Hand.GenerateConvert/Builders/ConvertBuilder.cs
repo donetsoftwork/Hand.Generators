@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace Hand.Builders;
 
@@ -125,7 +126,7 @@ public partial class ConvertBuilder(Compilation compilation, TypeSymbolCacher ty
     /// <exception cref="NotImplementedException"></exception>
     private IConverter? CreateCore(TypeSymbolInfo sourceInfo, TypeSymbolInfo destInfo)
     {
-        var (sourceOriginal, sourceSymbol, sourceCategory, _) = sourceInfo;
+        var (sourceOriginal, sourceSymbol, sourceCategory, sourceElement) = sourceInfo;
         var (destOriginal, destSymbol, destCategory, _) = destInfo;
 
         if (sourceOriginal.Equals(destOriginal, SymbolEqualityComparer.Default))
@@ -153,13 +154,31 @@ public partial class ConvertBuilder(Compilation compilation, TypeSymbolCacher ty
             }
             return CheckSource(new CastConverter(destSymbol.ToSyntax()), sourceIsNull, destInfo);
         }
-        var stringSymbol = _compilation.GetStringSymbol();
-        if (destSymbol.Equals(stringSymbol, SymbolEqualityComparer.Default))
-            return CheckSource(ToStringConverter.Instance, sourceIsNull, destInfo);
 
         var systemConvert = GetConverterBySystem(sourceInfo, destInfo);
         if (systemConvert is not null)
             return systemConvert;
+
+        if (sourceCategory.IsEntity() && sourceElement is not  null)
+        {
+            IConverter memberConverter = MemberConverter.Original;
+            if (sourceElement.Equals(destOriginal, SymbolEqualityComparer.Default))
+                return CheckSource(memberConverter, sourceIsNull, destInfo);
+            var originalInfo = _typeCacher.Get(sourceElement);
+            if (originalInfo is not null)
+            {
+                var original = Get(originalInfo, destInfo);
+                if (original is not null)
+                {
+                    memberConverter = new CompatibleConverter(memberConverter, original);
+                    return CheckSource(memberConverter, sourceIsNull, destInfo);
+                }
+            }
+        }
+
+        var stringSymbol = _compilation.GetStringSymbol();
+        if (destSymbol.Equals(stringSymbol, SymbolEqualityComparer.Default))
+            return CheckSource(ToStringConverter.Instance, sourceIsNull, destInfo);
 
         if (sourceCategory.IsEnum())
             return CheckOriginal(FromEnum(sourceSymbol, destInfo, convertToInfo), sourceIsNull, destInfo);

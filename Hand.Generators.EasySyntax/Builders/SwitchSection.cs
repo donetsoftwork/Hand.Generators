@@ -36,7 +36,7 @@ public class SwitchSection(SwitchBuilder @switch)
     /// 获取标签
     /// </summary>
     /// <returns></returns>
-    protected virtual IEnumerable<SwitchLabelSyntax> GetLabels()
+    protected virtual SyntaxList<SwitchLabelSyntax> GetLabels()
         => [SyntaxFactory.DefaultSwitchLabel()];
     /// <summary>
     /// 构建分支
@@ -44,8 +44,8 @@ public class SwitchSection(SwitchBuilder @switch)
     /// <returns></returns>
     public SwitchSectionSyntax BuildSection()
         => _isReturn ?
-        SyntaxFactory.SwitchSection(SyntaxFactory.List(GetLabels()), SyntaxGenerator.List(_statements)) :
-        SyntaxFactory.SwitchSection(SyntaxFactory.List(GetLabels()), SyntaxGenerator.List([.. _statements, SyntaxFactory.BreakStatement()]));
+        SyntaxFactory.SwitchSection(GetLabels(), SyntaxGenerator.List(_statements)) :
+        SyntaxFactory.SwitchSection(GetLabels(), SyntaxGenerator.List([.. _statements, SyntaxFactory.BreakStatement()]));
     /// <inheritdoc />
     public override StatementSyntax Build()
         => _switch.Build();

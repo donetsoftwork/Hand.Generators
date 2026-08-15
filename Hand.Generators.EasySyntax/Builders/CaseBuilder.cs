@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 
@@ -30,8 +31,8 @@ public class CaseBuilder(SwitchBuilder @switch, List<SwitchLabelSyntax> labels)
         => _labels;
     #endregion
     /// <inheritdoc />
-    protected override IEnumerable<SwitchLabelSyntax> GetLabels()
-        => _labels;
+    protected override SyntaxList<SwitchLabelSyntax> GetLabels()
+        => SyntaxFactory.List(_labels);
     /// <summary>
     /// 条件分支(新增)
     /// </summary>

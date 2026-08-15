@@ -684,9 +684,21 @@ partial class ProductTable : global::ShadowSql.Identifiers.Table
 ### 5.1 Roslyn简易语法
 >* 参看: https://www.cnblogs.com/xiangji/p/19688804
 
-### 5.2 源生成器partial范式及单元测试
+### 5.2 .net源生成器必须知道的4套类型
+>* 参看: https://www.cnblogs.com/xiangji/p/22359584
+
+### 5.3 C#.NET源生成器如何处理Attribute
+>* 参看: https://www.cnblogs.com/xiangji/p/22439407
+
+### 5.4 C#.NET源生成器如何处理XML注释文档
+>* 参看: https://www.cnblogs.com/xiangji/p/22488819
+
+### 5.5 Roslyn语法的模式匹配之EasySyntax增加模式匹配支持
+>* 参看: https://www.cnblogs.com/xiangji/p/20691808
+
+### 5.6 源生成器partial范式及单元测试
 >* https://www.cnblogs.com/xiangji/p/19737143
 
-### 5.3 源生成器nuget打包
+### 5.7 源生成器nuget打包
 >* https://www.cnblogs.com/xiangji/p/19781120
 

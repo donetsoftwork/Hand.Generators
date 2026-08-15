@@ -28,5 +28,4 @@ public record User(int Id, string Name, int Sex);";
         var idSummary = CommentParser.GetSummary(id);
         Assert.Equal("Id标识", idSummary);
     }
-
 }

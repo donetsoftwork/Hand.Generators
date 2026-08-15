@@ -14,11 +14,11 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Hand.Core" Version="0.3.1.11-alpha" />
-		<PackageReference Include="Hand.AutoCache" Version="0.3.1.3-alpha" />
-		<PackageReference Include="Hand.MemberValidation" Version="0.3.1.3-alpha" />
-		<PackageReference Include="Hand.Naming" Version="0.3.1.3-alpha" />
-		<PackageReference Include="Hand.ParseXml" Version="0.3.1.4-alpha" />
+		<PackageReference Include="Hand.Core" Version="0.3.1.11-alpha" PrivateAssets="all" />
+		<PackageReference Include="Hand.AutoCache" Version="0.3.1.3-alpha" PrivateAssets="all" />
+		<PackageReference Include="Hand.MemberValidation" Version="0.3.1.3-alpha" PrivateAssets="all" />
+		<PackageReference Include="Hand.Naming" Version="0.3.1.3-alpha" PrivateAssets="all" />
+		<PackageReference Include="Hand.ParseXml" Version="0.3.1.4-alpha" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="5.6.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="5.6.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
@@ -33,7 +33,8 @@
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.6.0" PrivateAssets="all" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\Hand.GenerateCore\Hand.GenerateCore.csproj" />
+		<ProjectReference Include="..\..\Hand.Generators.EasySyntax\Hand.Generators.EasySyntax.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+		<ProjectReference Include="..\..\Hand.GenerateCore\Hand.GenerateCore.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
 		<ProjectReference Include="..\..\Hand.GeneratePoco\Hand.GeneratePoco.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
 		<ProjectReference Include="..\..\Hand.GenerateConvert\Hand.GenerateConvert.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
 		<ProjectReference Include="..\..\Hand.Generators.Attributes\Hand.Generators.Attributes.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />

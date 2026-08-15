@@ -86,11 +86,18 @@ public class CommentParser()
     /// <param name="defaultValue"></param>
     /// <returns></returns>
     public static string GetSummary(ISymbol symbol, string defaultValue = "")
+        => GetSummary(symbol.GetDocumentationCommentXml(), defaultValue);
+    /// <summary>
+    /// 获取备注
+    /// </summary>
+    /// <param name="xml"></param>
+    /// <param name="defaultValue"></param>
+    /// <returns></returns>
+    public static string GetSummary(string? xml, string defaultValue = "")
     {
-        var xml = symbol.GetDocumentationCommentXml();
         if (string.IsNullOrWhiteSpace(xml))
             return defaultValue;
-        if(_summaryParser.TryParse(xml!, out var summary))
+        if (_summaryParser.TryParse(xml!, out var summary))
             return summary.Trim();
         return defaultValue;
     }

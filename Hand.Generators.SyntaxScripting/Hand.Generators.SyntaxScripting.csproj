@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<RootNamespace>Hand</RootNamespace>
 		<PackageId>Hand.Generators.SyntaxScripting</PackageId>
-		<Version>$(VersionBase).4-alpha</Version>
+		<Version>$(VersionBase).5-alpha</Version>
 		<LangVersion>Latest</LangVersion>
 		<PackageReadmeFile>readme.md</PackageReadmeFile>
 	</PropertyGroup>

@@ -22,4 +22,21 @@ public class MemberConverter(SimpleNameSyntax memberName)
     /// <inheritdoc />
     public ExpressionSyntax Convert(ExpressionSyntax source)
         => source.Access(_memberName);
+
+    /// <summary>
+    /// 转化为Original属性
+    /// </summary>
+    public static MemberConverter Original
+        => Inner.Original;
+
+    /// <summary>
+    /// 内部延迟加载
+    /// </summary>
+    class Inner
+    {
+        /// <summary>
+        /// 转化为Original属性
+        /// </summary>
+        public static readonly MemberConverter Original = new(SyntaxFactory.IdentifierName("Original"));
+    }
 }

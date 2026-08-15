@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 
@@ -33,7 +34,7 @@ public class PatternCaseBuilder(SwitchBuilder @switch, PatternSyntax pattern)
         return this;
     }
     /// <inheritdoc />
-    protected override IEnumerable<SwitchLabelSyntax> GetLabels()
+    protected override SyntaxList<SwitchLabelSyntax> GetLabels()
         => [SyntaxFactory.CasePatternSwitchLabel(_pattern, CreateWhen(_conditons), SyntaxFactory.Token(SyntaxKind.ColonToken))];
     /// <summary>
     /// 构造when

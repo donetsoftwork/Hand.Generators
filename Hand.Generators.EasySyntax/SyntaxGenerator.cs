@@ -258,7 +258,7 @@ public partial class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDecl
             return new SyntaxGenerator([], typeNew, [], [], [], []);
         else if(parent is BaseNamespaceDeclarationSyntax ns)
             // 清空成员并注释
-            return new NamespaceBuilder(ns.WithMembers(SyntaxFactory.List<MemberDeclarationSyntax>()).WithLeadingTrivia(SyntaxFactory.TriviaList()), [], typeNew, [], [], [], []);
+            return new NamespaceBuilder(ns.WithMembers([]).WithLeadingTrivia(), [], typeNew, [], [], [], []);
         else if (parent is CompilationUnitSyntax cu)
             return new SyntaxGenerator([.. cu.Usings], typeNew, [], [], [], []);
         return new SyntaxGenerator([], typeNew, [], [], [], []); 
