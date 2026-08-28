@@ -39,14 +39,15 @@ public class ExtensionMethodSource(MethodSource original, TypeNameInfo info)
     /// 创建方法声明
     /// </summary>
     /// <returns></returns>
-    public MethodDeclarationSyntax CreateMethod()
+    public MethodDeclarationSyntax CreateMethod(SyntaxGenerator generator)
     {
         var thisParameter = _original.ThisType.Parameter(ExtensionThis.Identifier)
             .This();
-        var method = _original.ReturnType.Method(_original.MethodName, [thisParameter, .. _original.CreateParameters()])
+        var returnType = generator.Display(_original.ReturnInfo);
+        var method = returnType.Method(_original.MethodName, [thisParameter, .. _original.CreateParameters()])
             .Public()
             .Static();
-        return _original.BuildBody(method, ExtensionThis);
+        return _original.BuildBody(generator, method, ExtensionThis);
     }
     /// <summary>
     /// 构建生成器
@@ -55,7 +56,7 @@ public class ExtensionMethodSource(MethodSource original, TypeNameInfo info)
     public SyntaxGenerator Generate()
     {
         var generator = CreateGenerator(_info);
-        var method = CreateMethod();
+        var method = CreateMethod(generator);
         generator.AddMethod(method);
         return generator;
     }
@@ -67,6 +68,10 @@ public class ExtensionMethodSource(MethodSource original, TypeNameInfo info)
     public static SyntaxGenerator CreateGenerator(TypeNameInfo info)
     {
         var type = SyntaxFactory.ClassDeclaration(info.TypeName);
-        return SyntaxGenerator.Create(info.Namespace, type.Internal().Static().Partial());
+        if (info.IsInternal)
+            type = type.Internal();
+        else
+            type = type.Public();
+        return SyntaxGenerator.Create(info.Namespace, type.Static().Partial());
     }
 }

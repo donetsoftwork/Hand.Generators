@@ -41,5 +41,5 @@ public partial record struct ProductPrice : IEntityProperty<decimal>;
     }
 }
 
-//[GenerateProperty("Include: Constructor")]
-//public partial record struct ProductPrice : IEntityProperty<decimal>;
+[GenerateProperty("Include: Constructor")]
+public partial record struct ProductPrice : IEntityProperty<decimal>;

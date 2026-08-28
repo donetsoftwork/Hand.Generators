@@ -1,7 +1,7 @@
 ﻿using Hand.Builders;
 using Hand.Entities;
 using Hand.Members;
-using Hand.Reflection;
+using Hand.Types;
 using Hand.Words;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -14,7 +14,7 @@ namespace Hand.GeneratePoco;
 /// <summary>
 /// 按属性生成
 /// </summary>
-public class PocoPropertySource(TypeDeclarationSyntax type, ConvertBuilder convertBuilder, TypeSymbolInfo typeInfo, TypeSymbolInfo sourseInfo
+public class PocoPropertySource(TypeDeclarationSyntax type, ConvertBuilder convertBuilder, ComplexTypeInfo typeInfo, ComplexTypeInfo sourseInfo
     , AttributeData attribute, InitializeKind initializer)
     : PocoSource(type, convertBuilder, typeInfo, sourseInfo, attribute)
 {
@@ -26,41 +26,35 @@ public class PocoPropertySource(TypeDeclarationSyntax type, ConvertBuilder conve
     /// <inheritdoc />
     public override SyntaxGenerator Generate()
     {
-        var builder = SyntaxGenerator.Clone(_type);
-        var generateArguments = new List<MemberArgument>(_sourceMembers.Count);
+        //var generator = SyntaxGenerator.Clone(_type);
+        var sourceMembers = ConvertBuilder.GetSourceMembers(_convertBuilder.TypeCacher, _sourseSymbol, _recognizers);
+        var arguments = new List<MemberArgument>(sourceMembers.Count);
         var kind = CheckAccessorKind(_useInit);
-        foreach (var item in _sourceMembers)
+        foreach (var item in sourceMembers)
         {
             var name = item.Key;
             if (_memberNames.Contains(name))
                 continue;
-            var argument = _useField ? CheckFieldMember(builder, name, item.Value, kind) :
-                CheckMember(builder, name, item.Value, kind);
-            generateArguments.Add(argument);
+            var argument = _useField ? CheckFieldMember(_generator, name, item.Value, kind) :
+                CheckMember(_generator, name, item.Value, kind);
+            arguments.Add(argument);
         }
-        if (_convertTo)
-        {
-            var method = CheckConvertTo(_convertBuilder, generateArguments);
-            if (method is not null)
-                builder.AddMethod(method);
-        }
-        if (_convertFrom)
-            CheckConvertFrom(_convertBuilder, generateArguments);
+        CheckConvert(_generator, sourceMembers, arguments);
         //// 设置Xml备注
         //builder.Apply(type => type.WithSummary(_summary));
-        return builder;
-    }    
+        return _generator;
+    }
     /// <summary>
     /// 处理成员
     /// </summary>
-    /// <param name="builder"></param>
+    /// <param name="generator"></param>
     /// <param name="name"></param>
     /// <param name="sourseMember"></param>
     /// <param name="kind"></param>
     /// <returns></returns>
-    public MemberArgument CheckFieldMember(SyntaxGenerator builder, string name, SymbolMember sourseMember, SyntaxKind kind)
+    public MemberArgument CheckFieldMember(SyntaxGenerator generator, string name, SymbolMember sourseMember, SyntaxKind kind)
     {
-        var (memberType, memberSymbolInfo) = CheckMemberType(_compilation, name, sourseMember.SymbolInfo);
+        var (memberType, memberSymbolInfo) = CheckMemberType(name, sourseMember.SymbolInfo);
         var fieldName = UnderWordRule.UnderLower(name);
         var fieldExpression = SyntaxFactory.IdentifierName(fieldName);
         var field = CreateField(memberType, fieldName, memberSymbolInfo)
@@ -73,12 +67,12 @@ public class PocoPropertySource(TypeDeclarationSyntax type, ConvertBuilder conve
         var property = memberType.Property(name, getDeclaration, accessorDeclaration)
             .Public();
         if (_generateAttribute)
-            property = builder.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember.Original, AttributeTargets.Property));
+            property = generator.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember.Original, AttributeTargets.Property));
         var summary = sourseMember.Element;
         if (summary is not null)
             property = property.WithSummary(summary);
-        builder.AddField(field);
-        builder.AddProperty(property);
+        generator.AddField(field);
+        generator.AddProperty(property);
         string summaryFunc() => sourseMember.Summary;
         var fieldMember = new FieldDeclarationMember(fieldName, memberSymbolInfo, field, summaryFunc);
         var propertyMember = new PropertyDeclarationMember(memberSymbolInfo, property, summaryFunc);
@@ -89,22 +83,22 @@ public class PocoPropertySource(TypeDeclarationSyntax type, ConvertBuilder conve
     /// <summary>
     /// 处理成员
     /// </summary>
-    /// <param name="builder"></param>
+    /// <param name="generator"></param>
     /// <param name="name"></param>
     /// <param name="sourseMember"></param>
     /// <param name="kind"></param>
     /// <returns></returns>
-    public MemberArgument CheckMember(SyntaxGenerator builder, string name, SymbolMember sourseMember, SyntaxKind kind)
+    public MemberArgument CheckMember(SyntaxGenerator generator, string name, SymbolMember sourseMember, SyntaxKind kind)
     {
-        var (memberType, memberSymbolInfo) = CheckMemberType(_compilation, name, sourseMember.SymbolInfo);
+        var (memberType, memberSymbolInfo) = CheckMemberType(name, sourseMember.SymbolInfo);
         var property = CreateProperty(memberType, name, kind, memberSymbolInfo)
             .Public();
         if (_generateAttribute)
-            property = builder.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember.Original, AttributeTargets.Property));
+            property = generator.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember.Original, AttributeTargets.Property));
         var summary = sourseMember.Element;
         if (summary is not null)
             property = property.WithSummary(summary);
-        builder.AddProperty(property);
+        generator.AddProperty(property);
 
         var member = new PropertyDeclarationMember(memberSymbolInfo, property, () => sourseMember.Summary);
         return new(member, sourseMember);
@@ -117,10 +111,12 @@ public class PocoPropertySource(TypeDeclarationSyntax type, ConvertBuilder conve
     /// <param name="kind"></param>
     /// <param name="info"></param>
     /// <returns></returns>
-    public PropertyDeclarationSyntax CreateProperty(TypeSyntax type, string name, SyntaxKind kind, TypeSymbolInfo info)
+    public PropertyDeclarationSyntax CreateProperty(TypeSyntax type, string name, SyntaxKind kind, ITypeSymbolInfo info)
     {
         var property = type.Property(name, SyntaxKind.GetAccessorDeclaration, kind);
-        return _useDefault ? property.WithInitializer(DefaultExpressionBuilder.Default(info, _compilation)).WithSemicolonToken() : property;
+        if (_useDefault)
+            return property.WithInitializer(DefaultExpressionBuilder.GetDefault(info)).WithSemicolonToken();
+        return property;
     }
     /// <summary>
     /// 属性操作器种类

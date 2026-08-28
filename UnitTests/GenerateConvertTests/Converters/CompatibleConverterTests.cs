@@ -1,6 +1,9 @@
-﻿using Hand.Converters;
+﻿using Hand;
+using Hand.Cachers;
+using Hand.Converters;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace GenerateConvertTests.Converters;
 
@@ -9,14 +12,26 @@ public class CompatibleConverterTests
     [Fact]
     public void Convert()
     {
+        var driver = SyntaxTreeDriver.CreateDefaultDriver();
+        var compilation = driver.Compile("partial record UserId(int Original);");
+        Assert.NotNull(compilation);
+        var syntaxTree = compilation.SyntaxTrees.FirstOrDefault();
+        Assert.NotNull(syntaxTree);
+        var type = syntaxTree.GetRoot().DescendantNodes().OfType<TypeDeclarationSyntax>().FirstOrDefault();
+        Assert.NotNull(type);
+        var semanticModel = compilation.GetSemanticModel(syntaxTree);
+        var symbol = semanticModel.GetDeclaredSymbol(type);
+        Assert.NotNull(symbol);
+        var typeInfos = new TypeSymbolCacher(compilation);
+        var typeInfo = typeInfos.Get(symbol);
+        var generator = SyntaxGenerator.Create(type);
         var compatible = new SystemConverter(SyntaxFactory.IdentifierName("ToInt32"));
-        var type = SyntaxFactory.IdentifierName("UserId");
-        var original = new ConstructorConverter(type);
+        var original = new ConstructorConverter(typeInfo);
         var converter = new CompatibleConverter(compatible, original);
         var source = SyntaxFactory.IdentifierName("value");
-        var dest = converter.Convert(source);
+        var dest = converter.Convert(generator, source);
         var code = dest.NormalizeWhitespace().ToFullString();
-        Assert.Equal("new UserId(System.Convert.ToInt32(value))", code);
+        Assert.Equal("new UserId(Convert.ToInt32(value))", code);
     }
     //public record UserId(int Original);
 }

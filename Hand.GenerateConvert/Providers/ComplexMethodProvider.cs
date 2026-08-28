@@ -26,6 +26,6 @@ public class ComplexMethodProvider(IMethodProvider original, IMethodProvider ext
         => _extension;
     #endregion
     /// <inheritdoc />
-    public IMethodSymbol? GetConvertMethod(ConvertMethodInfo info, INamedTypeSymbol dest)
+    public IMethodSymbol? GetConvertMethod(ConvertMethodInfo info, ITypeSymbol dest)
         => _original.GetConvertMethod(info, dest) ?? _extension.GetConvertMethod(info, dest);
 }

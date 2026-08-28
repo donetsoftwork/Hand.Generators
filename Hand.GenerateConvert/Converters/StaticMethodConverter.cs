@@ -1,6 +1,6 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Generic;
 
 namespace Hand.Converters;
 
@@ -30,21 +30,22 @@ public class StaticMethodConverter(ExpressionSyntax method)
     /// <summary>
     /// 构造参数
     /// </summary>
+    /// <param name="generator"></param>
     /// <param name="source"></param>
     /// <returns></returns>
-    protected virtual IEnumerable<ArgumentSyntax> CreateArguments(ExpressionSyntax source)
+    protected virtual SeparatedSyntaxList<ArgumentSyntax> CreateArguments(SyntaxGenerator generator, ExpressionSyntax source)
         => [SyntaxFactory.Argument(source)];
 
     /// <inheritdoc />
-    public virtual ExpressionSyntax Convert(ExpressionSyntax source)
+    public virtual ExpressionSyntax Convert(SyntaxGenerator generator, ExpressionSyntax source)
     {
-        return GetMethod()
-            .Invocation(CreateArguments(source));
+        return GetMethod(generator)
+            .Invocation(CreateArguments(generator, source));
     }
     /// <summary>
     /// 获取方法
     /// </summary>
     /// <returns></returns>
-    protected virtual ExpressionSyntax GetMethod()
+    protected virtual ExpressionSyntax GetMethod(SyntaxGenerator generator)
         => _method;
 }

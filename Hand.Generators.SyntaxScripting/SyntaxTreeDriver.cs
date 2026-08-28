@@ -21,7 +21,7 @@ public partial class SyntaxTreeDriver
     {
         return CSharpSyntaxTree.ParseText(source, path: _path, options: _options)
             .GetCompilationUnitRoot()
-            .Using(_usings)
+            .AddUsings([.. _usings])
             .SyntaxTree;
     }
     #endregion

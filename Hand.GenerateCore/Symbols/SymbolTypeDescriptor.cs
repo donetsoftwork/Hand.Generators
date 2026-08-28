@@ -68,7 +68,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// </summary>
     /// <param name="parameterTypes"></param>
     /// <returns></returns>
-    public IMethodSymbol? GetConstructor(params INamedTypeSymbol[] parameterTypes)
+    public IMethodSymbol? GetConstructor(params ITypeSymbol[] parameterTypes)
     {
         foreach (var constructor in _constructors)
         {
@@ -106,7 +106,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="isPartial"></param>
     /// <param name="parameterTypes"></param>
     /// <returns></returns>
-    public IMethodSymbol? GetMethod(string name, bool isPartial, params INamedTypeSymbol[] parameterTypes)
+    public IMethodSymbol? GetMethod(string name, bool isPartial, params ITypeSymbol[] parameterTypes)
     {
         foreach (var method in _methods)
         {
@@ -121,7 +121,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="name"></param>
     /// <param name="parameterTypes"></param>
     /// <returns></returns>
-    public IMethodSymbol? GetMethod(string name, params INamedTypeSymbol[] parameterTypes)
+    public IMethodSymbol? GetMethod(string name, params ITypeSymbol[] parameterTypes)
         => GetMethod(_methods, name, parameterTypes);
     /// <summary>
     /// 获取方法
@@ -130,7 +130,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="name"></param>
     /// <param name="parameterTypes"></param>
     /// <returns></returns>
-    public static IMethodSymbol? GetMethod(IEnumerable<IMethodSymbol> methods, string name, params INamedTypeSymbol[] parameterTypes)
+    public static IMethodSymbol? GetMethod(IEnumerable<IMethodSymbol> methods, string name, params ITypeSymbol[] parameterTypes)
     {
         foreach (var item in methods)
         {
@@ -146,7 +146,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="name"></param>
     /// <param name="parameterType"></param>
     /// <returns></returns>
-    public static IMethodSymbol? GetSingleParameterMethod(IEnumerable<IMethodSymbol> methods, string name, INamedTypeSymbol parameterType)
+    public static IMethodSymbol? GetSingleParameterMethod(IEnumerable<IMethodSymbol> methods, string name, ITypeSymbol parameterType)
     {
         foreach (var item in methods)
         {
@@ -161,7 +161,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="returnType"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IEnumerable<IMethodSymbol> GetMethodsByReturnType(INamedTypeSymbol returnType)
+    public IEnumerable<IMethodSymbol> GetMethodsByReturnType(ITypeSymbol returnType)
         => _methods.Where(item => SymbolEqualityComparer.IncludeNullability.Equals(returnType, item.ReturnType));
     #endregion
     #region Operator
@@ -171,7 +171,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="name"></param>
     /// <param name="parameterTypes"></param>
     /// <returns></returns>
-    public IMethodSymbol? GetOperator(string name, params INamedTypeSymbol[] parameterTypes)
+    public IMethodSymbol? GetOperator(string name, params ITypeSymbol[] parameterTypes)
     {
         foreach (var item in _operators)
         {
@@ -186,7 +186,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="otherType"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IMethodSymbol? GetEqualOperator(INamedTypeSymbol otherType)
+    public IMethodSymbol? GetEqualOperator(ITypeSymbol otherType)
         => GetOperator("op_Equality", [_symbol, otherType]);
     /// <summary>
     /// 获取不等重载符
@@ -194,7 +194,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="otherType"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IMethodSymbol? GetUnEqualOperator(INamedTypeSymbol otherType)
+    public IMethodSymbol? GetUnEqualOperator(ITypeSymbol otherType)
         => GetOperator("op_Inequality", [_symbol, otherType]);
     /// <summary>
     /// 获取相加重载符
@@ -202,7 +202,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="otherType"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IMethodSymbol? GetAddOperator(INamedTypeSymbol otherType)
+    public IMethodSymbol? GetAddOperator(ITypeSymbol otherType)
         => GetOperator("op_Addition", [_symbol, otherType]);
     /// <summary>
     /// 获取相减重载符
@@ -210,7 +210,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="otherType"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IMethodSymbol? GetSubtractOperator(INamedTypeSymbol otherType)
+    public IMethodSymbol? GetSubtractOperator(ITypeSymbol otherType)
         => GetOperator("op_Subtraction", [_symbol, otherType]);
     /// <summary>
     /// 获取相乘重载符
@@ -218,7 +218,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="otherType"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IMethodSymbol? GetMultiplyOperator(INamedTypeSymbol otherType)
+    public IMethodSymbol? GetMultiplyOperator(ITypeSymbol otherType)
         => GetOperator("op_Multiply", [_symbol, otherType]);
     /// <summary>
     /// 获取相除重载符
@@ -226,7 +226,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="otherType"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IMethodSymbol? GetDivideOperator(INamedTypeSymbol otherType)
+    public IMethodSymbol? GetDivideOperator(ITypeSymbol otherType)
         => GetOperator("op_Division", [_symbol, otherType]);
     /// <summary>
     /// 获取求余重载符
@@ -234,7 +234,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="otherType"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IMethodSymbol? GetModOperator(INamedTypeSymbol otherType)
+    public IMethodSymbol? GetModOperator(ITypeSymbol otherType)
         => GetOperator("op_Modulus", [_symbol, otherType]);
     /// <summary>
     /// 获取逻辑与重载符
@@ -242,7 +242,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="otherType"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IMethodSymbol? GetAndOperator(INamedTypeSymbol otherType)
+    public IMethodSymbol? GetAndOperator(ITypeSymbol otherType)
         => GetOperator("op_LogicalAnd", [_symbol, otherType]);
     /// <summary>
     /// 获取逻辑或重载符
@@ -250,7 +250,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="otherType"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IMethodSymbol? GetOrOperator(INamedTypeSymbol otherType)
+    public IMethodSymbol? GetOrOperator(ITypeSymbol otherType)
         => GetOperator("op_LogicalOr", [_symbol, otherType]);
     #endregion
     /// <summary>
@@ -259,7 +259,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="parameters"></param>
     /// <param name="parameterTypes"></param>
     /// <returns></returns>
-    public static bool MatchParameterType(ImmutableArray<IParameterSymbol> parameters, INamedTypeSymbol[] parameterTypes)
+    public static bool MatchParameterType(ImmutableArray<IParameterSymbol> parameters, ITypeSymbol[] parameterTypes)
     {
         var typeCount = parameterTypes.Length;
         if (parameters.Length != typeCount)
@@ -277,7 +277,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="parameters"></param>
     /// <param name="parameterType"></param>
     /// <returns></returns>
-    public static bool MatchSingle(ImmutableArray<IParameterSymbol> parameters, INamedTypeSymbol parameterType)
+    public static bool MatchSingle(ImmutableArray<IParameterSymbol> parameters, ITypeSymbol parameterType)
     {
         if (parameters.Length != 1)
             return false;
@@ -289,7 +289,7 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="parameters"></param>
     /// <param name="parameterType"></param>
     /// <returns></returns>
-    public static bool MatchFirst(ImmutableArray<IParameterSymbol> parameters, INamedTypeSymbol parameterType)
+    public static bool MatchFirst(ImmutableArray<IParameterSymbol> parameters, ITypeSymbol parameterType)
     {
         if (parameters.Length == 0)
             return false;
@@ -301,22 +301,10 @@ public class SymbolTypeDescriptor(Compilation compilation, INamedTypeSymbol symb
     /// <param name="symbol"></param>
     /// <param name="other"></param>
     /// <returns></returns>
-    public static bool CheckEquals(INamedTypeSymbol symbol, ITypeSymbol? other)
-    {
-        if (other is INamedTypeSymbol namedType)
-            return CheckEquals(symbol, namedType);
-        return false;
-    }
-    /// <summary>
-    /// 判断相等
-    /// </summary>
-    /// <param name="symbol"></param>
-    /// <param name="other"></param>
-    /// <returns></returns>
-    public static bool CheckEquals(INamedTypeSymbol symbol, INamedTypeSymbol other)
+    public static bool CheckEquals(ITypeSymbol symbol, ITypeSymbol other)
     {
         if (other.Kind == SymbolKind.ErrorType && other is IErrorTypeSymbol error)
             return string.Equals(symbol.MetadataName, error.MetadataName);
-        return symbol.Equals( other, SymbolEqualityComparer.IncludeNullability);
+        return symbol.Equals(other, SymbolEqualityComparer.IncludeNullability);
     }
 }

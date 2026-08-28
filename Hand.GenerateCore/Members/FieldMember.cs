@@ -1,5 +1,6 @@
 ﻿using Hand.Cachers;
 using Hand.Reflection;
+using Hand.Types;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 
@@ -11,7 +12,7 @@ namespace Hand.Members;
 /// <param name="name"></param>
 /// <param name="original"></param>
 /// <param name="symbolInfo"></param>
-public class FieldMember(string name, IFieldSymbol original, TypeSymbolInfo symbolInfo)
+public class FieldMember(string name, IFieldSymbol original, ITypeSymbolInfo symbolInfo)
     : SymbolMember(name, original, symbolInfo)
 {
     #region 配置
@@ -38,7 +39,7 @@ public class FieldMember(string name, IFieldSymbol original, TypeSymbolInfo symb
             var name = field.Name.TrimStart(_fieldTrimChars);
             if (members.ContainsKey(name))
                 continue;
-            var symbol = typeSymbols.GetByType(field.Type);
+            var symbol = typeSymbols.Get(field.Type);
             if (symbol is null)
                 continue;
             members.Add(name, new FieldMember(name, field, symbol));

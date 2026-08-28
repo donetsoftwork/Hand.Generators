@@ -3,6 +3,7 @@ using Hand.Builders;
 using Hand.Converters;
 using Hand.Members;
 using Hand.Reflection;
+using Hand.Types;
 using Hand.Words;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -19,8 +20,8 @@ namespace Hand.Sources;
 /// <param name="returnInfo"></param>
 /// <param name="methodName"></param>
 /// <param name="arguments"></param>
-public class ComplexSource(ConvertBuilder builder, TypeSyntax thisType, TypeSymbolInfo returnInfo, string methodName, MemberArgument[] arguments)
-    : MethodSource(builder.Compilation, methodName, thisType, returnInfo.Symbol.ToSyntax())
+public class ComplexSource(ConvertBuilder builder, TypeSyntax thisType, ComplexTypeInfo returnInfo, string methodName, MemberArgument[] arguments)
+    : MethodSource(builder.Compilation, methodName, thisType, returnInfo)
 {
     /// <summary>
     /// 复杂转化器
@@ -30,13 +31,12 @@ public class ComplexSource(ConvertBuilder builder, TypeSyntax thisType, TypeSymb
     /// <param name="returnInfo"></param>
     /// <param name="methodName"></param>
     /// <param name="arguments"></param>
-    public ComplexSource(ConvertBuilder builder, string thisType, TypeSymbolInfo returnInfo, string methodName, MemberArgument[] arguments)
+    public ComplexSource(ConvertBuilder builder, string thisType, ComplexTypeInfo returnInfo, string methodName, MemberArgument[] arguments)
         : this(builder, SyntaxFactory.IdentifierName(thisType), returnInfo, methodName, arguments)
     {
     }
     #region 配置
     private readonly ConvertBuilder _builder = builder;
-    private readonly TypeSymbolInfo _returnInfo = returnInfo;
     private readonly MemberArgument[] _arguments = arguments;
     #endregion
 
@@ -46,21 +46,18 @@ public class ComplexSource(ConvertBuilder builder, TypeSyntax thisType, TypeSymb
     /// <param name="info"></param>
     /// <param name="parameter"></param>
     /// <returns></returns>
-    public ExpressionSyntax CheckDefault(TypeSymbolInfo info, IParameterSymbol parameter)
+    public static ExpressionSyntax CheckDefault(ITypeSymbolInfo info, IParameterSymbol parameter)
     {
         if (parameter.HasExplicitDefaultValue)
         {
             var value = parameter.ExplicitDefaultValue;
             if (value is not null)
-            {
-                var symbol = info.Symbol;
-                return SyntaxGenerator.Literal(symbol.SpecialType, value);
-            }
+                return SyntaxGenerator.Literal(info.Symbol.SpecialType, value);
         }
-        return DefaultExpressionBuilder.Default(info, _compilation);
+        return DefaultExpressionBuilder.GetParameterDefault(info);
     }
     /// <inheritdoc />
-    public override MethodDeclarationSyntax BuildBody(MethodDeclarationSyntax method, ExpressionSyntax @this)
+    public override MethodDeclarationSyntax BuildBody(SyntaxGenerator generator, MethodDeclarationSyntax method, ExpressionSyntax @this)
     {
         var parameters = new List<ParameterSyntax>();
         var builder = new CreationBuilder();
@@ -88,25 +85,26 @@ public class ComplexSource(ConvertBuilder builder, TypeSyntax thisType, TypeSymb
                 }
                 else if (member.Kind == MemberKind.ParameterDeclaration && member is ParameterSyntaxMember parameterDeclaration)
                 {
-                    defaultValue = DefaultExpressionBuilder.Default(memberInfo, _compilation);
+                    defaultValue = DefaultExpressionBuilder.GetParameterDefault(memberInfo);
                     parameterName = CamelWordRule.FistToLower(parameterDeclaration.Original.Identifier.ValueText);
                     memberValue = SyntaxFactory.IdentifierName(parameterName);
                     builder.WithArgument(memberValue);
                 }
                 else
                 {
-                    defaultValue = DefaultExpressionBuilder.Default(memberInfo, _compilation);
-                    parameterName = CamelWordRule.FistToLower(member.Name);
-                    memberValue = SyntaxFactory.IdentifierName(parameterName);
-                    builder.Initialize(member.Name, memberValue);
+                    continue;
+                    //defaultValue = DefaultExpressionBuilder.GetParameterDefault(memberInfo);
+                    //parameterName = CamelWordRule.FistToLower(member.Name);
+                    //memberValue = SyntaxFactory.IdentifierName(parameterName);
+                    //builder.Initialize(member.Name, memberValue);
                 }
                 // 增加参数
-                parameters.Add(memberInfo.Symbol.ToSyntax().Parameter(parameterName, defaultValue));
+                parameters.Add(generator.Display(memberInfo).Parameter(parameterName, defaultValue));
                 comment.AddParam(parameterName, member.Summary);
             }
             else 
             {
-                memberValue = memberConverter.Convert(@this.Access(sourceMember.Name));
+                memberValue = memberConverter.Convert(generator, @this.Access(sourceMember.Name));
                 if (member.Kind == MemberKind.Parameter && member is ParameterMember parameterMember)
                 {
                     var parameter = parameterMember.Original;

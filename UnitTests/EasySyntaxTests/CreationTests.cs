@@ -176,6 +176,28 @@ public class CreationTests
         var creation = type.NewArray(one, two);
         var code = creation.NormalizeWhitespace().ToFullString();
         Assert.StartsWith("new int[]", code);
+        
+        var size = SyntaxFactory.ArrayRankSpecifier(SyntaxFactory.SingletonSeparatedList<ExpressionSyntax>(SyntaxGenerator.Literal(0)));
+        var creation0 = SyntaxFactory.ArrayType(type, SyntaxFactory.SingletonList(size));
+        var code0 = creation0.NormalizeWhitespace().ToFullString();
+        Assert.StartsWith("int[0]", code0);
+    }
+    [Fact]
+    public void EmptyArray()
+    {
+        var type = SyntaxGenerator.IntType;
+        var creation = type.EmptyArray();
+        var code = creation.NormalizeWhitespace().ToFullString();
+        Assert.StartsWith("new int[0]", code);
+    }
+    [Fact]
+    public void EmptyArray0()
+    {
+        var type = SyntaxGenerator.IntType;
+        var arrayType = type.Array(SyntaxGenerator.Literal(0));
+        var creation = arrayType.Empty();
+        var code = creation.NormalizeWhitespace().ToFullString();
+        Assert.StartsWith("new int[0]", code);
     }
     [Fact]
     public void Collection0()

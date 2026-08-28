@@ -64,6 +64,37 @@ public partial class SyntaxGenerator
     public static RecordDeclarationSyntax RecordStructDeclaration(string recordName)
         => RecordStructDeclaration(SyntaxFactory.Identifier(recordName));
     #endregion
+    #region TypeDeclaration
+    /// <summary>
+    /// 定义类型
+    /// </summary>
+    /// <param name="typeName"></param>
+    /// <param name="isRecord"></param>
+    /// <param name="isValueType"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypeDeclarationSyntax TypeDeclaration(string typeName, bool isRecord, bool isValueType)
+        => TypeDeclaration(SyntaxFactory.Identifier(typeName), isRecord, isValueType);
+    /// <summary>
+    /// 定义类型
+    /// </summary>
+    /// <param name="typeName"></param>
+    /// <param name="isRecord"></param>
+    /// <param name="isValueType"></param>
+    /// <returns></returns>
+    public static TypeDeclarationSyntax TypeDeclaration(SyntaxToken typeName, bool isRecord, bool isValueType)
+    {
+        if (isRecord)
+        {
+            if (isValueType)
+                return RecordStructDeclaration(typeName);
+            return RecordDeclaration(typeName);
+        }
+        if (isValueType)
+            return SyntaxFactory.StructDeclaration(typeName);
+        return SyntaxFactory.ClassDeclaration(typeName);
+    }
+    #endregion
     #region ConstructorDeclaration
     /// <summary>
     /// 定义构造函数
@@ -72,8 +103,8 @@ public partial class SyntaxGenerator
     /// <param name="parameters"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ConstructorDeclarationSyntax ConstructorDeclaration(string typeName, params ParameterSyntax[] parameters)
-        => ConstructorDeclaration(SyntaxFactory.Identifier(typeName), parameters);
+    public static ConstructorDeclarationSyntax ConstructorDeclaration(string typeName, params SeparatedSyntaxList<ParameterSyntax> parameters)
+        => SyntaxFactory.ConstructorDeclaration(default, default, SyntaxFactory.Identifier(typeName), SyntaxFactory.ParameterList(parameters), default, default, default, default);
     /// <summary>
     /// 定义构造函数
     /// </summary>
@@ -81,8 +112,8 @@ public partial class SyntaxGenerator
     /// <param name="parameters"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ConstructorDeclarationSyntax ConstructorDeclaration(SyntaxToken typeName, params ParameterSyntax[] parameters)
-        => SyntaxFactory.ConstructorDeclaration(default, default, typeName, ParameterList(parameters), default, default, default, default);
+    public static ConstructorDeclarationSyntax ConstructorDeclaration(SyntaxToken typeName, params SeparatedSyntaxList<ParameterSyntax> parameters)
+        => SyntaxFactory.ConstructorDeclaration(default, default, typeName, SyntaxFactory.ParameterList(parameters), default, default, default, default);
     #endregion
     #region PrimaryConstructorBaseType
     /// <summary>
@@ -113,8 +144,8 @@ public partial class SyntaxGenerator
     /// <param name="parameters"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static OperatorDeclarationSyntax OperatorDeclaration(SyntaxKind kind, TypeSyntax returnType, params ParameterSyntax[] parameters)
-        => SyntaxFactory.OperatorDeclaration(default, SyntaxFactory.TokenList(GenerateServices._public, GenerateServices._static), returnType, default, SyntaxFactory.Token(SyntaxKind.OperatorKeyword), default, SyntaxFactory.Token(kind), ParameterList(parameters), default, default, default);
+    public static OperatorDeclarationSyntax OperatorDeclaration(SyntaxKind kind, TypeSyntax returnType, params SeparatedSyntaxList<ParameterSyntax> parameters)
+        => SyntaxFactory.OperatorDeclaration(default, SyntaxFactory.TokenList(GenerateServices._public, GenerateServices._static), returnType, default, SyntaxFactory.Token(SyntaxKind.OperatorKeyword), default, SyntaxFactory.Token(kind), SyntaxFactory.ParameterList(parameters), default, default, default);
     /// <summary>
     /// 含a、b参数
     /// </summary>

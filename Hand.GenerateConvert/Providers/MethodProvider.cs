@@ -1,6 +1,10 @@
-﻿using Hand.Builders;
-using Hand.Members;
+﻿using Hand.Members;
+using Hand.Reflection;
+using Hand.Symbols;
 using Microsoft.CodeAnalysis;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Hand.Providers;
 
@@ -16,8 +20,8 @@ public class MethodProvider(INamedTypeSymbol symbol)
     #endregion
 
     /// <inheritdoc />
-    public IMethodSymbol? GetConvertMethod(ConvertMethodInfo info, INamedTypeSymbol dest)
-        => ConvertBuilder.GetInstanceMethod(_symbol, dest, info.Filter);
+    IMethodSymbol? IMethodProvider.GetConvertMethod(ConvertMethodInfo info, ITypeSymbol dest)
+        => GetInstanceMethod(_symbol, dest, info.Filter);
 
     /// <summary>
     /// 构造方法提供者
@@ -38,4 +42,32 @@ public class MethodProvider(INamedTypeSymbol symbol)
             return new StaticMethodProvider(extension, source);
         return new ComplexMethodProvider(new MethodProvider(source), new StaticMethodProvider(extension, source));
     }
+    /// <summary>
+    /// 获取静态方法
+    /// </summary>
+    /// <param name="declare"></param>
+    /// <param name="source"></param>
+    /// <param name="dest"></param>
+    /// <param name="filter"></param>
+    /// <returns></returns>
+    public static IMethodSymbol? GetStaticMethod(INamedTypeSymbol declare, INamedTypeSymbol source, ITypeSymbol dest, Func<IMethodSymbol, bool> filter)
+        => GetMethod(SymbolReflection.GetMethods(declare).Where(m => SymbolTypeDescriptor.CheckEquals(dest, m.ReturnType) && SymbolTypeDescriptor.MatchFirst(m.Parameters, source)), filter);
+    /// <summary>
+    /// 获取实例方法
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="dest"></param>
+    /// <param name="filter"></param>
+    /// <returns></returns>
+    public static IMethodSymbol? GetInstanceMethod(INamedTypeSymbol source, ITypeSymbol dest, Func<IMethodSymbol, bool> filter)
+        => GetMethod(SymbolReflection.GetMethods(source).Where(m => SymbolTypeDescriptor.CheckEquals(dest, m.ReturnType)), filter);
+    /// <summary>
+    /// 获取参数最好的方法
+    /// </summary>
+    /// <param name="methods"></param>
+    /// <param name="filter"></param>
+    /// <returns></returns>
+    public static IMethodSymbol? GetMethod(IEnumerable<IMethodSymbol> methods, Func<IMethodSymbol, bool> filter)
+        => methods.OrderBy(m => m.Parameters.Length)
+        .FirstOrDefault(filter);
 }

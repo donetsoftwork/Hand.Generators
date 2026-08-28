@@ -52,5 +52,5 @@ public partial class UserId : IEntityId;
     }
 }
 
-//[GenerateProperty]
-//public partial class UserId : IEntityId;
+[GenerateProperty]
+public partial class UserId : IEntityId;

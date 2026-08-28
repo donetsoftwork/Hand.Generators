@@ -81,7 +81,7 @@ public class GenerateProvider
             if (targetNode is null || !filter.Match(targetNode, cancellationToken))
                 continue;
             var targetSymbol = semanticModel.GetDeclaredSymbol(targetNode, cancellationToken);
-            if(targetSymbol is null)
+            if(targetSymbol is null || targetSymbol.DeclaredAccessibility == Accessibility.Private)
                 continue;
             var attributes = MatchAttributes(targetNode, targetSymbol, attributeType);
             var context = new AttributeContext(targetNode, targetSymbol, semanticModel, attributes);

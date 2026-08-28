@@ -52,7 +52,7 @@ public class ParseTypeNameTests
             Assert.Fail();
             return;
         }
-        var qualifiedName0 = SyntaxFactory.IdentifierName("User").Qualified("Models");
+        var qualifiedName0 = SyntaxFactory.IdentifierName("User").Qualify("Models");
         Assert.Equal(qualifiedName0.ToFullString(), qualifiedName.ToFullString());
         var identifierName = SyntaxFactory.IdentifierName("Models.User");
         Assert.Equal(qualifiedName0.ToFullString(), identifierName.ToFullString());
@@ -85,7 +85,7 @@ public class ParseTypeNameTests
             Assert.Fail();
             return;
         }
-        var qualifiedName0 = SyntaxGenerator.Generic("List", SyntaxGenerator.IntType).Qualified("System.Collections.Generic");
+        var qualifiedName0 = SyntaxGenerator.Generic("List", SyntaxGenerator.IntType).Qualifies("System", "Collections", "Generic");
         Assert.Equal(qualifiedName0.ToFullString(), qualifiedName.ToFullString());
         var genericName2 = SyntaxGenerator.Generic("System.Collections.Generic.List", SyntaxGenerator.IntType);
         Assert.Equal(qualifiedName0.ToFullString(), genericName2.ToFullString());

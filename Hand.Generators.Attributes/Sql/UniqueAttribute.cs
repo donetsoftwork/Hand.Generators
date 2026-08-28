@@ -5,9 +5,16 @@
 /// </summary>
 /// <param name="name"></param>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
-public class UniqueAttribute(string name = "")
+public class UniqueAttribute(string name)
     : Attribute
 {
+    /// <summary>
+    /// 唯一键标识
+    /// </summary>
+    public UniqueAttribute()
+        : this(string.Empty)
+    {
+    }
     /// <summary>
     /// 约束名
     /// </summary>

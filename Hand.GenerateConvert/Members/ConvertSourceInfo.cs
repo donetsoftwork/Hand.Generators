@@ -1,4 +1,5 @@
-﻿using Hand.Converters;
+﻿using Hand.Collections;
+using Hand.Converters;
 using Hand.Creational;
 using Hand.Providers;
 using Microsoft.CodeAnalysis.CSharp;
@@ -49,6 +50,7 @@ public class ConvertSourceInfo(SourceProvider provider, TypeNameInfo typeInfo, C
     public bool IsPartial 
         => _isPartial;
     #endregion
+
     /// <summary>
     /// 获取方法转化器
     /// </summary>
@@ -56,7 +58,7 @@ public class ConvertSourceInfo(SourceProvider provider, TypeNameInfo typeInfo, C
     public IConverter Create()
     {
         if (_isStatic)
-            return new StaticMethodConverter(_typeInfo.Type.Access(_methodInfo.Name));
+            return new ExtensionMethodConverter(_typeInfo.Namespace, SyntaxFactory.IdentifierName(_methodInfo.Name));
         return new InstanceMethodConverter(SyntaxFactory.IdentifierName(_methodInfo.Name));
     }
 }

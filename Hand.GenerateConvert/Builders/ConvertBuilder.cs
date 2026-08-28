@@ -7,12 +7,11 @@ using Hand.Members;
 using Hand.Providers;
 using Hand.Reflection;
 using Hand.Sources;
-using Hand.Symbols;
+using Hand.Types;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
 
 namespace Hand.Builders;
 
@@ -50,7 +49,7 @@ public partial class ConvertBuilder(Compilation compilation, TypeSymbolCacher ty
     /// <summary>
     /// 转化源
     /// </summary>
-    public IEnumerable<IGeneratorSource> Sources 
+    public IReadOnlyCollection<IGeneratorSource> Sources 
         => _sources;
     #endregion
     /// <summary>
@@ -59,7 +58,7 @@ public partial class ConvertBuilder(Compilation compilation, TypeSymbolCacher ty
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <param name="info"></param>
-    public IConverter Save(TypeSymbolInfo source, TypeSymbolInfo dest, ConvertSourceInfo info)
+    public IConverter Save(ComplexTypeInfo source, ComplexTypeInfo dest, ConvertSourceInfo info)
     {
         var converter = info.Create();
         Save(new PairSymbolInfoKey(source, dest), converter);
@@ -72,6 +71,11 @@ public partial class ConvertBuilder(Compilation compilation, TypeSymbolCacher ty
     public void AddSource(IGeneratorSource source)
         => _sources.Add(source);
     /// <summary>
+    /// 清空转化源
+    /// </summary>
+    public void ClearSource()
+        => _sources.Clear();
+    /// <summary>
     /// 添加扩展方法转化源
     /// </summary>
     /// <param name="method"></param>
@@ -83,12 +87,41 @@ public partial class ConvertBuilder(Compilation compilation, TypeSymbolCacher ty
         return source;
     }
     /// <summary>
+    /// 添加复杂转化器
+    /// </summary>
+    /// <param name="method"></param>
+    /// <param name="info"></param>
+    /// <param name="symbol"></param>
+    /// <returns></returns>
+    public IGeneratorSource AddSource(ComplexSource method, TypeNameInfo info, INamedTypeSymbol symbol)
+    {
+        IGeneratorSource source;
+        if (info.IsStatic)
+        {
+            source = new ExtensionMethodSource(method, info);
+        }
+        else
+        {
+            var type = SyntaxGenerator.TypeDeclaration(info.TypeName, symbol.IsRecord, symbol.IsValueType)
+                .Partial();
+            var containingNamespace = symbol.ContainingNamespace.ToDisplayString();
+            SyntaxGenerator generator;
+            if (string.IsNullOrWhiteSpace(containingNamespace))
+                generator = SyntaxGenerator.Create(type);
+            else
+                generator = SyntaxGenerator.Create(containingNamespace, type);
+            source = new ConvertToSource(this, generator, info.FullName, [method]);
+        }
+        _sources.Add(source);
+        return source;
+    }
+    /// <summary>
     /// 获取转化器
     /// </summary>
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? Get(INamedTypeSymbol source, INamedTypeSymbol dest)
+    public IConverter? Get(ITypeSymbol source, ITypeSymbol dest)
     {
         var sourceInfo = _typeCacher.Get(source);
         if (sourceInfo is null)
@@ -104,97 +137,154 @@ public partial class ConvertBuilder(Compilation compilation, TypeSymbolCacher ty
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? Get(TypeSymbolInfo source, TypeSymbolInfo dest)
+    public IConverter? Get(ITypeSymbolInfo source, ITypeSymbolInfo dest)
         => Get(new PairSymbolInfoKey(source, dest));
     /// <inheritdoc />
     protected override IConverter? CreateNew(in PairSymbolInfoKey key)
         => CreateCore(key.Left, key.Right);
-    ///// <summary>
-    ///// 
-    ///// </summary>
-    ///// <param name="source"></param>
-    ///// <param name="dest"></param>
-    ///// <returns></returns>
-    //public bool CheckCompatible(INamedTypeSymbol source, INamedTypeSymbol dest)
-    //    => source.Equals(dest, SymbolEqualityComparer.Default);
     /// <summary>
     /// 根据成员信息创建转化器
     /// </summary>
-    /// <param name="sourceInfo"></param>
-    /// <param name="destInfo"></param>
+    /// <param name="source"></param>
+    /// <param name="dest"></param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    private IConverter? CreateCore(TypeSymbolInfo sourceInfo, TypeSymbolInfo destInfo)
+    private IConverter? CreateCore(ITypeSymbolInfo source, ITypeSymbolInfo dest)
     {
-        var (sourceOriginal, sourceSymbol, sourceCategory, sourceElement) = sourceInfo;
-        var (destOriginal, destSymbol, destCategory, _) = destInfo;
+        // 原始类型兼容直接转化
+        if (source.Original.IsCompatible(dest.Original))
+            return new PassConverter(DefaultExpressionBuilder.GetDefault(dest), false);
 
-        if (sourceOriginal.Equals(destOriginal, SymbolEqualityComparer.Default))
-            return new PassConverter(DefaultExpressionBuilder.Default(destInfo, _compilation), false);
-        var sourceIsNull = sourceCategory.IsNullable();
-        if (sourceSymbol.Equals(destSymbol, SymbolEqualityComparer.Default))
-            return new PassConverter(DefaultExpressionBuilder.Default(destInfo, _compilation), sourceIsNull);
+        // 类型兼容直接转化
+        if (source.Symbol.IsCompatible(dest.Symbol))
+            return new PassConverter(DefaultExpressionBuilder.GetDefault(dest), source.IsNullable);
 
-        var sourceProvider = SourceProvider.Create(_compilation, sourceSymbol);
-        var convertToInfo = sourceProvider.ConvertTo(destSymbol.Name);
-        var convertToMethod = sourceProvider.GetConvertMethod(convertToInfo.MethodInfo, destSymbol);
-        if (convertToMethod is not null)
-            return convertToInfo.Create();
-
-        var conversion = _compilation.ClassifyCommonConversion(sourceSymbol, destSymbol);
-        if (conversion.Exists)
+        return dest.Kind switch
         {
-            if (conversion.IsImplicit)
-                return new PassConverter(DefaultExpressionBuilder.Default(destInfo, _compilation), sourceIsNull);
-            if (sourceCategory.IsEnum() && destCategory.IsEnum())
-            {
-                var original = EnumToEnum(sourceSymbol, destInfo, convertToInfo);
-                if (original is not null)
-                    return CheckSource(original, sourceIsNull, destInfo);
-            }
-            return CheckSource(new CastConverter(destSymbol.ToSyntax()), sourceIsNull, destInfo);
-        }
+            TypeSymbolKind.Primitive => ToPrimitive(source, (PrimitiveTypeInfo)dest),
+            TypeSymbolKind.Enum => ToEnum(source, (EnumTypeInfo)dest),
+            TypeSymbolKind.Entity => ToEntity(source, (EntityTypeInfo)dest),
+            TypeSymbolKind.Array => ToArray(source, (ArrayTypeInfo)dest),
+            TypeSymbolKind.Collection => ToCollection(source, (CollectionTypeInfo)dest),
+            TypeSymbolKind.Complex => ToComplex(source, (ComplexTypeInfo)dest),
+            TypeSymbolKind.Generic => ToComplex(source, (ComplexTypeInfo)dest),
+            _ => ToUnknow(source, dest),
+        };
+        //// 集合(含数组)
+        //if (source is ICollectionSymbolInfo sourceCollection)
+        //{
+        //    if (dest.IsArray())
+        //        return CollectionToArray(sourceCollection, (ArrayTypeInfo)dest, sourceIsNull);
+        //    else if (dest.IsCollection())
+        //        return CollectionToCollection(sourceCollection, (CollectionTypeInfo)dest, sourceIsNull);
+        //    return FromCollection(sourceCollection, dest, sourceIsNull);
+        //}
+        //else if (dest is ICollectionSymbolInfo destCollection)
+        //{
+        //    // 单个转数组或集合
+        //    return ElementToCollection(source, destCollection);
+        //}
+        //var sourceNamedSymbol = source.Symbol as INamedTypeSymbol;
+        //ConvertSourceInfo? convertToInfo = null;
+        //if (sourceNamedSymbol is not null)
+        //{
+        //    var sourceProvider = SourceProvider.Create(_compilation, sourceNamedSymbol);
+        //    convertToInfo = sourceProvider.ConvertTo(destSymbol.Name);
+        //    var convertToMethod = sourceProvider.GetConvertMethod(convertToInfo.MethodInfo, destSymbol);
+        //    if (convertToMethod is not null)
+        //        return convertToInfo.Create();
+        //}
 
-        var systemConvert = GetConverterBySystem(sourceInfo, destInfo);
-        if (systemConvert is not null)
-            return systemConvert;
+        //var conversion = _compilation.ClassifyCommonConversion(sourceSymbol, destSymbol);
+        //if (conversion.Exists)
+        //{
+        //    if (conversion.IsImplicit)
+        //        return new PassConverter(DefaultExpressionBuilder.GetDefault(dest, _compilation), sourceIsNull);
+        //    if (source.IsEnum() && dest.IsEnum() && convertToInfo is not null)
+        //    {
+        //        var original = EnumToEnum((EnumTypeInfo)source, (EnumTypeInfo)dest, convertToInfo);
+        //        if (original is not null)
+        //            return CheckSource(original, sourceIsNull, dest);
+        //    }
+        //    return CheckSource(new CastConverter(destSymbol.ToSyntax()), sourceIsNull, dest);
+        //}
 
-        if (sourceCategory.IsEntity() && sourceElement is not  null)
-        {
-            IConverter memberConverter = MemberConverter.Original;
-            if (sourceElement.Equals(destOriginal, SymbolEqualityComparer.Default))
-                return CheckSource(memberConverter, sourceIsNull, destInfo);
-            var originalInfo = _typeCacher.Get(sourceElement);
-            if (originalInfo is not null)
-            {
-                var original = Get(originalInfo, destInfo);
-                if (original is not null)
-                {
-                    memberConverter = new CompatibleConverter(memberConverter, original);
-                    return CheckSource(memberConverter, sourceIsNull, destInfo);
-                }
-            }
-        }
+        //if (source.IsPrimitive() && dest.IsPrimitive())
+        //{
+        //    var systemConvert = GetConverterBySystem((PrimitiveTypeInfo)source, (PrimitiveTypeInfo)dest);
+        //    if (systemConvert is not null)
+        //        return CheckSource(systemConvert, sourceIsNull, dest);
+        //}
 
-        var stringSymbol = _compilation.GetStringSymbol();
-        if (destSymbol.Equals(stringSymbol, SymbolEqualityComparer.Default))
-            return CheckSource(ToStringConverter.Instance, sourceIsNull, destInfo);
+        //if (source.IsEntity() && source is EntityTypeInfo entityType)
+        //{
+        //    IConverter memberConverter = MemberConverter.Original;
+        //    if (entityType.Element.Equals(destSymbol, SymbolEqualityComparer.Default))
+        //        return CheckSource(memberConverter, sourceIsNull, dest);
+        //    var original = Get(entityType.ElementInfo, dest);
+        //    if (original is not null)
+        //    {
+        //        memberConverter = new CompatibleConverter(memberConverter, original);
+        //        return CheckSource(memberConverter, sourceIsNull, dest);
+        //    }
+        //}
 
-        if (sourceCategory.IsEnum())
-            return CheckOriginal(FromEnum(sourceSymbol, destInfo, convertToInfo), sourceIsNull, destInfo);
-        if (destCategory.IsEnum())
-            return CheckOriginal(ToEnum(sourceSymbol, destInfo, convertToInfo), sourceIsNull, destInfo);
+        //var stringSymbol = _compilation.GetStringSymbol();
+        //if (destSymbol.Equals(stringSymbol, SymbolEqualityComparer.Default))
+        //    return CheckSource(ToString(source), sourceIsNull, dest);
 
-        if (destCategory.IsComplex())
-        {
-            if (sourceCategory.IsComplex())
-                return CheckOriginal(ComplexToComplex(sourceSymbol, destInfo, convertToInfo), sourceIsNull, destInfo);
-            return CheckOriginal(ToComplex(sourceSymbol, destSymbol, convertToInfo), sourceIsNull, destInfo);
-        }
-        if (sourceCategory.IsComplex())
-            return CheckOriginal(FromComplex(sourceSymbol, destSymbol, destInfo), sourceIsNull, destInfo);
+        //if(convertToInfo is null)
+        //    return null;
 
-        return null;
+        //if (source.IsEnum())
+        //    return CheckOriginal(FromEnum((EnumTypeInfo)source, dest, convertToInfo), sourceIsNull, dest);
+        //if (dest.IsEnum())
+        //    return CheckOriginal(ToEnum(source, (EnumTypeInfo)dest, convertToInfo), sourceIsNull, dest);
+
+        //if (destSymbol is not INamedTypeSymbol destNamedSymbol)
+        //    return null;
+        //if (dest.IsComplex() || dest.IsEntity())
+        //{
+        //    if (source.IsComplex())
+        //        return ComplexToComplex((ComplexTypeInfo)source, (ComplexTypeInfo)dest, convertToInfo);
+        //    return CheckOriginal(ToComplex(sourceSymbol, (ComplexTypeInfo)dest, convertToInfo), sourceIsNull, dest);
+        //}
+        //if (source.IsComplex())
+        //    return CheckOriginal(FromComplex((ComplexTypeInfo)source, destNamedSymbol, dest), sourceIsNull, dest);
+
+        //return null;
+    }
+    /// <summary>
+    /// 获取
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="source"></param>
+    /// <param name="dest"></param>
+    /// <returns></returns>
+    public static (ConvertSourceInfo, IConverter?) GetConverter(Compilation compilation, INamedTypeSymbol source, INamedTypeSymbol dest)
+    {
+        var sourceProvider = SourceProvider.Create(compilation, source);
+        var convertToInfo = sourceProvider.ConvertTo(dest.Name);
+        var convertToMethod = sourceProvider.GetConvertMethod(convertToInfo.MethodInfo, dest);
+        if (convertToMethod is null)
+            return (convertToInfo, null);
+        return (convertToInfo, convertToInfo.Create());
+    }
+    /// <summary>
+    /// 获取系统普通转化器(支持运算符重载)
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="dest"></param>
+    /// <returns></returns>
+    public IConverter? GetCommonConversion(ITypeSymbolInfo source, ITypeSymbolInfo dest)
+    {
+        var destSymbol = dest.Symbol;
+        var conversion = _compilation.ClassifyCommonConversion(source.Symbol, destSymbol);
+        if (!conversion.Exists)
+            return null;
+        if (conversion.IsImplicit)
+            return new PassConverter(DefaultExpressionBuilder.GetDefault(dest), source.IsNullable);
+        return CheckSource(new CastConverter(dest), source.IsNullable, dest);
     }
     /// <summary>
     /// 系统转化
@@ -202,13 +292,13 @@ public partial class ConvertBuilder(Compilation compilation, TypeSymbolCacher ty
     /// <param name="sourceInfo"></param>
     /// <param name="destInfo"></param>
     /// <returns></returns>
-    public IConverter? GetConverterBySystem(TypeSymbolInfo sourceInfo, TypeSymbolInfo destInfo)
+    public IConverter? GetConverterBySystem(PrimitiveTypeInfo sourceInfo, PrimitiveTypeInfo destInfo)
     {
         var systemConvert = _systemProvider.Get(sourceInfo.Original, destInfo.Original);
         if (systemConvert is not null)
             return CheckSource(systemConvert, false, destInfo);
-        var sourceIsNull = sourceInfo.Kind.IsNullable();
-        var destIsNull = destInfo.Kind.IsNullable();
+        var sourceIsNull = sourceInfo.IsNullable;
+        var destIsNull = destInfo.IsNullable;
         if (sourceIsNull || destIsNull)
         {
             systemConvert = _systemProvider.Get(sourceInfo.Symbol, destInfo.Symbol);
@@ -224,45 +314,26 @@ public partial class ConvertBuilder(Compilation compilation, TypeSymbolCacher ty
     /// <param name="isNull"></param>
     /// <param name="info"></param>
     /// <returns></returns>
-    public IConverter CheckSource(IConverter original, bool isNull, TypeSymbolInfo info)
-        => isNull ? new NullableConverter(original, DefaultExpressionBuilder.Default(info, _compilation)) : original;
-    /// <summary>
-    /// 判断原转化器是否存在
-    /// </summary>
-    /// <param name="original"></param>
-    /// <param name="isNull"></param>
-    /// <param name="info"></param>
-    /// <returns></returns>
-    public IConverter? CheckOriginal(IConverter? original, bool isNull, TypeSymbolInfo info)
-        => original is null ? null : CheckSource(original, isNull, info);
-    /// <summary>
-    /// 获取静态方法
-    /// </summary>
-    /// <param name="declare"></param>
-    /// <param name="source"></param>
-    /// <param name="dest"></param>
-    /// <param name="filter"></param>
-    /// <returns></returns>
-    public static IMethodSymbol? GetStaticMethod(INamedTypeSymbol declare, INamedTypeSymbol source, INamedTypeSymbol dest, Func<IMethodSymbol, bool> filter)
-        => GetMethod(SymbolReflection.GetMethods(declare).Where(m => SymbolTypeDescriptor.CheckEquals(dest, m.ReturnType) && SymbolTypeDescriptor.MatchFirst(m.Parameters, source)), filter);
-    /// <summary>
-    /// 获取实例方法
-    /// </summary>
-    /// <param name="source"></param>
-    /// <param name="dest"></param>
-    /// <param name="filter"></param>
-    /// <returns></returns>
-    public static IMethodSymbol? GetInstanceMethod(INamedTypeSymbol source, INamedTypeSymbol dest, Func<IMethodSymbol, bool> filter)
-        => GetMethod(SymbolReflection.GetMethods(source).Where(m => SymbolTypeDescriptor.CheckEquals(dest, m.ReturnType)), filter);
-    /// <summary>
-    /// 获取参数最好的方法
-    /// </summary>
-    /// <param name="methods"></param>
-    /// <param name="filter"></param>
-    /// <returns></returns>
-    public static IMethodSymbol? GetMethod(IEnumerable<IMethodSymbol> methods, Func<IMethodSymbol, bool> filter)
-        => methods.OrderBy(m => m.Parameters.Length)
-        .FirstOrDefault(filter);
+    public IConverter CheckSource(IConverter original, bool isNull, ITypeSymbolInfo info)
+        => isNull ? new NullableConverter(original, DefaultExpressionBuilder.GetDefault(info)) : original;
+    ///// <summary>
+    ///// 判断原类型是否为空
+    ///// </summary>
+    ///// <param name="original"></param>
+    ///// <param name="isNull"></param>
+    ///// <param name="defaultValue"></param>
+    ///// <returns></returns>
+    //public static IConverter CheckSource(IConverter original, bool isNull, ExpressionSyntax defaultValue)
+    //    => isNull ? new NullableConverter(original, defaultValue) : original;
+    ///// <summary>
+    ///// 判断原转化器是否存在
+    ///// </summary>
+    ///// <param name="original"></param>
+    ///// <param name="isNull"></param>
+    ///// <param name="info"></param>
+    ///// <returns></returns>
+    //public IConverter? CheckOriginal(IConverter? original, bool isNull, ITypeSymbolInfo info)
+    //    => original is null ? null : CheckSource(original, isNull, info);
     /// <summary>
     /// 解析开关状态
     /// </summary>
@@ -290,10 +361,6 @@ public partial class ConvertBuilder(Compilation compilation, TypeSymbolCacher ty
         if (attributeType.IsGenericType)
             return attributeType.TypeArguments[0] as INamedTypeSymbol;
         return null;
-        //var argument = SymbolAttributeHelper.GetArgumentConstant(attribute, 0);
-        //if (argument is null)
-        //    return null;
-        //return argument.Value.GetTypeSymbol();
     }
     /// <summary>
     /// 解析投影规则
@@ -324,11 +391,35 @@ public partial class ConvertBuilder(Compilation compilation, TypeSymbolCacher ty
     /// </summary>
     /// <param name="returnInfo"></param>
     /// <returns></returns>
-    public static string GetMethodSummary(TypeSymbolInfo returnInfo)
+    public static string GetMethodSummary(ITypeSymbolInfo returnInfo)
     {
         var typeSummary = returnInfo.Summary;
         if (string.IsNullOrEmpty(typeSummary))
             return "转化";
         return "转化为" + typeSummary;
+    }
+    /// <summary>
+    /// 获取成员字典
+    /// </summary>
+    /// <param name="typeSymbols"></param>
+    /// <param name="type"></param>
+    /// <param name="rules"></param>
+    /// <returns></returns>
+    public static IDictionary<string, SymbolMember> GetSourceMembers(TypeSymbolCacher typeSymbols, INamedTypeSymbol type, IRecognizer<string>[] rules)
+    {
+        IDictionary<string, SymbolMember> sourceMembers = SymbolMember.GetSourceMembers(typeSymbols, type);
+        return Recognize(sourceMembers, rules);
+    }
+    /// <summary>
+    /// 识别
+    /// </summary>
+    /// <param name="sourceMembers"></param>
+    /// <param name="rules"></param>
+    /// <returns></returns>
+    public static IDictionary<string, SymbolMember> Recognize(IDictionary<string, SymbolMember> sourceMembers, IRecognizer<string>[] rules)
+    {
+        foreach (var rule in rules)
+            sourceMembers = rule.Recognize(sourceMembers);
+        return sourceMembers;
     }
 }

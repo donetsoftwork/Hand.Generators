@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +32,6 @@ public class ArgumentInstanceMethodConverter(SimpleNameSyntax methodName, IEnume
         => _arguments;
     #endregion
     /// <inheritdoc />
-    protected override IEnumerable<ArgumentSyntax> CreateArguments()
-        => _arguments;
+    protected override SeparatedSyntaxList<ArgumentSyntax> CreateArguments(SyntaxGenerator generator, ExpressionSyntax source)
+        => [.._arguments];
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Hand.Collections;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
@@ -11,12 +12,12 @@ namespace Hand;
 /// <summary>
 /// 语法树执行器
 /// </summary>
-public partial class SyntaxTreeDriver(CSharpParseOptions options, string path, List<UsingDirectiveSyntax> usings, List<MetadataReference> references)
+public partial class SyntaxTreeDriver(CSharpParseOptions options, string path, HashSet<UsingDirectiveSyntax> usings, List<MetadataReference> references)
 {
     #region 配置
     private CSharpParseOptions _options = options;
     private readonly string _path = path;
-    private readonly List<UsingDirectiveSyntax> _usings = usings;
+    private readonly HashSet<UsingDirectiveSyntax> _usings = usings;
     private readonly List<MetadataReference> _references = references;
     /// <summary>
     /// 配置
@@ -53,26 +54,26 @@ public partial class SyntaxTreeDriver(CSharpParseOptions options, string path, L
     /// <summary>
     /// 添加using
     /// </summary>
-    /// <param name="usings"></param>
-    public SyntaxTreeDriver Using(params IEnumerable<UsingDirectiveSyntax> usings)
+    /// <param name="using"></param>
+    public SyntaxTreeDriver Using(UsingDirectiveSyntax @using)
     {
-        _usings.AddRange(usings);
+        _usings.Add(@using);
         return this;
     }
     /// <summary>
     /// 添加using
     /// </summary>
-    /// <param name="names"></param>
+    /// <param name="name"></param>
     /// <returns></returns>
-    public SyntaxTreeDriver Using(params IEnumerable<NameSyntax> names)
-        => Using(names.Select(SyntaxFactory.UsingDirective));
+    public SyntaxTreeDriver Using(NameSyntax name)
+        => Using(SyntaxFactory.UsingDirective(name));
     /// <summary>
     /// 添加using
     /// </summary>
-    /// <param name="names"></param>
+    /// <param name="name"></param>
     /// <returns></returns>
-    public SyntaxTreeDriver Using(params IEnumerable<string> names)
-        => Using(names.Select(SyntaxFactory.IdentifierName));
+    public SyntaxTreeDriver Using(string name)
+        => Using(SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName(name)));
     #endregion
     #region Reference
     /// <summary>
@@ -120,25 +121,25 @@ public partial class SyntaxTreeDriver(CSharpParseOptions options, string path, L
     /// <param name="path"></param>
     /// <returns></returns>
     public static SyntaxTreeDriver CreateDriver(string path)
-        => new(new CSharpParseOptions(LanguageVersion.Latest), path, [], []);
+        => new(new CSharpParseOptions(LanguageVersion.Latest), path, new(UsingDirectiveComparer.Instance), []);
     /// <summary>
     /// 构造执行器
     /// </summary>
     /// <returns></returns>
     public static SyntaxTreeDriver CreateDriver()
-        => new(new CSharpParseOptions(LanguageVersion.Latest), Environment.CurrentDirectory, [], []);
+        => new(new CSharpParseOptions(LanguageVersion.Latest), Environment.CurrentDirectory, new(UsingDirectiveComparer.Instance), []);
     /// <summary>
     /// 构造默认执行器
     /// </summary>
     /// <returns></returns>
     public static SyntaxTreeDriver CreateDefaultDriver()
-        => new(new CSharpParseOptions(LanguageVersion.Latest), Environment.CurrentDirectory, [_usingSystem], [.. DefaultInner.Instance.References]);
+        => new(new CSharpParseOptions(LanguageVersion.Latest), Environment.CurrentDirectory, new([SyntaxGenerator.SystemDirective], UsingDirectiveComparer.Instance), [.. DefaultInner.Instance.References]);
     /// <summary>
     /// 构造默认执行器
     /// </summary>
     /// <returns></returns>
     public static SyntaxTreeDriver CreateScriptDriver()
-        => new(new CSharpParseOptions(LanguageVersion.Latest, kind: SourceCodeKind.Script), Environment.CurrentDirectory, [_usingSystem], [.. ScriptInner.Instance.References]);
+        => new(new CSharpParseOptions(LanguageVersion.Latest, kind: SourceCodeKind.Script), Environment.CurrentDirectory, new([SyntaxGenerator.SystemDirective], UsingDirectiveComparer.Instance), [.. ScriptInner.Instance.References]);
     #endregion
     /// <summary>
     /// 默认实例
@@ -151,28 +152,17 @@ public partial class SyntaxTreeDriver(CSharpParseOptions options, string path, L
     public static SyntaxTreeDriver ScriptDriver
          => ScriptInner.Instance;
     /// <summary>
-    /// using System
-    /// </summary>
-    private static readonly UsingDirectiveSyntax _usingSystem = SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("System"));
-    ///// <summary>
-    ///// 获取引用
-    ///// </summary>
-    ///// <param name="assemblies"></param>
-    ///// <returns></returns>
-    //public static IEnumerable<MetadataReference> GetReferences(Assembly[] assemblies)
-    //    => assemblies.SelectMany(assembly => assembly.ToReferences());
-    /// <summary>
     /// 内部缓存
     /// </summary>
     internal static class DefaultInner
     {
-        internal static SyntaxTreeDriver Instance = new(new CSharpParseOptions(LanguageVersion.Latest), Environment.CurrentDirectory, [_usingSystem], [.. AppDomain.CurrentDomain.GetAssemblies().SelectMany(assembly => assembly.ToReferences())]);
+        internal static SyntaxTreeDriver Instance = new(new CSharpParseOptions(LanguageVersion.Latest), Environment.CurrentDirectory, new([SyntaxGenerator.SystemDirective], UsingDirectiveComparer.Instance), [.. AppDomain.CurrentDomain.GetAssemblies().SelectMany(assembly => assembly.ToReferences())]);
     }
     /// <summary>
     /// 内部缓存
     /// </summary>
     internal static class ScriptInner
     {
-        internal static SyntaxTreeDriver Instance = new(new CSharpParseOptions(LanguageVersion.Latest, kind: SourceCodeKind.Script), Environment.CurrentDirectory, [_usingSystem], [.. AppDomain.CurrentDomain.GetAssemblies().SelectMany(assembly => assembly.ToReferences())]);
+        internal static SyntaxTreeDriver Instance = new(new CSharpParseOptions(LanguageVersion.Latest, kind: SourceCodeKind.Script), Environment.CurrentDirectory, new([SyntaxGenerator.SystemDirective], UsingDirectiveComparer.Instance), [.. AppDomain.CurrentDomain.GetAssemblies().SelectMany(assembly => assembly.ToReferences())]);
     }
 }

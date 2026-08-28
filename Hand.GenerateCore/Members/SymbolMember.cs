@@ -1,6 +1,7 @@
 ﻿using Hand.Cachers;
 using Hand.Reflection;
 using Hand.Symbols;
+using Hand.Types;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
@@ -17,7 +18,7 @@ namespace Hand.Members;
 /// <param name="original"></param>
 /// <param name="symbolInfo"></param>
 /// <param name="summary"></param>
-public abstract class SymbolMember(string name, ISymbol original, TypeSymbolInfo symbolInfo, Lazy<string> summary)
+public abstract class SymbolMember(string name, ISymbol original, ITypeSymbolInfo symbolInfo, Lazy<string> summary)
     : Member(name, symbolInfo, summary, new Lazy<XmlElementSyntax?>(() => SyntaxGenerator.CreateSummary(summary.Value)))
 {
     /// <summary>
@@ -26,7 +27,7 @@ public abstract class SymbolMember(string name, ISymbol original, TypeSymbolInfo
     /// <param name="name"></param>
     /// <param name="original"></param>
     /// <param name="symbolInfo"></param>
-    public SymbolMember(string name, ISymbol original, TypeSymbolInfo symbolInfo)
+    public SymbolMember(string name, ISymbol original, ITypeSymbolInfo symbolInfo)
         : this(name, original, symbolInfo, new Lazy<string>(() => SummaryCacher.GetSummary(original, symbolInfo.Summary)))
     {
     }

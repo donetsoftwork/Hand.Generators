@@ -32,7 +32,7 @@ public class SourceTextExecutor : IGeneratorExecutor<AttributeContext>
         if (model.GetDeclaredSymbol(generatorContext.TargetNode, cancellation) is not INamedTypeSymbol symbol)
             return;
         var compilation = model.Compilation;
-        var originalSymbol = GetOriginalSymbol(compilation, symbol);
+        var originalSymbol = SymbolReflection.GetOriginalSymbol(compilation, symbol);
 //#if DEBUG
 //        System.Diagnostics.Debugger.Launch();
 //#endif
@@ -363,30 +363,6 @@ public class SourceTextExecutor : IGeneratorExecutor<AttributeContext>
                 builder.AppendLine($"return {memberName}.GetHashCode();");
         }
     }
-    /// <summary>
-    /// 获取原始类型信息
-    /// </summary>
-    /// <param name="compilation"></param>
-    /// <param name="symbol"></param>
-    /// <returns></returns>
-    public static INamedTypeSymbol? GetOriginalSymbol(Compilation compilation, INamedTypeSymbol symbol)
-    {
-        var interfaces = symbol.AllInterfaces;
-        var entityId = compilation.GetTypeByMetadataName("Hand.Models.IEntityId");
-        if (entityId is null)
-            return null;
-        if(interfaces.Any(item => SymbolTypeDescriptor.CheckEquals(entityId, item)))
-            return compilation.GetSpecialType(SpecialType.System_Int64);
-        var entityProperty = compilation.GetTypeByMetadataName("Hand.Models.IEntityProperty`1");
-        if (entityProperty is null)
-            return null;
-        var @interface = symbol.GetGenericCloseInterfaces(entityProperty)
-            .FirstOrDefault();
-        if (@interface is null)
-            return null;
-        return @interface.TypeArguments.FirstOrDefault() as INamedTypeSymbol;
-    }
-
     /// <summary>
     /// 获取类型信息
     /// </summary>

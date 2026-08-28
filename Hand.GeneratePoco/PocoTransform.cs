@@ -5,6 +5,7 @@ using Hand.Entities;
 using Hand.Generators;
 using Hand.Reflection;
 using Hand.Transform;
+using Hand.Types;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -30,8 +31,7 @@ public class PocoTransform : IGeneratorTransform<PocoSource>
             return null;
         var compilation = context.SemanticModel.Compilation;
         var typeCacher = new TypeSymbolCacher(compilation);
-        var typeInfo = typeCacher.Get(typeSymbol);
-        if (typeInfo is null || typeInfo.Kind != TypeSymbolKind.Complex)
+        if (typeCacher.Get(typeSymbol) is not ComplexTypeInfo typeInfo)
             return null;
 
         var attribute = context.Attributes.FirstOrDefault();
@@ -40,8 +40,7 @@ public class PocoTransform : IGeneratorTransform<PocoSource>
         var sourseSymbol = ConvertBuilder.CheckToSymbol(attribute);
         if (sourseSymbol is null || sourseSymbol.Equals(typeSymbol, SymbolEqualityComparer.IncludeNullability))
             return null;
-        var sourseInfo = typeCacher.Get(sourseSymbol);
-        if (sourseInfo is null || sourseInfo.Kind != TypeSymbolKind.Complex)
+        if (typeCacher.Get(sourseSymbol) is not ComplexTypeInfo sourseInfo)
             return null;
         var isRecord = IsRecord(type);
         var initializer = CheckInitializeKind(attribute, CheckDefaultKind(typeSymbol, isRecord));

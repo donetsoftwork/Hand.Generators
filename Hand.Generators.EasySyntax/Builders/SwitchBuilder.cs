@@ -33,7 +33,7 @@ public class SwitchBuilder(ExpressionSyntax governing)
         var list = new List<SwitchSectionSyntax>();
         foreach (var item in _sections)
             list.Add(item.BuildSection());
-        var statement = SyntaxFactory.SwitchStatement(_governing, SyntaxGenerator.List(list));
+        var statement = SyntaxFactory.SwitchStatement(_governing, [.. list]);
         return statement;
     }
     /// <summary>

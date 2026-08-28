@@ -1,6 +1,6 @@
 ﻿using Hand.Members;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Generic;
 
 namespace Hand.Converters;
 
@@ -8,25 +8,30 @@ namespace Hand.Converters;
 /// 实例方法转化器
 /// </summary>
 /// <param name="methodName"></param>
-public class InstanceMethodConverter(SimpleNameSyntax methodName)
-     : InstanceMember(methodName), IConverter
+/// <param name="isNullable"></param>
+public class InstanceMethodConverter(SimpleNameSyntax methodName, bool isNullable = false)
+     : InstanceMember(methodName, isNullable), IConverter
 {
     /// <inheritdoc />
-    public ExpressionSyntax Convert(ExpressionSyntax source)
+    public virtual ExpressionSyntax Convert(SyntaxGenerator generator, ExpressionSyntax source)
     {
-        return GetMethod(source)
-            .Invocation(CreateArguments());
+        return GetMethod(generator, source)
+            .Invocation(CreateArguments(generator, source));
     }
     /// <summary>
     /// 获取方法
     /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="source"></param>
     /// <returns></returns>
-    protected virtual ExpressionSyntax GetMethod(ExpressionSyntax source)
+    protected virtual ExpressionSyntax GetMethod(SyntaxGenerator generator, ExpressionSyntax source)
         => source.Access(_memberName);
     /// <summary>
     /// 构造参数
     /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="source"></param>
     /// <returns></returns>
-    protected virtual IEnumerable<ArgumentSyntax> CreateArguments()
+    protected virtual SeparatedSyntaxList<ArgumentSyntax> CreateArguments(SyntaxGenerator generator, ExpressionSyntax source)
         => [];
 }

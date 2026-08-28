@@ -41,7 +41,7 @@ public readonly partial struct Birthday : IEntityProperty<DateOnly>
         Assert.Contains("Original", code);
     }
 }
-//[GenerateProperty("")]
-//public readonly partial struct Birthday : IEntityProperty<DateOnly>
-//{
-//}
+[GenerateProperty("")]
+public readonly partial struct Birthday : IEntityProperty<DateOnly>
+{
+}

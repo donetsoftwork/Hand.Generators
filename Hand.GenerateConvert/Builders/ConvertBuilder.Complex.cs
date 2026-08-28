@@ -4,6 +4,7 @@ using Hand.Members;
 using Hand.Reflection;
 using Hand.Sources;
 using Hand.Symbols;
+using Hand.Types;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,53 +16,227 @@ namespace Hand.Builders;
 /// </summary>
 public partial class ConvertBuilder
 {
+    #region ToComplex
     /// <summary>
-    /// 转化为实体
+    /// 转化为复杂类型
     /// </summary>
-    /// <param name="sourceSymbol"></param>
-    /// <param name="ComplexSymbol"></param>
-    /// <param name="convertToInfo"></param>
+    /// <param name="source"></param>
+    /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? ToComplex(INamedTypeSymbol sourceSymbol, INamedTypeSymbol ComplexSymbol, ConvertSourceInfo convertToInfo)
+    public IConverter? ToComplex(ITypeSymbolInfo source, ComplexTypeInfo dest)
     {
-        //var sourceProvider = SourceProvider.Create(_compilation, sourceSymbol);
-        //var convertToInfo = sourceProvider.ConvertTo(ComplexSymbol);
-        //var methodInfo = convertToInfo.MethodInfo;
-        //var convertToMethod = sourceProvider.GetConvertMethod(methodInfo, ComplexSymbol);
-        //var typeInfo = convertToInfo.TypeInfo;
-        //if (convertToMethod is not null)
-        //    return new StaticMethodConverter(typeInfo.Type.Access(convertToMethod.Name));
-        if (!convertToInfo.IsPartial)
-            return null;
-
-        var constructors = SymbolReflection.GetConstructors(ComplexSymbol);
-        return ToComplexBySingle(constructors, sourceSymbol, ComplexSymbol) ??
-            ToComplexByCompatibleParameter(constructors, sourceSymbol, ComplexSymbol);
+        return source.Kind switch
+        {
+            TypeSymbolKind.Complex => ComplexToComplex((ComplexTypeInfo)source, dest),
+            TypeSymbolKind.Generic => ComplexToComplex((ComplexTypeInfo)source, dest),
+            TypeSymbolKind.Enum => EnumToComplex((EnumTypeInfo)source, dest),
+            TypeSymbolKind.Entity => EntityToComplex((EntityTypeInfo)source, dest),
+            TypeSymbolKind.Array => CollectionToOther((ICollectionSymbolInfo)source, dest),
+            TypeSymbolKind.Collection => CollectionToOther((ICollectionSymbolInfo)source, dest),
+            _ => OtherToComplex(source, dest),
+        };
     }
     /// <summary>
-    /// 
+    /// 复杂类型转化为复杂类型
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="dest"></param>
+    /// <returns></returns>
+    public IConverter? ComplexToComplex(ComplexTypeInfo source, ComplexTypeInfo dest)
+    {
+        (var convertToInfo, var converter) = GetConverter(_compilation, source.Symbol, dest.Symbol);
+        if (converter is not null)
+            return CheckSource(converter, source.IsNullable, dest);
+        return ComplexToComplex(source, dest, convertToInfo);
+    }
+    /// <summary>
+    /// 转化为复杂类型
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="dest"></param>
+    /// <returns></returns>
+    public IConverter? OtherToComplex(ITypeSymbolInfo source, ComplexTypeInfo dest)
+    {
+        var converter = GetCommonConversion(source, dest);
+        if (converter is not null)
+            return converter;
+        var sourceSymbol = source.Symbol;
+        var destSymbol = dest.Symbol;
+        if (sourceSymbol is INamedTypeSymbol namedType)
+        {
+            (_, converter) = GetConverter(_compilation, namedType, destSymbol);
+            if (converter is not null)
+                return CheckSource(converter, source.IsNullable, dest);
+        }
+        var constructors = SymbolReflection.GetConstructors(destSymbol);
+        return ConstructorBySingle(constructors, sourceSymbol, dest) ??
+            ConstructorByCompatibleParameter(constructors, sourceSymbol, dest);
+    }
+    /// <summary>
+    /// 复杂类型转化为复杂类型
+    /// </summary>
+    /// <param name="sourceInfo"></param>
+    /// <param name="destInfo"></param>
+    /// <param name="convertToInfo"></param>
+    /// <returns></returns>
+    public IConverter? ComplexToComplex(ComplexTypeInfo sourceInfo, ComplexTypeInfo destInfo, ConvertSourceInfo convertToInfo)
+    {
+        if (!convertToInfo.IsPartial)
+            return null;
+        var parameters = SymbolMember.GetTargetMembers(_typeCacher, destInfo.Symbol, true);
+        if (parameters.Count == 0)
+            return null;
+        var converter = Save(sourceInfo, destInfo, convertToInfo);
+        var arguments = Map(_typeCacher, parameters.Values, sourceInfo.Symbol).ToArray();
+        var typeInfo = convertToInfo.TypeInfo;
+        var symbolName = convertToInfo.Provider.SymbolName;
+        var methodName = convertToInfo.MethodInfo.Name;
+
+        var source = new ComplexSource(this, symbolName, destInfo, methodName, arguments);
+        AddSource(source, typeInfo, sourceInfo.Symbol);
+        return CheckSource(converter, sourceInfo.IsNullable, destInfo);
+    }
+    #endregion
+    #region FromComplex
+    /// <summary>
+    /// 从复杂类型转化
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="dest"></param>
+    /// <returns></returns>
+    public IConverter? ComplexToOther(ComplexTypeInfo source, ITypeSymbolInfo dest)
+    {
+        var sourceSymbol = source.Symbol;
+        var destSymbol = dest.Symbol;
+        IConverter? converter;
+        if (destSymbol is INamedTypeSymbol namedType)
+        {
+            (_, converter) = GetConverter(_compilation, sourceSymbol, namedType);
+            if (converter is not null)
+                return CheckSource(converter, source.IsNullable, dest);
+        }
+        converter = GetCommonConversion(source, dest);
+        if (converter is not null)
+            return converter;
+        foreach (var item in SymbolReflection.GetPublicPropertiesWithBase(sourceSymbol))
+        {
+            var itemType = item.Type;
+            if (itemType.Equals(destSymbol, SymbolEqualityComparer.Default))
+            {
+                var itemInfo = _typeCacher.Get(itemType);
+                if (itemInfo is null)
+                    continue;
+                var memberConverter = new MemberConverter(item.Name);
+                return CheckSource(memberConverter, itemInfo.IsNullable, dest);
+            }
+        }
+        foreach (var item in SymbolReflection.GetPublicFieldsWithBase(sourceSymbol))
+        {
+            var itemType = item.Type;
+            if (itemType.Equals(destSymbol, SymbolEqualityComparer.Default))
+            {
+                var itemInfo = _typeCacher.Get(itemType);
+                if (itemInfo is null)
+                    continue;
+                var memberConverter = new MemberConverter(item.Name);
+                return CheckSource(memberConverter, itemInfo.IsNullable, dest);
+            }
+        }
+        return null;
+    }
+    #endregion
+    ///// <summary>
+    ///// 从复杂类型转化
+    ///// </summary>
+    ///// <param name="sourceInfo"></param>
+    ///// <param name="destSymbol"></param>
+    ///// <param name="destInfo"></param>
+    ///// <returns></returns>
+    //public IConverter? FromComplex(ComplexTypeInfo sourceInfo, INamedTypeSymbol destSymbol, ITypeSymbolInfo destInfo)
+    //{
+    //    var sourceSymbol = sourceInfo.Symbol;
+    //    //if (!convertToInfo.IsPartial)
+    //    //    return null;
+    //    foreach (var item in SymbolReflection.GetPublicPropertiesWithBase(sourceSymbol))
+    //    {
+    //        if (item.Type is INamedTypeSymbol itemType && itemType.Equals(destSymbol, SymbolEqualityComparer.Default))
+    //        {
+    //            var itemInfo = _typeCacher.Get(itemType);
+    //            if (itemInfo is null)
+    //                continue;
+    //            var memberConverter = new MemberConverter(item.Name);
+    //            return CheckSource(memberConverter, itemInfo.IsNullable, destInfo);
+    //        }
+    //    }
+    //    foreach (var item in SymbolReflection.GetPublicFieldsWithBase(sourceSymbol))
+    //    {
+    //        if (item.Type is INamedTypeSymbol itemType && itemType.Equals(destSymbol, SymbolEqualityComparer.Default))
+    //        {
+    //            var itemInfo = _typeCacher.Get(itemType);
+    //            if (itemInfo is null)
+    //                continue;
+    //            var memberConverter = new MemberConverter(item.Name);
+    //            return CheckSource(memberConverter, itemInfo.IsNullable, destInfo);
+    //        }
+    //    }
+    //    return null;
+    //}
+    ///// <summary>
+    ///// 转化为复杂类型
+    ///// </summary>
+    ///// <param name="sourceSymbol"></param>
+    ///// <param name="destInfo"></param>
+    ///// <param name="convertToInfo"></param>
+    ///// <returns></returns>
+    //public IConverter? ToComplex(ITypeSymbol sourceSymbol, ComplexTypeInfo destInfo, ConvertSourceInfo convertToInfo)
+    //{
+    //    //var sourceProvider = SourceProvider.Create(_compilation, sourceSymbol);
+    //    //var convertToInfo = sourceProvider.ConvertTo(ComplexSymbol);
+    //    //var methodInfo = convertToInfo.MethodInfo;
+    //    //var convertToMethod = sourceProvider.GetConvertMethod(methodInfo, ComplexSymbol);
+    //    //var typeInfo = convertToInfo.TypeInfo;
+    //    //if (convertToMethod is not null)
+    //    //    return new StaticMethodConverter(typeInfo.Type.Access(convertToMethod.Name));
+    //    if (!convertToInfo.IsPartial)
+    //        return null;
+    //    var destSymbo = destInfo.Symbol;
+
+    //    var constructors = SymbolReflection.GetConstructors(destSymbo);
+    //    return ConstructorBySingle(constructors, sourceSymbol, destSymbo) ??
+    //        ConstructorByCompatibleParameter(constructors, sourceSymbol, destSymbo);
+    //}
+    /// <summary>
+    /// 尝试单参数构造函数
+    /// </summary>
+    /// <param name="sourceSymbol"></param>
+    /// <param name="dest"></param>
+    /// <returns></returns>
+    public static IConverter? ConstructorBySingle(ITypeSymbol sourceSymbol, ComplexTypeInfo dest)
+        => ConstructorBySingle(SymbolReflection.GetConstructors(dest.Symbol), sourceSymbol, dest);
+    /// <summary>
+    /// 尝试单参数构造函数
     /// </summary>
     /// <param name="constructors"></param>
     /// <param name="sourceSymbol"></param>
-    /// <param name="ComplexSymbol"></param>
+    /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? ToComplexBySingle(IEnumerable<IMethodSymbol> constructors, INamedTypeSymbol sourceSymbol, INamedTypeSymbol ComplexSymbol)
+    public static IConverter? ConstructorBySingle(IEnumerable<IMethodSymbol> constructors, ITypeSymbol sourceSymbol, ComplexTypeInfo dest)
     {
         var constructor = constructors.Where(m => SymbolTypeDescriptor.MatchSingle(m.Parameters, sourceSymbol))
             .OrderBy(m => m.Parameters.Length)
             .FirstOrDefault();
         if (constructor is not null)
-            return new ConstructorConverter(ComplexSymbol.ToSyntax());
+            return new ConstructorConverter(dest);
         return null;
     }
     /// <summary>
-    /// 尝试兼容的参数
+    /// 尝试兼容类型的参数
     /// </summary>
     /// <param name="constructors"></param>
     /// <param name="sourceSymbol"></param>
-    /// <param name="ComplexSymbol"></param>
+    /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? ToComplexByCompatibleParameter(IEnumerable<IMethodSymbol> constructors, INamedTypeSymbol sourceSymbol, INamedTypeSymbol ComplexSymbol)
+    public IConverter? ConstructorByCompatibleParameter(IEnumerable<IMethodSymbol> constructors, ITypeSymbol sourceSymbol, ComplexTypeInfo dest)
     {
         foreach (var item in constructors.Where(m => m.Parameters.Length == 1))
         {
@@ -77,111 +252,116 @@ public partial class ConvertBuilder
             var compatibleConverter = Get(sourceSymbol, parameterSymbol);
             if (compatibleConverter is null)
                 return null;
-            var constructorConverter = new ConstructorConverter(ComplexSymbol.ToSyntax());
+            var constructorConverter = new ConstructorConverter(dest);
             var converter = new CompatibleConverter(compatibleConverter, constructorConverter);
             return converter;
         }
         return null;
     }
     /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="ComplexSymbol"></param>
-    /// <param name="destSymbol"></param>
-    /// <param name="destInfo"></param>
-    /// <returns></returns>
-    public IConverter? FromComplex(INamedTypeSymbol ComplexSymbol, INamedTypeSymbol destSymbol, TypeSymbolInfo destInfo)
-    {
-        //if (!convertToInfo.IsPartial)
-        //    return null;
-        foreach (var item in SymbolReflection.GetPublicPropertiesWithBase(ComplexSymbol))
-        {
-            if (item.Type is INamedTypeSymbol itemType && itemType.Equals(destSymbol, SymbolEqualityComparer.Default))
-            {
-                var itemInfo = _typeCacher.Get(itemType);
-                if (itemInfo is null)
-                    continue;
-                var memberConverter = new MemberConverter(item.Name);
-                return CheckSource(memberConverter, itemInfo.Kind.IsNullable(), destInfo);
-            }
-        }
-        foreach (var item in SymbolReflection.GetPublicFieldsWithBase(ComplexSymbol))
-        {
-            if (item.Type is INamedTypeSymbol itemType && itemType.Equals(destSymbol, SymbolEqualityComparer.Default))
-            {
-                var itemInfo = _typeCacher.Get(itemType);
-                if (itemInfo is null)
-                    continue;
-                var memberConverter = new MemberConverter(item.Name);
-                return CheckSource(memberConverter, itemInfo.Kind.IsNullable(), destInfo);
-            }
-        }
-        return null;
-    }
-    /// <summary>
-    /// 实体转化为实体
-    /// </summary>
-    /// <param name="sourceSymbol"></param>
-    /// <param name="destInfo"></param>
-    /// <param name="convertToInfo"></param>
-    /// <returns></returns>
-    public IConverter? ComplexToComplex(INamedTypeSymbol sourceSymbol, TypeSymbolInfo destInfo, ConvertSourceInfo convertToInfo)
-    {
-        if (!convertToInfo.IsPartial)
-            return null;
-        var parameters = SymbolMember.GetTargetMembers(_typeCacher, destInfo.Symbol, true);
-        if (parameters.Count == 0)
-            return null;
-        var sourceInfo = _typeCacher.Get(sourceSymbol)!;
-        var converter = Save(sourceInfo, destInfo, convertToInfo);
-        var arguments = Map(_typeCacher, parameters.Values, sourceSymbol).ToArray();
-        var typeInfo = convertToInfo.TypeInfo;
-        var symbolName = convertToInfo.Provider.SymbolName;
-        var methodName = convertToInfo.MethodInfo.Name;
-
-        var source = new ComplexSource(this, symbolName, destInfo, methodName, arguments);
-        AddSource(source, typeInfo);
-        return converter;
-        //var constructors = SymbolReflection.GetConstructors(ComplexSymbol);
-        //var converter = ToComplexBySingle(constructors, sourceSymbol, ComplexSymbol);
-        //if (converter is not null)
-        //    return converter;
-        //var parameters = MemberParameter.GetParametersByType(_compilation, ComplexSymbol, true);
-        //if (parameters.Count == 0)
-        //    return null;
-
-        //var arguments = Map(_compilation, parameters.Values, sourceSymbol).ToArray();
-        //return new ComplexConverter(this, ComplexSymbol.ToSyntax(), arguments);
-    }
-    /// <summary>
     /// 映射
     /// </summary>
     /// <param name="typeSymbols"></param>
-    /// <param name="destSymbol"></param>
+    /// <param name="members"></param>
     /// <param name="sourceSymbol"></param>
     /// <returns></returns>
-    public static IEnumerable<MemberArgument> Map(TypeSymbolCacher typeSymbols, INamedTypeSymbol destSymbol, INamedTypeSymbol sourceSymbol)
-    {
-        var parameters = SymbolMember.GetTargetMembers(typeSymbols, destSymbol, true);
-        if (parameters.Count == 0)
-            return [];
-        return Map(typeSymbols, parameters.Values, sourceSymbol);
-    }
-    /// <summary>
-    /// 映射
-    /// </summary>
-    /// <param name="typeSymbols"></param>
-    /// <param name="parameters"></param>
-    /// <param name="sourceSymbol"></param>
-    /// <returns></returns>
-    public static IEnumerable<MemberArgument> Map(TypeSymbolCacher typeSymbols, IEnumerable<Member> parameters, INamedTypeSymbol sourceSymbol)
+    public static IEnumerable<MemberArgument> Map(TypeSymbolCacher typeSymbols, IEnumerable<Member> members, INamedTypeSymbol sourceSymbol)
     {
         var sourceMembers = SymbolMember.GetSourceMembers(typeSymbols, sourceSymbol);
-        foreach (var parameter in parameters)
+        return Map(members, sourceMembers);
+    }
+    /// <summary>
+    /// 映射
+    /// </summary>
+    /// <param name="members">成员</param>
+    /// <param name="sourceMembers">来源</param>
+    /// <returns></returns>
+    public static IEnumerable<MemberArgument> Map(IEnumerable<Member> members, IDictionary<string, SymbolMember> sourceMembers)
+    {
+        foreach (var member in members)
         {
-            var name = parameter.Name;
-            sourceMembers.TryGetValue(name, out var sourceMember);
-            yield return new MemberArgument(parameter, sourceMember);
+            var name = member.Name;
+            sourceMembers.TryGetValue(name, out var source);
+            yield return new MemberArgument(member, source);
         }
     }
+    /// <summary>
+    /// 映射
+    /// </summary>
+    /// <param name="members">成员</param>
+    /// <param name="sourceMembers">来源</param>
+    /// <param name="references">参考规则</param>
+    /// <returns></returns>
+    public static List<MemberArgument> Map(IEnumerable<Member> members, IDictionary<string, SymbolMember> sourceMembers, List<MemberArgument> references)
+    {
+        var arguments = Map(members, sourceMembers)
+            .ToList();
+        return Reference(arguments, references);
+    }
+    /// <summary>
+    /// 可反转的映射
+    /// </summary>
+    /// <param name="sourceMembers"></param>
+    /// <param name="targetMembers"></param>
+    /// <param name="publicMembers"></param>
+    /// <returns></returns>
+    public static IEnumerable<MemberArgument> ReversedMap(IDictionary<string, SymbolMember> sourceMembers, IEnumerable<SymbolMember> targetMembers, IDictionary<string, SymbolMember> publicMembers)
+    {
+        foreach (var member in targetMembers)
+        {
+            var name = member.Name;
+            sourceMembers.TryGetValue(name, out var source);
+            if ((member.Kind == MemberKind.Parameter || member.Original.DeclaredAccessibility != Accessibility.Public)
+                && publicMembers.TryGetValue(name, out var publicMember))
+            {
+                var reversedArgument = new MemberArgument(source, publicMember);
+                // 源成员映射到参数,需要手动反转为属性映射源成员
+                yield return new MemberReversedArgument(member, source, reversedArgument);
+            }
+            else
+            {
+                yield return new MemberArgument(member, source);
+            }
+        }
+    }
+    /// <summary>
+    /// 参考
+    /// </summary>
+    /// <param name="arguments">成员映射</param>
+    /// <param name="references">参考规则</param>
+    /// <returns></returns>
+    public static List<MemberArgument> Reference(List<MemberArgument> arguments, List<MemberArgument> references)
+    {
+        foreach (var referenced in references)
+        {
+            var referenceSource = referenced.Source;
+            if (referenceSource is null)
+                continue;
+            var referenceMember = referenced.Member;
+            var argument = arguments.FirstOrDefault(item => item.Member.Equals(referenceMember));
+            if (argument is null)
+            {
+                arguments.Add(referenced);
+            }
+            else
+            {
+                argument.Source = referenceSource;
+            }
+        }
+        return arguments;
+    }
+    ///// <summary>
+    ///// 映射
+    ///// </summary>
+    ///// <param name="typeSymbols"></param>
+    ///// <param name="destSymbol"></param>
+    ///// <param name="sourceSymbol"></param>
+    ///// <returns></returns>
+    //public static IEnumerable<MemberArgument> Map(TypeSymbolCacher typeSymbols, INamedTypeSymbol destSymbol, INamedTypeSymbol sourceSymbol)
+    //{
+    //    var parameters = SymbolMember.GetTargetMembers(typeSymbols, destSymbol, true);
+    //    if (parameters.Count == 0)
+    //        return [];
+    //    return Map(typeSymbols, parameters.Values, sourceSymbol);
+    //}
 }

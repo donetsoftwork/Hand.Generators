@@ -1,4 +1,3 @@
-using Hand.Symbols;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
@@ -231,7 +230,7 @@ public static class SymbolReflection
     /// <param name="type"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IEnumerable<IMethodSymbol> GetMethods(INamedTypeSymbol type)
+    public static IEnumerable<IMethodSymbol> GetMethods(ITypeSymbol type)
         => GetMembers<IMethodSymbol>(type, SymbolKind.Method);
     /// <summary>
     /// 获取本类及基类方法
@@ -299,7 +298,7 @@ public static class SymbolReflection
         var entityId = compilation.GetTypeByMetadataName("Hand.Models.IEntityId");
         if (entityId is null)
             return null;
-        if (interfaces.Any(item => SymbolTypeDescriptor.CheckEquals(entityId, item)))
+        if (type.IsInterface(entityId))
             return compilation.GetSpecialType(SpecialType.System_Int64);
         var entityProperty = compilation.GetTypeByMetadataName("Hand.Models.IEntityProperty`1");
         if (entityProperty is null)

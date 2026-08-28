@@ -4,15 +4,11 @@
 /// 生成Poco(Plain Old CLR Object)
 /// </summary>
 /// <typeparam name="TFrom"></typeparam>
-[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
 public class GeneratePocoAttribute<TFrom>
     : Attribute
 {
     #region 配置
-    /// <summary>
-    /// 来源类型
-    /// </summary>
-    public Type From { get; } = typeof(TFrom);
     /// <summary>
     /// 规则
     /// </summary>

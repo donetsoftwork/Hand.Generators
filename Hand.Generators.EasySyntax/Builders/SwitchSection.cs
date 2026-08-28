@@ -44,8 +44,8 @@ public class SwitchSection(SwitchBuilder @switch)
     /// <returns></returns>
     public SwitchSectionSyntax BuildSection()
         => _isReturn ?
-        SyntaxFactory.SwitchSection(GetLabels(), SyntaxGenerator.List(_statements)) :
-        SyntaxFactory.SwitchSection(GetLabels(), SyntaxGenerator.List([.. _statements, SyntaxFactory.BreakStatement()]));
+        SyntaxFactory.SwitchSection(GetLabels(), [.. _statements]) :
+        SyntaxFactory.SwitchSection(GetLabels(), [.. _statements, SyntaxFactory.BreakStatement()]);
     /// <inheritdoc />
     public override StatementSyntax Build()
         => _switch.Build();

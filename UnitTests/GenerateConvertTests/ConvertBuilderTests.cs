@@ -1,6 +1,5 @@
 ﻿using GenerateConvertTests.DTO;
 using GenerateConvertTests.Supports;
-using GeneratePocoTests.Supports;
 using Hand;
 using Hand.Builders;
 using Hand.Converters;
@@ -16,10 +15,9 @@ public class ConvertBuilderTests
     private readonly ConvertBuilder _builder;
     public ConvertBuilderTests()
     {
-        var source = "var i = 0;";
         var driver = SyntaxTreeDriver.CreateDefaultDriver()
             .Using("System");
-        _compilation = driver.Compile(source);
+        _compilation = driver.Compile("");
         _builder = new ConvertBuilder(_compilation);
     }
     [Theory]
@@ -209,7 +207,7 @@ public class ConvertBuilderTests
         Assert.NotNull(destType);
         var converter = _builder.Get(sourceType, destType);
         Assert.NotNull(converter);
-        if (converter is not StaticMethodConverter)
+        if (converter is not ExtensionMethodConverter)
             Assert.Fail();
         var last = _builder.Sources.LastOrDefault();
         Assert.NotNull(last);
@@ -229,7 +227,7 @@ public class ConvertBuilderTests
         Assert.NotNull(destType);
         var converter = _builder.Get(sourceType, destType);
         Assert.NotNull(converter);
-        if (converter is not StaticMethodConverter)
+        if (converter is not ExtensionMethodConverter)
             Assert.Fail();
         var last = _builder.Sources.LastOrDefault();
         Assert.NotNull(last);
@@ -253,7 +251,7 @@ public class ConvertBuilderTests
         Assert.NotNull(destSymbol);
         var converter = _builder.Get(sourceSymbol, destSymbol);
         Assert.NotNull(converter);
-        if (converter is not StaticMethodConverter)
+        if (converter is not ExtensionMethodConverter)
             Assert.Fail();
         var last = _builder.Sources.LastOrDefault();
         Assert.NotNull(last);
@@ -278,7 +276,7 @@ public class ConvertBuilderTests
         Assert.NotNull(destSymbol);
         var converter = _builder.Get(sourceSymbol, destSymbol);
         Assert.NotNull(converter);
-        if (converter is not StaticMethodConverter)
+        if (converter is not ExtensionMethodConverter)
             Assert.Fail();
         var last = _builder.Sources.LastOrDefault();
         Assert.NotNull(last);
@@ -301,7 +299,7 @@ public class ConvertBuilderTests
         Assert.NotNull(destSymbol);
         var converter = _builder.Get(sourceSymbol, destSymbol);
         Assert.NotNull(converter);
-        if (converter is not StaticMethodConverter)
+        if (converter is not ExtensionMethodConverter)
             Assert.Fail();
         var last = _builder.Sources.LastOrDefault();
         Assert.NotNull(last);
@@ -312,7 +310,7 @@ public class ConvertBuilderTests
         Assert.Contains("ToMyColor", code);
     }
     [Fact]
-    public void ToEntityBySingle()
+    public void PrimitiveToEntity()
     {
         var sourceType = typeof(long);
         var destType = typeof(UserId);
@@ -328,6 +326,38 @@ public class ConvertBuilderTests
             Assert.Fail();
     }
     [Fact]
+    public void PrimitiveToEntity2()
+    {
+        var sourceType = typeof(string);
+        var destType = typeof(UserId);
+        var compilation = _compilation.WithReference(sourceType)
+            .WithReference(destType);
+        var sourceSymbol = compilation.GetStringSymbol();
+        Assert.NotNull(sourceSymbol);
+        var destSymbol = compilation.GetTypeByMetadataName(destType.FullName!);
+        Assert.NotNull(destSymbol);
+        var converter = _builder.Get(sourceSymbol, destSymbol);
+        Assert.NotNull(converter);
+        if (converter is not CompatibleConverter)
+            Assert.Fail();
+    }
+    [Fact]
+    public void EntityToEntity()
+    {
+        var sourceType = typeof(CustomerId);
+        var destType = typeof(UserId);
+        var compilation = _compilation.WithReference(sourceType)
+            .WithReference(destType);
+        var sourceSymbol = compilation.GetTypeByMetadataName(sourceType.FullName!);
+        Assert.NotNull(sourceSymbol);
+        var destSymbol = compilation.GetTypeByMetadataName(destType.FullName!);
+        Assert.NotNull(destSymbol);
+        var converter = _builder.Get(sourceSymbol, destSymbol);
+        Assert.NotNull(converter);
+        if (converter is not CompatibleConverter)
+            Assert.Fail();
+    }
+    [Fact]
     public void ToDTO()
     {
         var sourceType = typeof(User);
@@ -340,14 +370,14 @@ public class ConvertBuilderTests
         Assert.NotNull(destSymbol);
         var converter = _builder.Get(sourceSymbol, destSymbol);
         Assert.NotNull(converter);
-        if (converter is not StaticMethodConverter)
+        if (converter is not ExtensionMethodConverter)
             Assert.Fail();
         //var source = SyntaxFactory.IdentifierName("user");
         //var dest = converter.Convert(source);
         //var code = dest.NormalizeWhitespace()
         //    .ToFullString();
         //Assert.Contains("UserDTO", code);
-        var last = _builder.Sources.LastOrDefault();
+        var last = _builder.Sources.FirstOrDefault();
         Assert.NotNull(last);
         var code = last.Generate()
             .Build()
@@ -368,7 +398,7 @@ public class ConvertBuilderTests
         Assert.NotNull(destSymbol);
         var converter = _builder.Get(sourceSymbol, destSymbol);
         Assert.NotNull(converter);
-        if (converter is not StaticMethodConverter)
+        if (converter is not ExtensionMethodConverter)
             Assert.Fail();
         var last = _builder.Sources.LastOrDefault();
         Assert.NotNull(last);
@@ -391,7 +421,7 @@ public class ConvertBuilderTests
         Assert.NotNull(destSymbol);
         var converter = _builder.Get(sourceSymbol, destSymbol);
         Assert.NotNull(converter);
-        if (converter is not StaticMethodConverter)
+        if (converter is not ExtensionMethodConverter)
             Assert.Fail();
         var last = _builder.Sources.LastOrDefault();
         Assert.NotNull(last);

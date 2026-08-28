@@ -1,4 +1,5 @@
 ﻿using Hand.Reflection;
+using Hand.Types;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 
@@ -11,7 +12,7 @@ namespace Hand.Members;
 /// <param name="symbolInfo">成员类型</param>
 /// <param name="summary"></param>
 /// <param name="element"></param>
-public abstract class Member(string name, TypeSymbolInfo symbolInfo, Lazy<string> summary, Lazy<XmlElementSyntax?> element)
+public abstract class Member(string name, ITypeSymbolInfo symbolInfo, Lazy<string> summary, Lazy<XmlElementSyntax?> element)
     : IEquatable<Member>
 {
     /// <summary>
@@ -21,7 +22,7 @@ public abstract class Member(string name, TypeSymbolInfo symbolInfo, Lazy<string
     /// <param name="symbolInfo"></param>
     /// <param name="summary"></param>
     /// <param name="element"></param>
-    public Member(string name, TypeSymbolInfo symbolInfo, Func<string> summary, Func<XmlElementSyntax?> element)
+    public Member(string name, ITypeSymbolInfo symbolInfo, Func<string> summary, Func<XmlElementSyntax?> element)
         : this(name, symbolInfo, new Lazy<string>(summary), new Lazy<XmlElementSyntax?>(element))
     {
     }
@@ -39,11 +40,11 @@ public abstract class Member(string name, TypeSymbolInfo symbolInfo, Lazy<string
     /// <summary>
     /// 成员类型信息
     /// </summary>
-    protected readonly TypeSymbolInfo _symbolInfo = symbolInfo;
+    protected readonly ITypeSymbolInfo _symbolInfo = symbolInfo;
     /// <summary>
     /// 成员类型
     /// </summary>
-    public TypeSymbolInfo SymbolInfo
+    public ITypeSymbolInfo SymbolInfo
         => _symbolInfo;
     private readonly Lazy<string> _summary = summary;
     /// <summary>

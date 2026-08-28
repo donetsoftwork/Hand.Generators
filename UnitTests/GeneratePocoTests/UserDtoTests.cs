@@ -144,6 +144,39 @@ public partial class UserDto
     //    public User ToUser() => new(System.Convert.ToInt32(Id), Name);
     //}
     [Fact]
+    public void WithOther()
+    {
+        var source = @"
+using Hand;
+using Hand.Entities;
+using Hand.GeneratePoco;
+using Hand.Models;
+
+namespace GeneratePocoTests;
+
+/// <summary>
+/// 用户
+/// </summary>
+/// <param name=""Id"">Id标识</param>
+/// <param name=""Name"">用户名</param>
+public record User(int? Id, string Name);
+
+[GeneratePoco<User>()]
+public partial class UserDto
+{
+    public string? Other { get; set; }
+}
+";
+        var service = SyntaxTreeDriver.CreateDefaultDriver()
+            .Reference(typeof(GeneratePocoAttribute<>));
+        var result = service.Generate<PocoGenerator>(source)
+            .GetRunResult();
+        var syntaxTree = result.GeneratedTrees.FirstOrDefault();
+        Assert.NotNull(syntaxTree);
+        var code = syntaxTree.GetText().ToString();
+        Assert.Contains("Name", code);
+    }
+    [Fact]
     public void WithullableRule()
     {
         var source = @"
@@ -174,6 +207,7 @@ public partial class UserDto;
         var code = syntaxTree.GetText().ToString();
         Assert.DoesNotContain("UserId", code);
         Assert.Contains("UserName", code);
+        Assert.Contains("int? UserSex", code);
     }
     [Fact]
     public void WithMaster()

@@ -39,12 +39,26 @@ public class SourceProvider(TypeNameInfo typeInfo, string symbolName, IMethodPro
     /// 是否扩展类
     /// </summary>
     private readonly bool _isExtension = isExtension;
-
+    /// <summary>
+    /// 类型信息
+    /// </summary>
+    public TypeNameInfo TypeInfo
+     => _typeInfo;
     /// <summary>
     /// 当前类名
     /// </summary>
     public string SymbolName 
         => _symbolName;
+    /// <summary>
+    /// 是否部分类
+    /// </summary>
+    public bool IsPartial 
+        => _isPartial;
+    /// <summary>
+    /// 是否扩展类
+    /// </summary>
+    public bool IsExtension 
+        => _isExtension;
     #endregion
     #region ISourceProvider
     /// <inheritdoc />
@@ -87,7 +101,7 @@ public class SourceProvider(TypeNameInfo typeInfo, string symbolName, IMethodPro
     /// <param name="info"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IMethodSymbol? GetConvertMethod(ConvertMethodInfo info, INamedTypeSymbol dest)
+    public IMethodSymbol? GetConvertMethod(ConvertMethodInfo info, ITypeSymbol dest)
         => _original.GetConvertMethod(info, dest);
     #endregion
     #region Create
@@ -105,13 +119,15 @@ public class SourceProvider(TypeNameInfo typeInfo, string symbolName, IMethodPro
     /// </summary>
     /// <param name="compilation"></param>
     /// <param name="symbol"></param>
+    /// <param name="isInternal"></param>
     /// <returns></returns>
-    public static SourceProvider CreateByExtension(Compilation compilation, INamedTypeSymbol symbol)
+    public static SourceProvider CreateByExtension(Compilation compilation, INamedTypeSymbol symbol, bool isInternal)
     {
-        var typeInfo = TypeNameInfo.GetExtensionInfo(symbol);
+        var currentAssembly = compilation.Assembly;
+        var typeInfo = TypeNameInfo.GetExtensionInfo(symbol, isInternal);
         var extension = compilation.GetTypeByMetadataName(typeInfo.FullName);
         var original = MethodProvider.Create(symbol, extension);
-        return new(typeInfo, symbol.Name, original, CheckIsPartial(compilation.Assembly, extension), true);
+        return new(typeInfo, symbol.Name, original, CheckExtensionIsPartial(currentAssembly, extension), true);
     }
     /// <summary>
     /// 构造生成源提供者
@@ -122,23 +138,25 @@ public class SourceProvider(TypeNameInfo typeInfo, string symbolName, IMethodPro
     /// <returns></returns>
     public static SourceProvider Create(Compilation compilation, INamedTypeSymbol symbol, bool isPartial)
     {
-        if(isPartial)
+        var isInternal = !SymbolEqualityComparer.Default.Equals(compilation.Assembly, symbol.ContainingAssembly)
+            || symbol.DeclaredAccessibility != Accessibility.Public;
+        if (isPartial)
         {
             // partial无需扩展类
-            var typeInfo = TypeNameInfo.GetInfo(symbol);
+            var typeInfo = TypeNameInfo.GetInfo(symbol, isInternal);
             var original = MethodProvider.Create(symbol, null);
             return new(typeInfo, symbol.Name, original, true, false);
         }
-        return CreateByExtension(compilation, symbol);
+        return CreateByExtension(compilation, symbol, isInternal);
     }
     /// <summary>
     /// 检查扩展类是否是partial
     /// </summary>
-    /// <param name="assembly"></param>
+    /// <param name="currentAssembly"></param>
     /// <param name="extension"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool CheckIsPartial(IAssemblySymbol assembly, INamedTypeSymbol? extension)
-        => extension is null || !SymbolEqualityComparer.Default.Equals(assembly, extension.ContainingAssembly) || extension.IsPartial();
+    public static bool CheckExtensionIsPartial(IAssemblySymbol currentAssembly, INamedTypeSymbol? extension)
+        => extension is null || !SymbolEqualityComparer.Default.Equals(currentAssembly, extension.ContainingAssembly) || extension.IsPartial();
     #endregion
 }

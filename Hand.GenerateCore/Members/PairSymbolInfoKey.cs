@@ -1,5 +1,4 @@
-﻿using Hand.Reflection;
-using Microsoft.CodeAnalysis;
+﻿using Hand.Types;
 using System;
 
 namespace Hand.Members;
@@ -9,21 +8,21 @@ namespace Hand.Members;
 /// </summary>
 /// <param name="left"></param>
 /// <param name="right"></param>
-public readonly struct PairSymbolInfoKey(TypeSymbolInfo left, TypeSymbolInfo right)
+public readonly struct PairSymbolInfoKey(ITypeSymbolInfo left, ITypeSymbolInfo right)
      : IEquatable<PairSymbolInfoKey>
 {
     #region 配置
-    private readonly TypeSymbolInfo _left = left;
-    private readonly TypeSymbolInfo _right = right;
+    private readonly ITypeSymbolInfo _left = left;
+    private readonly ITypeSymbolInfo _right = right;
     /// <summary>
     /// 映射源类型
     /// </summary>
-    public TypeSymbolInfo Left
+    public ITypeSymbolInfo Left
         => _left;
     /// <summary>
     /// 映射目标类型
     /// </summary>
-    public TypeSymbolInfo Right
+    public ITypeSymbolInfo Right
         => _right;
     #endregion
     /// <inheritdoc />
@@ -46,7 +45,7 @@ public readonly struct PairSymbolInfoKey(TypeSymbolInfo left, TypeSymbolInfo rig
     /// </summary>
     /// <param name="left"></param>
     /// <param name="right"></param>
-    public void Deconstruct(out TypeSymbolInfo left, out TypeSymbolInfo right)
+    public void Deconstruct(out ITypeSymbolInfo left, out ITypeSymbolInfo right)
     {
         left = _left;
         right = _right;

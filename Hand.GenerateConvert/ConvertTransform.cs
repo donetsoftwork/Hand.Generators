@@ -2,12 +2,13 @@
 using Hand.Cachers;
 using Hand.Converters;
 using Hand.Generators;
-using Hand.Maping;
 using Hand.Members;
 using Hand.Providers;
 using Hand.Reflection;
 using Hand.Sources;
+using Hand.Symbols;
 using Hand.Transform;
+using Hand.Types;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -20,129 +21,129 @@ namespace Hand;
 /// <summary>
 /// 转化
 /// </summary>
-public class ConvertTransform : IGeneratorTransform<IEnumerable<IGeneratorSource>>
+public class ConvertTransform : IGeneratorTransform<ConvertToSource>
 {
     /// <inheritdoc />
-    public IEnumerable<IGeneratorSource> Transform(AttributeContext context, CancellationToken cancellation = default)
+    public ConvertToSource? Transform(AttributeContext context, CancellationToken cancellation = default)
     {
         if (cancellation.IsCancellationRequested)
-            return [];
+            return null;
         if (context.TargetNode is not TypeDeclarationSyntax type)
-            return [];
-        if (context.TargetSymbol is not INamedTypeSymbol typeSymbol)
-            return [];
+            return null;
+        if (context.TargetSymbol is not INamedTypeSymbol targetSymbol)
+            return null;
         var attributes = context.Attributes;
         var count = attributes.Length;
         if (count == 0)
-            return [];
+            return null;
         var compilation = context.SemanticModel.Compilation;
         var typeCacher = new TypeSymbolCacher(compilation);
-        var typeInfo = typeCacher.Get(typeSymbol);
-        if (typeInfo is null || typeInfo.Kind != TypeSymbolKind.Complex)
-            return [];
-        var sourceProvider = SourceProvider.Create(compilation, typeSymbol);
-        var sourceMembers = SymbolMember.GetSourceMembers(typeCacher, typeSymbol, false);
+        if (typeCacher.Get(targetSymbol) is not ComplexTypeInfo targetInfo)
+            return null;
+        var sourceMembers = SymbolMember.GetSourceMembers(typeCacher, targetSymbol, true);
+        var targetMembers = GetTargetMembers(typeCacher, targetSymbol);
+        var sourceProvider = SourceProvider.Create(compilation, targetSymbol);
+        
         var methods = new List<ComplexSource>(count);
-        var typeSymbols = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
-        var builder = new ConvertBuilder(compilation, typeCacher, SystemConvertProvider.Create(compilation), new(compilation), [] );
-        var thisType = SyntaxFactory.IdentifierName(typeSymbol.Name);
+        var toSymbols = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+        var builder = new ConvertBuilder(compilation, typeCacher, SystemConvertProvider.Create(compilation), new(compilation), []);
+        var thisType = SyntaxFactory.IdentifierName(targetSymbol.Name);
         var list = new List<IGeneratorSource>(count + 1);
         foreach (var attribute in attributes)
         {
-            var targetSymbol = ConvertBuilder.CheckToSymbol(attribute);
-            if (targetSymbol is null || typeSymbols.Contains(targetSymbol) || targetSymbol.Equals(typeSymbol, SymbolEqualityComparer.Default))
+            var toSymbol = ConvertBuilder.CheckToSymbol(attribute);
+            if (toSymbol is null || toSymbols.Contains(toSymbol) || toSymbol.Equals(targetSymbol, SymbolEqualityComparer.Default))
                 continue;
-            var targetInfo = typeCacher.Get(targetSymbol);
-            if (targetInfo is null || typeInfo.Kind != TypeSymbolKind.Complex)
+            toSymbols.Add(toSymbol);
+            var convertFrom = ConvertBuilder.CheckState(attribute, "ConvertFrom", false);
+            var convertTo = ConvertBuilder.CheckState(attribute, "ConvertTo", true);
+            if (!convertFrom && !convertTo)
                 continue;
-            typeSymbols.Add(targetSymbol);
+            if (typeCacher.Get(toSymbol) is not ComplexTypeInfo toInfo)
+                continue;
 
-            var convertToInfo = sourceProvider.ConvertTo(targetSymbol.Name);
-            var convertToMethod = sourceProvider.GetConvertMethod(convertToInfo.MethodInfo, targetSymbol);
-            if (convertToMethod is not null)
-                continue;
-            var rules = ConvertBuilder.CheckRecognizeRules(attribute);
-            var arguments = MapTo(typeCacher, sourceMembers, rules, targetSymbol);
-            if (arguments.Count == 0)
-                continue;
-            builder.Save(typeInfo, targetInfo, convertToInfo);
-            var method = new ComplexSource(builder, thisType, targetInfo, convertToInfo.MethodInfo.Name, [.. arguments]);
-            methods.Add(method);
-            var convertFrom = ConvertBuilder.CheckState(attribute, "ConvertFrom", true);
+            var toTargetMembers = GetTargetMembers(typeCacher, toSymbol);
+            var toSourceMembers = SymbolMember.GetSourceMembers(typeCacher, toSymbol, true);
+            var recognizers = ConvertBuilder.CheckRecognizeRules(attribute);
+            var arguments = ConvertBuilder.ReversedMap(ConvertBuilder.Recognize(sourceMembers, recognizers), toTargetMembers.Values, toSourceMembers)
+                 .ToList();
+            if (convertTo)
+            {
+                var method = CheckConvertTo(builder, targetInfo, toInfo, arguments);
+                if (method is not null)
+                    methods.Add(method);
+            }
             if (convertFrom)
             {
-                var fromProvider = SourceProvider.Create(compilation, targetSymbol);
-                var fromInfo = fromProvider.ConvertTo(typeSymbol.Name);
-                var fromMethod = fromProvider.GetConvertMethod(fromInfo.MethodInfo, typeSymbol);
-                if (fromMethod is not null)
-                    continue;
-                var fromArguments = MapFrom(typeCacher, typeSymbol, targetSymbol, MemberArgument.Reverse(arguments));
-                if (fromArguments.Count == 0)
-                    continue;
-                builder.Save(targetInfo, typeInfo, fromInfo);
-                var fromMethodSource = new ComplexSource(builder, SyntaxFactory.IdentifierName(targetSymbol.Name), typeInfo, fromInfo.MethodInfo.Name, [.. fromArguments]);
-                list.Add(builder.AddSource(fromMethodSource, fromInfo.TypeInfo));
+                //投影规则翻转
+                recognizers = System.Array.ConvertAll(recognizers, recognizer => recognizer.Reverse());
+                CheckConvertFrom(builder, targetInfo, toInfo, ConvertBuilder.Recognize(toSourceMembers, recognizers), arguments);
             }
         }
-        list.Add(new ConvertToSource(type, typeSymbol, [.. methods]));
-        return list;
-    }    
+        var result = new ConvertToSource(builder, type, targetSymbol.MetadataName, [.. methods]);
+        return result;
+    }
     /// <summary>
-    /// 映射
+    /// 获取目标成员
     /// </summary>
     /// <param name="typeSymbols"></param>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    public static Dictionary<string, SymbolMember> GetTargetMembers(TypeSymbolCacher typeSymbols, INamedTypeSymbol type)
+    {
+        if (type.IsPartial())
+            return SymbolMember.GetTargetMembers(typeSymbols, type, false);
+        return SymbolMember.GetTargetMembers(typeSymbols, type, true);
+    }
+    #region CheckConvert
+    /// <summary>
+    /// 处理ConvertTo
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="targetInfo"></param>
+    /// <param name="toInfo"></param>
+    /// <param name="arguments"></param>
+    public static ComplexSource? CheckConvertTo(ConvertBuilder builder, ComplexTypeInfo targetInfo, ComplexTypeInfo toInfo, List<MemberArgument> arguments)
+    {
+        var targetSymbol = targetInfo.Symbol;
+        var toSymbol = toInfo.Symbol;
+        var sourceProvider = SourceProvider.Create(builder.Compilation, targetSymbol);
+        var convertToInfo = sourceProvider.ConvertTo(toSymbol.Name);
+        var convertToMethod = sourceProvider.GetConvertMethod(convertToInfo.MethodInfo, toSymbol);
+        if (convertToMethod is not null)
+            return null;
+        builder.Save(targetInfo, toInfo,  convertToInfo);
+        var source = new ComplexSource(builder, targetSymbol.Name, toInfo, convertToInfo.MethodInfo.Name, [.. arguments]);
+        if (targetSymbol.IsPartial())
+            return source;
+        builder.AddSource(source, convertToInfo.TypeInfo, targetSymbol);
+        return null;
+    }
+    /// <summary>
+    /// 处理ConvertFrom
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="targetInfo"></param>
+    /// <param name="toInfo"></param>
     /// <param name="sourceMembers"></param>
-    /// <param name="rules"></param>
-    /// <param name="returnSymbol"></param>
+    /// <param name="referenceArguments"></param>
     /// <returns></returns>
-    public static List<MemberArgument> MapTo(TypeSymbolCacher typeSymbols, IDictionary<string, SymbolMember> sourceMembers, IRecognizer<string>[] rules, INamedTypeSymbol returnSymbol)
+    public static void CheckConvertFrom(ConvertBuilder builder, ComplexTypeInfo targetInfo, ComplexTypeInfo toInfo, IDictionary<string, SymbolMember> sourceMembers, List<MemberArgument> referenceArguments)
     {
-        var targetMembers = SymbolMember.GetTargetMembers(typeSymbols, returnSymbol);
-        var count = targetMembers.Count;
-        if (count == 0)
-            return [];
-        foreach (var rule in rules)
-            sourceMembers = rule.Recognize(sourceMembers);
-
-        var list = new List<MemberArgument>(count);
-        foreach (var targetMember in targetMembers.Values)
-        {
-            var name = targetMember.Name;
-            if (sourceMembers.TryGetValue(name, out var sourceMember))
-                list.Add(new MemberArgument(targetMember, sourceMember));
-            else if (targetMember.Kind == MemberKind.Parameter)
-                list.Add(new MemberArgument(targetMember, null));
-        }
-        return list;
+        var targetSymbol = targetInfo.Symbol;
+        var toSymbol = toInfo.Symbol;
+        var sourceProvider = SourceProvider.Create(builder.Compilation, toSymbol);
+        var convertToInfo = sourceProvider.ConvertTo(targetSymbol.Name);
+        var convertToMethod = sourceProvider.GetConvertMethod(convertToInfo.MethodInfo, targetSymbol);
+        if (convertToMethod is not null)
+            return;
+        var targetMembers = SymbolMember.GetTargetMembers(builder.TypeCacher, targetSymbol, true);
+        var arguments = ConvertBuilder.Map(targetMembers.Values, sourceMembers, MemberArgument.Reverse(referenceArguments));
+        if (arguments.Count == 0)
+            return;
+        builder.Save(toInfo, targetInfo, convertToInfo);
+        var source = new ComplexSource(builder, toSymbol.Name, targetInfo, convertToInfo.MethodInfo.Name, [.. arguments]);
+        builder.AddSource(source, convertToInfo.TypeInfo, toSymbol);
     }
-    /// <summary>
-    /// 映射
-    /// </summary>
-    /// <param name="typeSymbols"></param>
-    /// <param name="typeSymbol"></param>
-    /// <param name="sourceSymbol"></param>
-    /// <param name="generateArguments"></param>
-    /// <returns></returns>
-    public static List<MemberArgument> MapFrom(TypeSymbolCacher typeSymbols, INamedTypeSymbol typeSymbol, INamedTypeSymbol sourceSymbol, List<MemberArgument> generateArguments)
-    {
-        var parameters = SymbolMember.GetTargetMembers(typeSymbols, typeSymbol, true);
-        var parameterCount = parameters.Count;
-        if (parameterCount == 0)
-            return generateArguments;
-
-        var arguments = ConvertBuilder.Map(typeSymbols, parameters.Values, sourceSymbol)
-            .ToList();
-        foreach (var generated in generateArguments)
-        {
-            var sourceMember = generated.Source;
-            if (sourceMember is null)
-                continue;
-            var argument = arguments.FirstOrDefault(item => item.Member.Equals(generated.Member));
-            if (argument is null)
-                arguments.Add(generated);
-            else
-                argument.Source = sourceMember;
-        }
-        return arguments;
-    }
+    #endregion
 }

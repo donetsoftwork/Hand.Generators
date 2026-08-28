@@ -6,8 +6,8 @@ using Hand.Providers;
 using Hand.Reflection;
 using Hand.Rule;
 using Hand.Sources;
+using Hand.Types;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Frozen;
 using System.Collections.Generic;
@@ -18,25 +18,29 @@ namespace Hand.GeneratePoco;
 /// <summary>
 /// Poco生成源
 /// </summary>
-public abstract class PocoSource(TypeDeclarationSyntax type, ConvertBuilder convertBuilder, TypeSymbolInfo typeInfo, INamedTypeSymbol typeSymbol, TypeSymbolInfo sourseInfo, INamedTypeSymbol sourseSymbol, AttributeData attribute)
+public abstract class PocoSource(SyntaxGenerator generator, ConvertBuilder convertBuilder, ComplexTypeInfo typeInfo, INamedTypeSymbol typeSymbol, ComplexTypeInfo sourseInfo, INamedTypeSymbol sourseSymbol, AttributeData attribute)
     : IGeneratorSource
 {
     /// <summary>
     /// Poco生成源
     /// </summary>
-    public PocoSource(TypeDeclarationSyntax type, ConvertBuilder convertBuilder, TypeSymbolInfo typeInfo, TypeSymbolInfo sourseInfo, AttributeData attribute)
-        : this(type, convertBuilder, typeInfo, typeInfo.Symbol, sourseInfo, sourseInfo.Symbol, attribute)
+    public PocoSource(TypeDeclarationSyntax type, ConvertBuilder convertBuilder, ComplexTypeInfo typeInfo, ComplexTypeInfo sourseInfo, AttributeData attribute)
+        : this(SyntaxGenerator.Clone(type), convertBuilder, typeInfo, typeInfo.Symbol, sourseInfo, sourseInfo.Symbol, attribute)
     {
     }
     #region 配置
     /// <summary>
     /// 类型
     /// </summary>
-    protected readonly TypeDeclarationSyntax _type = type;
+    protected readonly SyntaxGenerator _generator = generator;
     /// <summary>
     /// 当前类型
     /// </summary>
-    protected readonly TypeSyntax _thisType = SyntaxFactory.IdentifierName(typeSymbol.Name);
+    protected readonly TypeSyntax _thisType = generator.Display(typeSymbol);
+    /// <summary>
+    /// 来源类型
+    /// </summary>
+    protected readonly TypeSyntax _sourseType = generator.Display(sourseSymbol);
     /// <summary>
     /// 编译
     /// </summary>
@@ -48,7 +52,7 @@ public abstract class PocoSource(TypeDeclarationSyntax type, ConvertBuilder conv
     /// <summary>
     /// 类型信息
     /// </summary>
-    protected readonly TypeSymbolInfo _typeInfo = typeInfo;
+    protected readonly ComplexTypeInfo _typeInfo = typeInfo;
     /// <summary>
     /// 类型符号
     /// </summary>
@@ -56,15 +60,23 @@ public abstract class PocoSource(TypeDeclarationSyntax type, ConvertBuilder conv
     /// <summary>
     /// 来源类型信息
     /// </summary>
-    protected readonly TypeSymbolInfo _sourseInfo = sourseInfo;
+    protected readonly ComplexTypeInfo _sourseInfo = sourseInfo;
     /// <summary>
     /// 来源类型符号
     /// </summary>
     protected readonly INamedTypeSymbol _sourseSymbol = sourseSymbol;
     /// <summary>
-    /// 源成员
+    /// 特性配置
     /// </summary>
-    protected readonly IDictionary<string, SymbolMember> _sourceMembers = GetSourceMembers(convertBuilder.TypeCacher, sourseSymbol, ConvertBuilder.CheckRecognizeRules(attribute));
+    protected readonly AttributeData _attribute = attribute;
+    /// <summary>
+    /// 投影规则
+    /// </summary>
+    protected readonly IRecognizer<string>[] _recognizers = ConvertBuilder.CheckRecognizeRules(attribute);
+    ///// <summary>
+    ///// 源成员
+    ///// </summary>
+    //protected readonly IDictionary<string, SymbolMember> _sourceMembers = GetSourceMembers(convertBuilder.TypeCacher, sourseSymbol, ConvertBuilder.CheckRecognizeRules(attribute));
     /// <summary>
     /// 原成员名
     /// </summary>
@@ -79,14 +91,14 @@ public abstract class PocoSource(TypeDeclarationSyntax type, ConvertBuilder conv
     /// 是否生成特性标记
     /// </summary>
     protected readonly bool _generateAttribute = ConvertBuilder.CheckState(attribute, "GenerateAttribute", false);
-    /// <summary>
-    /// 是否生成convertTo
-    /// </summary>
-    protected readonly bool _convertTo = ConvertBuilder.CheckState(attribute, "ConvertTo", true);
-    /// <summary>
-    /// 是否生成convertFrom
-    /// </summary>
-    protected readonly bool _convertFrom = ConvertBuilder.CheckState(attribute, "ConvertFrom", true);
+    ///// <summary>
+    ///// 是否生成convertTo
+    ///// </summary>
+    //protected readonly bool _convertTo = ConvertBuilder.CheckState(attribute, "ConvertTo", true);
+    ///// <summary>
+    ///// 是否生成convertFrom
+    ///// </summary>
+    //protected readonly bool _convertFrom = ConvertBuilder.CheckState(attribute, "ConvertFrom", true);
     /// <summary>
     /// 是否生成默认值
     /// </summary>
@@ -96,11 +108,11 @@ public abstract class PocoSource(TypeDeclarationSyntax type, ConvertBuilder conv
     /// </summary>
     protected readonly AttributeSymbolCacher _attributeCacher = new(convertBuilder.Compilation);
 
-    /// <summary>
-    /// 类型
-    /// </summary>
-    public TypeDeclarationSyntax Type
-        => _type;
+    ///// <summary>
+    ///// 类型
+    ///// </summary>
+    //public TypeDeclarationSyntax Type
+    //    => _type;
     /// <summary>
     /// 反射信息
     /// </summary>
@@ -115,29 +127,9 @@ public abstract class PocoSource(TypeDeclarationSyntax type, ConvertBuilder conv
     public ConvertBuilder ConvertBuilder
         => _convertBuilder;
     #endregion
+
     /// <inheritdoc />
     public abstract SyntaxGenerator Generate();
-    /// <summary>
-    /// 处理ConvertFrom
-    /// </summary>
-    /// <param name="convertBuilder"></param>
-    /// <param name="generateArguments"></param>
-    public void CheckConvertFrom(ConvertBuilder convertBuilder, List<MemberArgument> generateArguments)
-    {
-        var sourceProvider = SourceProvider.Create(_compilation, _sourseSymbol);
-        var convertToInfo = sourceProvider.ConvertTo(_typeSymbol.Name);
-        var convertToMethod = sourceProvider.GetConvertMethod(convertToInfo.MethodInfo, _typeSymbol);
-        if (convertToMethod is not null)
-            return;        
-        var typeInfo = convertToInfo.TypeInfo;
-        _convertBuilder.Save(_sourseInfo, _typeInfo, convertToInfo);
-        var symbolName = convertToInfo.Provider.SymbolName;
-        var methodName = convertToInfo.MethodInfo.Name;
-        var arguments = MapFrom(_convertBuilder.TypeCacher, _typeSymbol, _sourseSymbol, generateArguments)
-            .ToArray();
-        var source = new ComplexSource(convertBuilder, symbolName, _typeInfo, methodName, arguments);
-        convertBuilder.AddSource(source, typeInfo);
-    }
     /// <summary>
     /// 构造参数
     /// </summary>
@@ -145,9 +137,9 @@ public abstract class PocoSource(TypeDeclarationSyntax type, ConvertBuilder conv
     /// <param name="name"></param>
     /// <param name="info"></param>
     /// <returns></returns>
-    public ParameterSyntax CreateParameter(TypeSyntax type, string name, TypeSymbolInfo info)
+    public ParameterSyntax CreateParameter(TypeSyntax type, string name, ITypeSymbolInfo info)
     {
-        return _useDefault ? type.Parameter(name, DefaultExpressionBuilder.Default(info, _compilation)) :
+        return _useDefault ? type.Parameter(name, DefaultExpressionBuilder.GetParameterDefault(info)) :
             type.Parameter(name);
     }
     /// <summary>
@@ -157,140 +149,29 @@ public abstract class PocoSource(TypeDeclarationSyntax type, ConvertBuilder conv
     /// <param name="name"></param>
     /// <param name="info"></param>
     /// <returns></returns>
-    public FieldDeclarationSyntax CreateField(TypeSyntax type, string name, TypeSymbolInfo info)
+    public FieldDeclarationSyntax CreateField(TypeSyntax type, string name, ITypeSymbolInfo info)
     {
-        return _useDefault ? type.Field(name, DefaultExpressionBuilder.Default(info, _compilation)) :
+        return _useDefault ? type.Field(name, DefaultExpressionBuilder.GetDefault(info)) :
             type.Field(name);
-    }
-    /// <summary>
-    /// 映射
-    /// </summary>
-    /// <param name="typeSymbols"></param>
-    /// <param name="typeSymbol"></param>
-    /// <param name="sourceSymbol"></param>
-    /// <param name="generateArguments"></param>
-    /// <returns></returns>
-    public static List<MemberArgument> MapFrom(TypeSymbolCacher typeSymbols, INamedTypeSymbol typeSymbol, INamedTypeSymbol sourceSymbol, List<MemberArgument> generateArguments)
-    {
-        var parameters = SymbolMember.GetTargetMembers(typeSymbols, typeSymbol, true);
-        var parameterCount = parameters.Count;
-        if (parameterCount == 0)
-            return generateArguments;
-
-        var arguments = ConvertBuilder.Map(typeSymbols, parameters.Values, sourceSymbol)
-            .ToList();
-        foreach (var generated in generateArguments)
-        {
-            var sourceMember = generated.Source;
-            if (sourceMember is null)
-                continue;
-            var argument = arguments.FirstOrDefault(item => item.Member.Equals(generated.Member));
-            if (argument is null)
-                arguments.Add(generated);
-            else
-                argument.Source = sourceMember;
-        }
-        return arguments;
-    }
-    /// <summary>
-    /// 映射
-    /// </summary>
-    /// <param name="typeSymbols"></param>
-    /// <param name="typeSymbol"></param>
-    /// <param name="sourceSymbol"></param>
-    /// <param name="generateArguments"></param>
-    /// <returns></returns>
-    public static List<MemberArgument> MapTo(TypeSymbolCacher typeSymbols, INamedTypeSymbol typeSymbol, INamedTypeSymbol sourceSymbol, List<MemberArgument> generateArguments)
-    {
-        var parameters = SymbolMember.GetTargetMembers(typeSymbols, sourceSymbol, true);
-        var parameterCount = parameters.Count;
-        if (parameterCount == 0)
-            return [];
-        var arguments = ConvertBuilder.Map(typeSymbols, parameters.Values, typeSymbol)
-            .ToList();
-        foreach (var generated in generateArguments)
-        {
-            var sourceMember = generated.Source;
-            if (sourceMember is null)
-                continue;
-            var argument = arguments.FirstOrDefault(item => item.Member.Equals(generated.Member));
-            if (argument is null)
-                arguments.Add(generated);
-            else
-                argument.Source = generated.Source;
-        }
-        return arguments;
-    }
-    /// <summary>
-    /// 处理ConvertTo
-    /// </summary>
-    /// <param name="convertBuilder"></param>
-    /// <param name="generateArguments"></param>
-    /// <returns></returns>
-    public MethodDeclarationSyntax? CheckConvertTo(ConvertBuilder convertBuilder, List<MemberArgument> generateArguments)
-    {
-        var sourceProvider = SourceProvider.Create(_compilation, _typeSymbol);
-        var convertToInfo = sourceProvider.ConvertTo(_sourseSymbol.Name);
-        var convertToMethod = sourceProvider.GetConvertMethod(convertToInfo.MethodInfo, _sourseSymbol);
-        if (convertToMethod is not null)
-            return null;
-        //var typeInfo = convertToInfo.TypeInfo;
-        //var symbolName = convertToInfo.Provider.SymbolName;
-        var methodName = convertToInfo.MethodInfo.Name;
-        var arguments = MapTo(_convertBuilder.TypeCacher, _typeSymbol, _sourseSymbol, MemberArgument.Reverse(generateArguments));
-        if (arguments.Count == 0)
-            return null;
-        _convertBuilder.Save(_typeInfo, _sourseInfo, convertToInfo);
-        var source = new ComplexSource(convertBuilder, _thisType, _sourseInfo, methodName, [.. arguments]);
-        return source.CreateMethod();
-    }
-    /// <summary>
-    /// 判断成员是否可空
-    /// </summary>
-    /// <param name="propertyName"></param>
-    /// <param name="propertyType"></param>
-    /// <returns></returns>
-    public TypeSyntax CheckMemberNullAble(string propertyName, TypeSyntax propertyType)
-    {
-        if (_nullableRule is null)
-            return propertyType;
-        if (_nullableRule.Validate(propertyName))
-            return propertyType.CheckNullable();
-        return propertyType;
-    }
+    }    
     /// <summary>
     /// 处理成员类型
     /// </summary>
-    /// <param name="compilation"></param>
     /// <param name="propertyName"></param>
     /// <param name="sourseInfo"></param>
     /// <returns></returns>
-    public (TypeSyntax, TypeSymbolInfo) CheckMemberType(Compilation compilation, string propertyName, TypeSymbolInfo sourseInfo)
+    public (TypeSyntax, ITypeSymbolInfo) CheckMemberType(string propertyName, ITypeSymbolInfo sourseInfo)
     {
-        var propertySymbol = sourseInfo.CheckPoco();
-        TypeSyntax propertyType;
-        TypeSymbolKind kind;
+        var propertyInfo = sourseInfo.CheckPoco();
+        var propertySymbol = propertyInfo.Original;
+        // 自包含属性转化为目标类型
         if (propertySymbol.Equals(_sourseSymbol, SymbolEqualityComparer.Default))
-        {
-            propertySymbol = _typeSymbol;
-            propertyType = _thisType;
-            kind = sourseInfo.Kind;
-        }
-        else
-        {
-            propertyType = propertySymbol.ToSyntax();
-            kind = TypeSymbolKind.Primitive;
-        }    
-        if (sourseInfo.Kind.IsNullable() || CheckMemberNullAble(propertyName))
-        {
-            return (propertyType.Nullable(),
-            new TypeSymbolInfo(compilation.GetNullable(propertySymbol), propertySymbol, kind | TypeSymbolKind.Nullable, null));
-        }
-        else
-        {
-            return (propertyType,
-            new TypeSymbolInfo(propertySymbol, propertySymbol, kind, null));
-        }
+            return (_thisType, _typeInfo);
+
+        var propertyType = _generator.Display(propertyInfo);
+        if (sourseInfo.IsNullable || CheckMemberNullAble(propertyName))
+            return (propertyType.Nullable(), propertyInfo.GetNullable(_compilation));
+        return (propertyType, propertyInfo);
     }
     /// <summary>
     /// 判断成员是否可空
@@ -303,20 +184,20 @@ public abstract class PocoSource(TypeDeclarationSyntax type, ConvertBuilder conv
             return false;
         return _nullableRule.Validate(propertyName);
     }
-    /// <summary>
-    /// 获取成员字典
-    /// </summary>
-    /// <param name="typeSymbols"></param>
-    /// <param name="type"></param>
-    /// <param name="rules"></param>
-    /// <returns></returns>
-    public static IDictionary<string, SymbolMember> GetSourceMembers(TypeSymbolCacher typeSymbols, INamedTypeSymbol type, IRecognizer<string>[] rules)
-    {
-        IDictionary<string, SymbolMember> sourceMembers = SymbolMember.GetSourceMembers(typeSymbols, type);
-        foreach (var rule in rules)
-            sourceMembers = rule.Recognize(sourceMembers);
-        return sourceMembers;
-    }
+    ///// <summary>
+    ///// 判断成员是否可空
+    ///// </summary>
+    ///// <param name="propertyName"></param>
+    ///// <param name="propertyType"></param>
+    ///// <returns></returns>
+    //public TypeSyntax CheckMemberNullAble(string propertyName, TypeSyntax propertyType)
+    //{
+    //    if (_nullableRule is null)
+    //        return propertyType;
+    //    if (_nullableRule.Validate(propertyName))
+    //        return propertyType.CheckNullable();
+    //    return propertyType;
+    //}
     /// <summary>
     /// 解析可空规则
     /// </summary>
@@ -332,4 +213,99 @@ public abstract class PocoSource(TypeDeclarationSyntax type, ConvertBuilder conv
             return null;
         return MemberRuleParser.Default.Parse(text);
     }
+    #region CheckConvert
+    /// <summary>
+    /// 处理转化
+    /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="sourceMembers"></param>
+    /// <param name="arguments"></param>
+    public void CheckConvert(SyntaxGenerator generator, IDictionary<string, SymbolMember> sourceMembers, List<MemberArgument> arguments)
+    {
+        var convertFrom = ConvertBuilder.CheckState(_attribute, "ConvertFrom", true);
+        var convertTo = ConvertBuilder.CheckState(_attribute, "ConvertTo", true);
+        if (!convertFrom && !convertTo)
+            return;
+        var members = SymbolMember.GetTargetMembers(_convertBuilder.TypeCacher, _typeSymbol, true);
+        // 参考生成规则映射
+        arguments = MapFrom(members, sourceMembers, arguments);
+        if (convertFrom)
+            CheckConvertFrom(arguments);
+        if (!convertTo)
+            return;
+        var method = CheckConvertTo(generator, _convertBuilder, arguments);
+        if (method is not null)
+            generator.AddMethod(method);
+    }
+    /// <summary>
+    /// 处理ConvertFrom
+    /// </summary>
+    /// <param name="arguments"></param>
+    public void CheckConvertFrom(List<MemberArgument> arguments)
+    {
+        var sourceProvider = SourceProvider.Create(_compilation, _sourseSymbol);
+        var convertToInfo = sourceProvider.ConvertTo(_typeSymbol.Name);
+        var convertToMethod = sourceProvider.GetConvertMethod(convertToInfo.MethodInfo, _typeSymbol);
+        if (convertToMethod is not null)
+            return;
+        var typeInfo = convertToInfo.TypeInfo;
+        _convertBuilder.Save(_sourseInfo, _typeInfo, convertToInfo);
+        var symbolName = convertToInfo.Provider.SymbolName;
+        var methodName = convertToInfo.MethodInfo.Name;
+        var source = new ComplexSource(_convertBuilder, symbolName, _typeInfo, methodName, [.. arguments]);
+        _convertBuilder.AddSource(source, typeInfo, _sourseSymbol);
+    }
+    /// <summary>
+    /// 映射
+    /// </summary>
+    /// <param name="members"></param>
+    /// <param name="sourceMembers"></param>
+    /// <param name="referenceArguments"></param>
+    /// <returns></returns>
+    public static List<MemberArgument> MapFrom(Dictionary<string, SymbolMember> members, IDictionary<string, SymbolMember> sourceMembers, List<MemberArgument> referenceArguments)
+    {
+        if (members.Count == 0)
+            return referenceArguments;
+        return ConvertBuilder.Map(members.Values, sourceMembers, referenceArguments);
+    }
+    /// <summary>
+    /// 映射
+    /// </summary>
+    /// <param name="typeSymbols"></param>
+    /// <param name="referenceArguments"></param>
+    /// <returns></returns>
+    public List<MemberArgument> MapTo(TypeSymbolCacher typeSymbols, List<MemberArgument> referenceArguments)
+    {
+        var members = SymbolMember.GetTargetMembers(typeSymbols, _sourseSymbol, true);
+        var parameterCount = members.Count;
+        if (parameterCount == 0)
+            return [];
+        //投影规则翻转
+        var recognizers = System.Array.ConvertAll(_recognizers, recognizer => recognizer.Reverse());
+        var sourceMembers = ConvertBuilder.GetSourceMembers(typeSymbols, _typeSymbol, recognizers);
+        return ConvertBuilder.Map(members.Values, sourceMembers, referenceArguments);
+    }
+    /// <summary>
+    /// 处理ConvertTo
+    /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="convertBuilder"></param>
+    /// <param name="referenceArguments"></param>
+    /// <returns></returns>
+    public MethodDeclarationSyntax? CheckConvertTo(SyntaxGenerator generator, ConvertBuilder convertBuilder, List<MemberArgument> referenceArguments)
+    {
+        var sourceProvider = SourceProvider.Create(_compilation, _typeSymbol);
+        var convertToInfo = sourceProvider.ConvertTo(_sourseSymbol.Name);
+        var convertToMethod = sourceProvider.GetConvertMethod(convertToInfo.MethodInfo, _sourseSymbol);
+        if (convertToMethod is not null)
+            return null;
+        var methodName = convertToInfo.MethodInfo.Name;
+        var arguments = MapTo(_convertBuilder.TypeCacher, MemberArgument.Reverse(referenceArguments));
+        if (arguments.Count == 0)
+            return null;
+        _convertBuilder.Save(_typeInfo, _sourseInfo, convertToInfo);
+        var source = new ComplexSource(convertBuilder, _thisType, _sourseInfo, methodName, [.. arguments]);
+        return source.CreateMethod(generator);
+    }
+    #endregion
 }

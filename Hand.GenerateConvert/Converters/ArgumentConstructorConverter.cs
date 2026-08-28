@@ -1,4 +1,6 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+﻿using Hand.Types;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +12,7 @@ namespace Hand.Converters;
 /// </summary>
 /// <param name="targetType"></param>
 /// <param name="otherArguments"></param>
-public class ArgumentConstructorConverter(TypeSyntax targetType, IEnumerable<ArgumentSyntax> otherArguments)
+public class ArgumentConstructorConverter(ITypeSymbolInfo targetType, IEnumerable<ArgumentSyntax> otherArguments)
     : ConstructorConverter(targetType)
 {
     /// <summary>
@@ -18,7 +20,7 @@ public class ArgumentConstructorConverter(TypeSyntax targetType, IEnumerable<Arg
     /// </summary>
     /// <param name="targetType"></param>
     /// <param name="otherArguments"></param>
-    public ArgumentConstructorConverter(TypeSyntax targetType, params IEnumerable<ExpressionSyntax> otherArguments)
+    public ArgumentConstructorConverter(ITypeSymbolInfo targetType, params IEnumerable<ExpressionSyntax> otherArguments)
         : this(targetType, otherArguments.Select(SyntaxFactory.Argument))
     {
     }
@@ -31,6 +33,6 @@ public class ArgumentConstructorConverter(TypeSyntax targetType, IEnumerable<Arg
         => _otherArguments;
     #endregion
     /// <inheritdoc />
-    protected override IEnumerable<ArgumentSyntax> CreateArguments(ExpressionSyntax source)
+    protected override SeparatedSyntaxList<ArgumentSyntax> CreateArguments(ExpressionSyntax source)
         => [SyntaxFactory.Argument(source), .. _otherArguments];
 }

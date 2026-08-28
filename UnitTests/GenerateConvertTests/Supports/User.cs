@@ -1,4 +1,4 @@
-﻿namespace GeneratePocoTests.Supports;
+﻿namespace GenerateConvertTests.Supports;
 
 /// <summary>
 /// 用户

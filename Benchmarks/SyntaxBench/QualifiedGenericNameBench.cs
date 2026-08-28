@@ -9,13 +9,22 @@ namespace SyntaxBench;
 public class QualifiedGenericNameBench
 {
     [Benchmark(Baseline = true)]
-    public QualifiedNameSyntax QualifiedName()
+    public NameSyntax Qualifies()
     {
         //return SyntaxFactory.QualifiedName(
         //    SyntaxFactory.IdentifierName("System.Collections.Generic"), 
         //    SyntaxFactory.GenericName("List")
         //        .AddTypeArgumentListArguments(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword))));
-        return SyntaxGenerator.Generic("List", SyntaxGenerator.IntType).Qualified("System.Collections.Generic");
+        return SyntaxGenerator.Generic("List", SyntaxGenerator.IntType).Qualifies("System", "Collections", "Generic");
+    }
+    [Benchmark]
+    public NameSyntax Qualify()
+    {
+        //return SyntaxFactory.QualifiedName(
+        //    SyntaxFactory.IdentifierName("System.Collections.Generic"), 
+        //    SyntaxFactory.GenericName("List")
+        //        .AddTypeArgumentListArguments(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword))));
+        return SyntaxGenerator.Generic("List", SyntaxGenerator.IntType).Qualify("System.Collections.Generic");
     }
     [Benchmark]
     public TypeSyntax ParseTypeName()
@@ -23,7 +32,7 @@ public class QualifiedGenericNameBench
         return SyntaxFactory.ParseTypeName("System.Collections.Generic.List<int>");
     }
     [Benchmark]
-    public GenericNameSyntax GenericName()
+    public GenericNameSyntax Generic()
     {
         //return SyntaxFactory.GenericName("System.Collections.Generic.List")
         //    .AddTypeArgumentListArguments(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)));

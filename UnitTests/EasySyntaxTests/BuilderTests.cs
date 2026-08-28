@@ -223,7 +223,7 @@ public class BuilderTests
             .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
             .AddParameterListParameters(
                 SyntaxFactory.Parameter(SyntaxFactory.Identifier("Id")).WithType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)))
-            )            
+            )
             .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
         // 将记录声明转换为字符串查看结果
         var tree = SyntaxFactory.CompilationUnit()

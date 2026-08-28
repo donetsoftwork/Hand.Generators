@@ -1,5 +1,4 @@
-﻿using Hand.Builders;
-using Hand.Members;
+﻿using Hand.Members;
 using Microsoft.CodeAnalysis;
 
 namespace Hand.Providers;
@@ -18,6 +17,6 @@ public class StaticMethodProvider(INamedTypeSymbol declare, INamedTypeSymbol sym
     #endregion
 
     /// <inheritdoc />
-    public IMethodSymbol? GetConvertMethod(ConvertMethodInfo info, INamedTypeSymbol dest)
-        => ConvertBuilder.GetStaticMethod(_declare, _symbol, dest, info.Filter);
+    IMethodSymbol? IMethodProvider.GetConvertMethod(ConvertMethodInfo info, ITypeSymbol dest)
+        => MethodProvider.GetStaticMethod(_declare, _symbol, dest, info.Filter);
 }

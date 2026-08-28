@@ -1,4 +1,5 @@
 ﻿using Hand.Reflection;
+using Hand.Types;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 
@@ -11,7 +12,7 @@ namespace Hand.Members;
 /// <param name="original"></param>
 /// <param name="symbolInfo"></param>
 /// <param name="summary"></param>
-public class ParameterSyntaxMember(string name, ParameterSyntax original, TypeSymbolInfo symbolInfo, Func<string> summary)
+public class ParameterSyntaxMember(string name, ParameterSyntax original, ITypeSymbolInfo symbolInfo, Func<string> summary)
     : Member(name, symbolInfo, summary, original.GetSummary)
 {
     /// <inheritdoc />

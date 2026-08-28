@@ -17,11 +17,11 @@ public static partial class GenerateCoreServices
     /// <summary>
     /// 生成特性标记
     /// </summary>
-    /// <param name="builder"></param>
+    /// <param name="generator"></param>
     /// <param name="member"></param>
     /// <param name="attributes"></param>
     /// <returns></returns>
-    public static TMember GenerateAttribute<TMember>(this SyntaxGenerator builder, TMember member, AttributeData[] attributes)
+    public static TMember GenerateAttribute<TMember>(this SyntaxGenerator generator, TMember member, AttributeData[] attributes)
         where TMember : CSharpSyntaxNode
     {
         if (attributes.Length == 0)
@@ -31,7 +31,9 @@ public static partial class GenerateCoreServices
             member = (TMember)(CSharpSyntaxNode)memberDeclaration.WithAttributeLists(SyntaxFactory.List(attributes.ToSyntax(namespaces)));
         else if (member is ParameterSyntax parameterSyntax)
             member = (TMember)(CSharpSyntaxNode)parameterSyntax.WithAttributeLists(SyntaxFactory.List(attributes.ToSyntax(namespaces)));
-        builder.Using(namespaces);
+
+        foreach (var item in namespaces.Distinct())
+            generator.Using(item);
         return member;
     }
     /// <summary>
@@ -43,9 +45,9 @@ public static partial class GenerateCoreServices
     public static AttributeSyntax ToSyntax(this AttributeData data, List<string> namespaces)
     {
         var type = data.AttributeClass!;
-        var @amespace = type.ContainingNamespace.ToDisplayString();
-        if (!string.IsNullOrWhiteSpace(@amespace))
-            namespaces.Add(@amespace);
+        var @namespace = type.ContainingNamespace.ToDisplayString();
+        if (!string.IsNullOrWhiteSpace(@namespace))
+            namespaces.Add(@namespace);
         var name = type.Name;
         if (name.EndsWith("Attribute"))
             name = name.Substring(0, name.Length - "Attribute".Length);
@@ -58,7 +60,7 @@ public static partial class GenerateCoreServices
         if (arguments.Length == 0)
             return SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(name));
         return SyntaxFactory.IdentifierName(name)
-            .Attribute(arguments);
+            .Attribute([..arguments]);
     }
     /// <summary>
     /// 转化特性数据为特性语法数组

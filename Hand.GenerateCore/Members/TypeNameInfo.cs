@@ -10,21 +10,27 @@ namespace Hand.Members;
 /// <param name="type"></param>
 /// <param name="typeName"></param>
 /// <param name="namespace"></param>
-public class TypeNameInfo(TypeSyntax type, string typeName, string @namespace)
+/// <param name="isStatic"></param>
+/// <param name="isInternal"></param>
+public class TypeNameInfo(TypeSyntax type, string typeName, string @namespace, bool isStatic, bool isInternal)
 {
     /// <summary>
     /// 类型信息
     /// </summary>
     /// <param name="typeName"></param>
     /// <param name="namespace"></param>
-    public TypeNameInfo(string typeName, string @namespace)
-        : this(SyntaxFactory.IdentifierName($"global::{@namespace}.{typeName}"), typeName, @namespace)
+    /// <param name="isStatic"></param>
+    /// <param name="isInternal"></param>
+    public TypeNameInfo(string typeName, string @namespace, bool isStatic, bool isInternal)
+        : this(SyntaxFactory.IdentifierName($"{@namespace}.{typeName}"), typeName, @namespace, isStatic, isInternal)
     {
     }
     #region 配置
     private readonly TypeSyntax _type = type;
     private readonly string _typeName = typeName;
     private readonly string _namespace = @namespace;
+    private readonly bool _isStatic = isStatic;
+    private readonly bool _isInternal = isInternal;
 
     /// <summary>
     /// 语法
@@ -46,19 +52,31 @@ public class TypeNameInfo(TypeSyntax type, string typeName, string @namespace)
     /// </summary>
     public string FullName
         => $"{Namespace}.{TypeName}";
+    /// <summary>
+    /// 是否静态类
+    /// </summary>
+    public bool IsStatic 
+        => _isStatic;
+    /// <summary>
+    /// 是否当前程序集可见
+    /// </summary>
+    public bool IsInternal 
+        => _isInternal;
     #endregion
     /// <summary>
     /// 获取扩展类信息
     /// </summary>
     /// <param name="symbol"></param>
+    /// <param name="isInternal"></param>
     /// <returns></returns>
-    public static TypeNameInfo GetInfo(INamedTypeSymbol symbol)
-        => new(symbol.ToSyntax(), symbol.Name, symbol.ContainingNamespace.ToDisplayString());
+    public static TypeNameInfo GetInfo(INamedTypeSymbol symbol, bool isInternal = false)
+        => new(symbol.ToSyntax(), symbol.Name, symbol.ContainingNamespace.ToDisplayString(), symbol.IsStatic, isInternal);
     /// <summary>
     /// 获取扩展类信息
     /// </summary>
     /// <param name="symbol"></param>
+    /// <param name="isInternal"></param>
     /// <returns></returns>
-    public static TypeNameInfo GetExtensionInfo(INamedTypeSymbol symbol)
-        => new(symbol.Name + "Extensions", symbol.ContainingNamespace.ToDisplayString());
+    public static TypeNameInfo GetExtensionInfo(INamedTypeSymbol symbol, bool isInternal = true)
+        => new(symbol.Name + "Extensions", symbol.ContainingNamespace.ToDisplayString(), true, isInternal);
 }

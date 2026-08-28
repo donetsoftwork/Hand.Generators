@@ -14,7 +14,8 @@ public class ScriptLoadContextTests
         var a = ScriptA();
         var b = ScriptB(a);
         var source = @"return [new A().Print(), new B().Print()];";
-        var script = SyntaxTreeDriver.ScriptDriver.CreateScript<string[]>(source, previous: b);
+        var script = SyntaxTreeDriver.CreateScriptDriver()
+            .CreateScript<string[]>(source, previous: b);
         var results = await script.ExecuteAsync();
         Assert.Equal(expected, results);
     }
@@ -25,7 +26,7 @@ public class ScriptLoadContextTests
         public virtual string Print()
             => ""Helo A"";
     }";
-        return SyntaxTreeDriver.ScriptDriver.ScriptCompile(source);
+        return SyntaxTreeDriver.CreateScriptDriver().ScriptCompile(source);
     }
     private static CSharpCompilation ScriptB(CSharpCompilation a)
     {
@@ -33,7 +34,8 @@ public class ScriptLoadContextTests
         public override string Print()
             => ""Helo B"";
     }";
-        return SyntaxTreeDriver.ScriptDriver.ScriptCompile(source, previous: a);
+        return SyntaxTreeDriver.CreateScriptDriver()
+            .ScriptCompile(source, previous: a);
     }
 
     [Fact]

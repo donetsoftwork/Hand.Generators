@@ -1,10 +1,5 @@
 ﻿using Hand;
 using Microsoft.CodeAnalysis.CSharp;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EasySyntaxTests;
 
@@ -23,5 +18,11 @@ public class GenericNameTests
         var listIntType = SyntaxGenerator.Generic("List", SyntaxFactory.OmittedTypeArgument());
         var code = listIntType.ToFullString();
         Assert.Equal("List<>", code);
+    }
+    [Fact]
+    public void IList()
+    {
+        //SyntaxFactory.Token(SyntaxKind.I)
+        //SyntaxFactory.Identifier(SyntaxFactory.)
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Hand.Cachers;
 using Hand.Reflection;
+using Hand.Types;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 
@@ -10,7 +11,7 @@ namespace Hand.Members;
 /// </summary>
 /// <param name="original"></param>
 /// <param name="symbolInfo"></param>
-public class PropertyMember(IPropertySymbol original, TypeSymbolInfo symbolInfo)
+public class PropertyMember(IPropertySymbol original, ITypeSymbolInfo symbolInfo)
     : SymbolMember(original.Name, original, symbolInfo)
 {
     #region 配置
@@ -35,7 +36,7 @@ public class PropertyMember(IPropertySymbol original, TypeSymbolInfo symbolInfo)
             var name = property.Name;
             if (members.ContainsKey(name))
                 continue;
-            var symbol = typeSymbols.GetByType(property.Type);
+            var symbol = typeSymbols.Get(property.Type);
             if (symbol is null)
                 continue;
             members.Add(name, new PropertyMember(property, symbol));

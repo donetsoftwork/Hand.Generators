@@ -1,7 +1,7 @@
 ﻿using Hand.Converters;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Generic;
 
 namespace Hand.Collections;
 
@@ -31,10 +31,6 @@ public class ListConverter(SimpleNameSyntax methodName, IConverter itemConverter
         => _itemConverter;
     #endregion
     /// <inheritdoc />
-    protected override IEnumerable<ArgumentSyntax> CreateArguments()
-    {
-        var item = SyntaxFactory.IdentifierName("item");
-        var lambda = SyntaxFactory.SimpleLambdaExpression(SyntaxFactory.Parameter(item.Identifier), _itemConverter.Convert(item));
-        return [SyntaxFactory.Argument(lambda)];
-    }
+    protected override SeparatedSyntaxList<ArgumentSyntax> CreateArguments(SyntaxGenerator generator, ExpressionSyntax source)
+        => [EnumerableConverter.GetLambda(generator, _itemConverter)];
 }

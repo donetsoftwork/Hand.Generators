@@ -187,8 +187,8 @@ public partial class SyntaxGenerator
     /// <param name="initializer"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ImplicitObjectCreationExpressionSyntax New(IEnumerable<ArgumentSyntax> arguments, InitializerExpressionSyntax? initializer = null)
-        => SyntaxFactory.ImplicitObjectCreationExpression(ArgumentList(arguments), initializer);
+    public static ImplicitObjectCreationExpressionSyntax New(SeparatedSyntaxList<ArgumentSyntax> arguments, InitializerExpressionSyntax? initializer = null)
+        => SyntaxFactory.ImplicitObjectCreationExpression(SyntaxFactory.ArgumentList(arguments), initializer);
     /// <summary>
     /// 初始化
     /// </summary>

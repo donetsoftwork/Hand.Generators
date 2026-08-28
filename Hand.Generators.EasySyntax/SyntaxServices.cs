@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Generic;
+using System;
 using System.Runtime.CompilerServices;
 
 namespace Hand;
@@ -77,7 +77,7 @@ public static partial class GenerateServices
     public static IdentifierNameSyntax ToIdentifierName(this TypeDeclarationSyntax type)
         => SyntaxFactory.IdentifierName(type.Identifier);
     #endregion
-    #region Qualified
+    #region Qualify
     /// <summary>
     /// 增加限定符
     /// </summary>
@@ -85,7 +85,7 @@ public static partial class GenerateServices
     /// <param name="prefix"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static QualifiedNameSyntax Qualified(this SimpleNameSyntax name, NameSyntax prefix)
+    public static QualifiedNameSyntax Qualify(this SimpleNameSyntax name, NameSyntax prefix)
         => SyntaxFactory.QualifiedName(prefix, name);
     /// <summary>
     /// 增加限定符
@@ -94,8 +94,34 @@ public static partial class GenerateServices
     /// <param name="prefix"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static QualifiedNameSyntax Qualified(this SimpleNameSyntax name, string prefix)
+    public static QualifiedNameSyntax Qualify(this SimpleNameSyntax name, string prefix)
         => SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName(prefix), name);
+    /// <summary>
+    /// 增加限定符
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="prefixes"></param>
+    /// <returns></returns>
+
+    public static NameSyntax Qualifies(this SimpleNameSyntax name, params SimpleNameSyntax[] prefixes)
+    {
+        var count = prefixes.Length;
+        if (count == 0)
+            return name;
+        NameSyntax prefix = prefixes[0];
+        for (var i = 1; i < count; i++)
+            prefix = SyntaxFactory.QualifiedName(prefix, prefixes[i]);
+        return SyntaxFactory.QualifiedName(prefix, name);
+    }
+    /// <summary>
+    /// 增加限定符
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="prefixes"></param>
+    /// <returns></returns>
+
+    public static NameSyntax Qualifies(this SimpleNameSyntax name, params string[] prefixes)
+        => Qualifies(name, System.Array.ConvertAll(prefixes, SyntaxFactory.IdentifierName));
     #endregion
     /// <summary>
     /// 转化为独立的标记列表
@@ -121,9 +147,9 @@ public static partial class GenerateServices
     /// <param name="usings"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static CompilationUnitSyntax ToUnit(this ExpressionSyntax expression, params IReadOnlyCollection<UsingDirectiveSyntax> usings)
+    public static CompilationUnitSyntax ToUnit(this ExpressionSyntax expression, params SyntaxList<UsingDirectiveSyntax> usings)
         => SyntaxFactory.CompilationUnit()
-            .Using(usings)
+            .WithUsings(usings)
             .AddMembers(SyntaxFactory.GlobalStatement(SyntaxFactory.ReturnStatement(expression)))
             .NormalizeWhitespace();
 }

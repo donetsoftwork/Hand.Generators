@@ -43,15 +43,17 @@
 | ParseTypeName | 284.3 ns | 0.69 ns | 0.74 ns |  2.21 |    0.02 | 0.0658 | 0.0001 |   1.11 KB |        1.08 |
 
 ### 限定名泛型
->* QualifiedName代码为SyntaxGenerator.Generic("List", SyntaxGenerator.IntType).Qualified("System.Collections.Generic")
+>* Qualifies代码为SyntaxGenerator.Generic("List", SyntaxGenerator.IntType).Qualifies("System", "Collections", "Generic")
+>* Qualify代码为SyntaxGenerator.Generic("List", SyntaxGenerator.IntType).Qualified("System.Collections.Generic")
 >* ParseTypeName代码为SyntaxFactory.ParseTypeName("System.Collections.Generic.List<int>")
->* GenericName代码为SyntaxGenerator.Generic("System.Collections.Generic.List", SyntaxGenerator.IntType)
+>* Generic代码为SyntaxGenerator.Generic("System.Collections.Generic.List", SyntaxGenerator.IntType)
 
-| Method        | Mean      | Error    | StdDev   | Median    | Ratio | RatioSD | Gen0   | Gen1   | Allocated | Alloc Ratio |
-|-------------- |----------:|---------:|---------:|----------:|------:|--------:|-------:|-------:|----------:|------------:|
-| QualifiedName |  72.81 ns | 2.099 ns | 2.333 ns |  71.06 ns |  1.00 |    0.04 | 0.0384 |      - |     664 B |        1.00 |
-| ParseTypeName | 425.04 ns | 1.605 ns | 1.717 ns | 426.37 ns |  5.84 |    0.18 | 0.0663 | 0.0001 |    1144 B |        1.72 |
-| GenericName   |  42.27 ns | 0.637 ns | 0.708 ns |  42.81 ns |  0.58 |    0.02 | 0.0236 |      - |     408 B |        0.61 |
+| Method        | Mean      | Error    | StdDev   | Ratio | Gen0   | Gen1   | Allocated | Alloc Ratio |
+|-------------- |----------:|---------:|---------:|------:|-------:|-------:|----------:|------------:|
+| Qualifies     | 137.28 ns | 0.458 ns | 0.528 ns |  1.00 | 0.0709 | 0.0001 |    1224 B |        1.00 |
+| Qualify       |  70.50 ns | 0.438 ns | 0.450 ns |  0.51 | 0.0384 |      - |     664 B |        0.54 |
+| ParseTypeName | 413.06 ns | 0.975 ns | 1.083 ns |  3.01 | 0.0663 | 0.0001 |    1144 B |        0.93 |
+| Generic       |  46.04 ns | 0.346 ns | 0.398 ns |  0.34 | 0.0236 |      - |     408 B |        0.33 |
 
 ## 访问成员
 >* Qualified代码为SyntaxFactory.QualifiedName(owner, member)
@@ -62,4 +64,3 @@
 |---------- |---------:|----------:|----------:|------:|-------:|----------:|------------:|
 | Qualified | 9.328 ns | 0.0473 ns | 0.0486 ns |  1.00 | 0.0065 |     112 B |        1.00 |
 | Access    | 9.689 ns | 0.0834 ns | 0.0893 ns |  1.04 | 0.0065 |     112 B |        1.00 |
-

@@ -10,6 +10,16 @@ namespace Hand;
 /// </summary>
 public partial class SyntaxGenerator
 {
+    #region UsingDirectiveSyntax
+    /// <summary>
+    /// System
+    /// </summary>
+    public static readonly UsingDirectiveSyntax SystemDirective = SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("System"));
+    /// <summary>
+    /// System.Collections.Generic
+    /// </summary>
+    public static readonly UsingDirectiveSyntax CollectionDirective = SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("System.Collections.Generic"));
+    #endregion
     #region PredefinedType
     /// <summary>
     /// bool
@@ -70,7 +80,7 @@ public partial class SyntaxGenerator
     /// <summary>
     /// DateTime
     /// </summary>
-    public static QualifiedNameSyntax DateTimeType => SyntaxFactory.IdentifierName("DateTime").Qualified("System");
+    public static IdentifierNameSyntax DateTimeType => SyntaxFactory.IdentifierName("DateTime");
     /// <summary>
     /// object
     /// </summary>
@@ -106,7 +116,7 @@ public partial class SyntaxGenerator
     /// <param name="elementType"></param>
     /// <returns></returns>
     public static TypeSyntax ListType(TypeSyntax elementType)
-        => SyntaxFactory.GenericName(SyntaxFactory.Identifier("System.Collections.Generic.List"), SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(elementType)));
+        => SyntaxFactory.GenericName(SyntaxFactory.Identifier("List"), SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(elementType)));
     /// <summary>
     /// IEnumerable~1
     /// </summary>
@@ -124,7 +134,7 @@ public partial class SyntaxGenerator
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GenericNameSyntax Generic(SyntaxToken name, params TypeSyntax[] argumentTypes)
-        => SyntaxFactory.GenericName(name, SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(argumentTypes)));
+        => SyntaxFactory.GenericName(name, SyntaxFactory.TypeArgumentList([.. argumentTypes]));
     /// <summary>
     /// 泛型
     /// </summary>

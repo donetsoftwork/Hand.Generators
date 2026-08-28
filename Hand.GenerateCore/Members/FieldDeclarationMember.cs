@@ -1,4 +1,5 @@
 ﻿using Hand.Reflection;
+using Hand.Types;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 
@@ -11,7 +12,7 @@ namespace Hand.Members;
 /// <param name="memberSymbol"></param>
 /// <param name="original"></param>
 /// <param name="summary"></param>
-public class FieldDeclarationMember(string name, TypeSymbolInfo memberSymbol, FieldDeclarationSyntax original, Func<string> summary)
+public class FieldDeclarationMember(string name, ITypeSymbolInfo memberSymbol, FieldDeclarationSyntax original, Func<string> summary)
     : Member(name, memberSymbol, summary, original.GetSummary)
 {
     /// <inheritdoc />

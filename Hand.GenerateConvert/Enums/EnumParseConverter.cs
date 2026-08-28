@@ -2,7 +2,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Generic;
 
 namespace Hand.Enums;
 
@@ -34,7 +33,7 @@ public sealed class EnumParseConverter(TypeSyntax enumType, ArgumentSyntax ignor
 
     }
     #region 配置
-    private static readonly SyntaxToken _parse = SyntaxFactory.Identifier("System.Enum.Parse");
+    private static readonly SyntaxToken _parse = SyntaxFactory.Identifier("Enum.Parse");
     private readonly TypeSyntax _enumType = enumType;
     private readonly ArgumentSyntax _ignoreCase = ignoreCase;
 
@@ -61,11 +60,13 @@ public sealed class EnumParseConverter(TypeSyntax enumType, ArgumentSyntax ignor
     //    return SyntaxGenerator.Generic(_parse, enumType)
     //        .Invocation([source, ignoreCase]);
     //}
-    /// <summary>
-    /// 构造参数
-    /// </summary>
-    /// <param name="source"></param>
-    /// <returns></returns>
-    protected override IEnumerable<ArgumentSyntax> CreateArguments(ExpressionSyntax source)
+    /// <inheritdoc />
+    public override ExpressionSyntax Convert(SyntaxGenerator generator, ExpressionSyntax source)
+    {
+        generator.Using("System");
+        return base.Convert(generator, source);
+    }
+    /// <inheritdoc />
+    protected override SeparatedSyntaxList<ArgumentSyntax> CreateArguments(SyntaxGenerator generator, ExpressionSyntax source)
         => [SyntaxFactory.Argument(source), _ignoreCase];
 }

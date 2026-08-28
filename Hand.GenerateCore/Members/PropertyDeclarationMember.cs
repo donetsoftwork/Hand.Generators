@@ -1,4 +1,5 @@
 ﻿using Hand.Reflection;
+using Hand.Types;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 
@@ -10,7 +11,7 @@ namespace Hand.Members;
 /// <param name="memberSymbol"></param>
 /// <param name="original"></param>
 /// <param name="summary"></param>
-public class PropertyDeclarationMember(TypeSymbolInfo memberSymbol, PropertyDeclarationSyntax original, Func<string> summary)
+public class PropertyDeclarationMember(ITypeSymbolInfo memberSymbol, PropertyDeclarationSyntax original, Func<string> summary)
     : Member(original.Identifier.ValueText, memberSymbol, summary, original.GetSummary)
 {
     #region 配置

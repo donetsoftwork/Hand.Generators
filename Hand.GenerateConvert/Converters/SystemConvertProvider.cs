@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Hand.Converters;
 
@@ -18,7 +19,8 @@ public class SystemConvertProvider(INamedTypeSymbol convertType)
     : CacheFactoryBase<PairTypeSymbolKey, SystemConverter?>()
 {
     #region 配置
-    private readonly List<IMethodSymbol> _methods = [.. SymbolReflection.GetMethods(convertType).Where(m => m.DeclaredAccessibility == Accessibility.Public && m.IsStatic)];
+    private readonly INamedTypeSymbol _convertType = convertType;
+    private readonly List<IMethodSymbol> _methods = [.. GetMethods(convertType)];
     private readonly Dictionary<PairTypeSymbolKey, string?> _types = [];
     /// <summary>
     /// 支持的来源类型
@@ -43,6 +45,15 @@ public class SystemConvertProvider(INamedTypeSymbol convertType)
     ];
     #endregion
     /// <summary>
+    /// 获取方法
+    /// </summary>
+    /// <param name="convertType"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IEnumerable<IMethodSymbol> GetMethods(INamedTypeSymbol convertType)
+        => SymbolReflection.GetMethods(convertType)
+        .Where(m => m.DeclaredAccessibility == Accessibility.Public && m.IsStatic);
+    /// <summary>
     /// 构造系统转化器
     /// </summary>
     /// <param name="compilation"></param>
@@ -60,7 +71,7 @@ public class SystemConvertProvider(INamedTypeSymbol convertType)
     /// <param name="from">来源类型</param>
     /// <param name="to">目标类型</param>
     /// <returns>对应的转换方法名称，如果不支持则返回null</returns>
-    public string? GetConvertMethodName(INamedTypeSymbol from, INamedTypeSymbol to)
+    public string? GetConvertMethodName(ITypeSymbol from, ITypeSymbol to)
     {
         var key = new PairTypeSymbolKey(from, to);
         if (_types.TryGetValue(key, out var convertMethodName))
@@ -120,6 +131,6 @@ public class SystemConvertProvider(INamedTypeSymbol convertType)
     /// <param name="from">来源类型</param>
     /// <param name="to">目标类型</param>
     /// <returns>对应的转换方法，如果不支持则返回null</returns>
-    public SystemConverter? Get(INamedTypeSymbol from, INamedTypeSymbol to)
+    public SystemConverter? Get(ITypeSymbol from, ITypeSymbol to)
         => Get(new PairTypeSymbolKey(from, to));
 }

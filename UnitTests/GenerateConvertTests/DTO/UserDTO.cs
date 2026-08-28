@@ -1,6 +1,6 @@
 ﻿namespace GenerateConvertTests.DTO;
 
-public class UserDTO
+public partial class UserDTO
 {
     public long Id { get; set; }
     public string Name { get; set; }

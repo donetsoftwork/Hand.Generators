@@ -14,5 +14,5 @@ public interface IMethodProvider
     /// <param name="info"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    IMethodSymbol? GetConvertMethod(ConvertMethodInfo info, INamedTypeSymbol dest);
+    IMethodSymbol? GetConvertMethod(ConvertMethodInfo info, ITypeSymbol dest);
 }

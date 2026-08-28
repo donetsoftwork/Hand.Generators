@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+﻿using Hand.Types;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Hand.Converters;
@@ -7,21 +8,21 @@ namespace Hand.Converters;
 /// 转化为目标类型
 /// </summary>
 /// <param name="targetType"></param>
-public class CastConverter(TypeSyntax targetType)
+public class CastConverter(ITypeSymbolInfo targetType)
      : IConverter
 {
     #region 配置
-    private readonly TypeSyntax _targetType = targetType;
+    private readonly ITypeSymbolInfo _targetType = targetType;
 
     /// <summary>
     /// 目标类型
     /// </summary>
-    public TypeSyntax TargetType
+    public ITypeSymbolInfo TargetType
         => _targetType;
     #endregion
     /// <inheritdoc />
-    public ExpressionSyntax Convert(ExpressionSyntax source)
-        => SyntaxFactory.CastExpression(_targetType, source);
+    public ExpressionSyntax Convert(SyntaxGenerator generator, ExpressionSyntax source)
+        => SyntaxFactory.CastExpression(generator.Display(_targetType), source);
     ///// <inheritdoc />
     //public IConverter Nullable(ExpressionSyntax? defaultExpression)
     //    => this.CheckNull(defaultExpression);

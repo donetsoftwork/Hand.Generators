@@ -23,7 +23,7 @@ public class PassConverter(ExpressionSyntax defaultExpression, bool isNullable =
         => _isNullable;
     #endregion
     /// <inheritdoc />
-    public ExpressionSyntax Convert(ExpressionSyntax source)
+    public ExpressionSyntax Convert(SyntaxGenerator generator, ExpressionSyntax source)
     {
         if (_isNullable)
             return source.NullCoalesce(_defaultExpression);

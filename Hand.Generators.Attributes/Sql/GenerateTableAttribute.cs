@@ -10,10 +10,6 @@ public class GenerateTableAttribute<TFrom>
 {
     #region 配置
     /// <summary>
-    /// 来源类型
-    /// </summary>
-    public Type From { get; } = typeof(TFrom);
-    /// <summary>
     /// 规则
     /// </summary>
     public string Rule { get; set; }

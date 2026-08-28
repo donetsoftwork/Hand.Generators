@@ -1,6 +1,6 @@
 ﻿using Hand.Builders;
 using Hand.Members;
-using Hand.Reflection;
+using Hand.Types;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -13,51 +13,45 @@ namespace Hand.GeneratePoco;
 /// 按属性生成
 /// </summary>
 public class PocoFieldSource(TypeDeclarationSyntax type, ConvertBuilder convertBuilder
-    , TypeSymbolInfo typeInfo, TypeSymbolInfo sourseInfo
+    , ComplexTypeInfo typeInfo, ComplexTypeInfo sourseInfo
     , AttributeData attribute)
     : PocoSource(type, convertBuilder, typeInfo, sourseInfo, attribute)
 {
     /// <inheritdoc />
     public override SyntaxGenerator Generate()
     {
-        var builder = SyntaxGenerator.Clone(_type);
-        var generateArguments = new List<MemberArgument>(_sourceMembers.Count);
-        foreach (var item in _sourceMembers)
+        //var generator = SyntaxGenerator.Clone(_type);
+        var sourceMembers = ConvertBuilder.GetSourceMembers(_convertBuilder.TypeCacher, _sourseSymbol, _recognizers);
+        var arguments = new List<MemberArgument>(sourceMembers.Count);
+        foreach (var item in sourceMembers)
         {
             var name = item.Key;
             if (_memberNames.Contains(name))
                 continue;
-            var argument = CheckMember(builder, name, item.Value);
-            generateArguments.Add(argument);
+            var argument = CheckMember(_generator, name, item.Value);
+            arguments.Add(argument);
         }
-        if (_convertTo)
-        {
-            var method = CheckConvertTo(_convertBuilder, generateArguments);
-            if (method is not null)
-                builder.AddMethod(method);
-        }
-        if (_convertFrom)
-            CheckConvertFrom(_convertBuilder, generateArguments);
-        return builder;
+        CheckConvert(_generator, sourceMembers, arguments);
+        return _generator;
     }
     /// <summary>
     /// 处理成员
     /// </summary>
-    /// <param name="builder"></param>
+    /// <param name="generator"></param>
     /// <param name="name"></param>
     /// <param name="sourseMember"></param>
     /// <returns></returns>
-    public MemberArgument CheckMember(SyntaxGenerator builder, string name, SymbolMember sourseMember)
+    public MemberArgument CheckMember(SyntaxGenerator generator, string name, SymbolMember sourseMember)
     {
-        var (memberType, memberSymbolInfo) = CheckMemberType(_compilation, name, sourseMember.SymbolInfo);
+        var (memberType, memberSymbolInfo) = CheckMemberType(name, sourseMember.SymbolInfo);
         var field = CreateField(memberType, name, memberSymbolInfo)
             .Public();
         if (_generateAttribute)
-            field = builder.GenerateAttribute(field, _attributeCacher.GetAttributes(sourseMember.Original, AttributeTargets.Field));
+            field = generator.GenerateAttribute(field, _attributeCacher.GetAttributes(sourseMember.Original, AttributeTargets.Field));
         var summary = sourseMember.Element;
         if (summary is not null)
             field = field.WithSummary(summary);
-        builder.AddField(field);
+        generator.AddField(field);
         var member = new FieldDeclarationMember(name, memberSymbolInfo, field, () => sourseMember.Summary);
         return new(member, sourseMember);
     }

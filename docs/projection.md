@@ -19,7 +19,7 @@ public record User(int Id, string Name);
 >
 
 ```csharp
-[GeneratePoco(typeof(User))]
+[GeneratePoco<User>)]
 public partial class UserDto;
 ```
 
@@ -58,12 +58,12 @@ graph LR
 ## 二、使用投影来调整代码
 >* 通过Rules配置投影规则
 
-### 1 增加前缀的Case
+### 1. 前缀投影
 #### 1.1 增加投影规则
 >* Prefix User就是生成的属性前缀是User
 
 ```csharp
-[GeneratePoco(typeof(User), Rules = ["Prefix User"])]
+[GeneratePoco<User>(Rules = ["Prefix User"])]
 public partial class UserDto;
 ```
 
@@ -105,7 +105,7 @@ graph LR
 >* Prefix User还是生成的属性前缀是User
 
 ```csharp
-[GeneratePoco(typeof(User), Rules = ["Exclude: Id", "Prefix User"])]
+[GeneratePoco<User>(Rules = ["Exclude: Id", "Prefix User"])]
 public partial class NewUserDto;
 ```
 
@@ -190,7 +190,7 @@ graph LR
 ### 4. Cross投影
 #### 4.1 Cross投影规则
 ```csharp
-[GeneratePoco(typeof(User), Rules = ["Cross: Prefix User"])]
+[GeneratePoco<User>(Rules = ["Cross: Prefix User"])]
 public partial class UserDto;
 ```
 
@@ -252,7 +252,7 @@ public record struct UserName(string Original) : IEntityProperty<string>;
 
 ### 2. 目标类型代码
 ```csharp
-[GeneratePoco(typeof(UserEntity), Rules = ["Prefix User"])]
+[GeneratePoco<UserEntity>(Rules = ["Prefix User"])]
 public partial class UserViews;
 ```
 
@@ -288,7 +288,7 @@ public class User(int id, string name, string email, int sex)
 >* 以下配置UserEmail和UserSex为可空
 
 ```csharp
-[GeneratePoco(typeof(User), Rules =
+[GeneratePoco<User>(Rules =
 [
     "Prefix User"
 ], NullableRule = "UserEmail UserSex")]
@@ -311,7 +311,7 @@ partial class UserDto
 >* NullableRule配置为ALL
 
 ```csharp
-[GeneratePoco(typeof(User), Rules =
+[GeneratePoco<User>(Rules =
 [
     "Prefix User"
 ], NullableRule = "ALL")]
@@ -337,7 +337,7 @@ partial class UserDto
 >* NullableRule配置为Exclude: UserId
 
 ```csharp
-[GeneratePoco(typeof(User), Rules =
+[GeneratePoco<User>(Rules =
 [
     "Prefix User"
 ], NullableRule = "Exclude: UserId")]
@@ -357,49 +357,8 @@ partial class UserDto
 }
 ```
 
-## 五、 处理Attribute
->* Attribute很重要,有时是必不可少的
->* 比如参数的校验Attribute
->* 比如数据库存储的类型Attribute
->* 这些虽然对模型类(领域模型)逻辑上无用,语义上还是有用的
->* 其他关联类型由模型类生成就可以把相关Attribute都放在模型类(领域模型)上统一管理
-
-### 1. 源类型代码
-```csharp
-public class User(int id, string name, string email)
-{
-    public int Id { get; } = id;
-    [Required]
-    [StringLength(100, MinimumLength = 6)]
-    public string Name { get; } = name;
-    [EmailAddress]
-    public string Email { get; } = email;
-}
-```
-
-### 2. 目标类型代码
-```csharp
-[GeneratePoco(typeof(User), Rules = ["Prefix User"])]
-public partial class UserDto;
-```
-
-### 3. 生成的代码
->* 源类对应属性如果有Attribute,会把这些Attribute也投影到目标类对应属性上
-
-```csharp
-partial class UserDto
-{
-    public int UserId { get; set; }
-    [Required]
-    [StringLength(100, MinimumLength = 6)]
-    public string UserName { get; set; }
-    [EmailAddress]
-    public string UserEmail { get; set; }
-}
-```
-
-## 六、例外处理
->* 某些情况无法或者很难用规则配置,就使用例外处理
+## 五、例外处理
+>* 如果目标类型已存在同名成员就不生成
 
 ### 1. 先预设模型类如下
 ```csharp
@@ -418,7 +377,7 @@ public class User(int id, string name, string email, int sex)
 >* 代码生成器会忽略已经重名的属性
 
 ```csharp
-[GeneratePoco(typeof(User), Rules = [ "Prefix User"])]
+[GeneratePoco<User>(Rules = ["Prefix User"])]
 public partial class UserDto
 {
     public string? UserSex { get; set; }
@@ -435,7 +394,7 @@ partial class UserDto
 }
 ```
 
-## 七、实现原理
+## 六、实现原理
 ### 1. 使用SyntaxTree简化语法
 >* 参看以前的文章[.NET源码生成器使用SyntaxTree生成代码及简化语法](https://www.cnblogs.com/xiangji/p/19688804)
 
@@ -451,18 +410,7 @@ partial class UserDto
 >* 非以上前缀的尝试解析为Through投影
 >* 解析失败的再尝试解析为IValidation规则(相当于Filter)
 
-### 4. 迁移Attribute
->* Attribute从原模型类的属性迁移到目标类型上看上去简单,就是复制
->* 实现上笔者还是费了些周折
->* 从原模型类拿到的是AttributeData,需要转化为AttributeSyntax
->* AttributeData由TypedConstant构成
->* TypedConstant需要转化为AttributeArgumentSyntax
->* TypedConstant由四种,分别是Primitive、Enum、Type和Array
->* 最难搞的就是Enum,处理枚举又要反射枚举字段,再用枚举值去匹配再拼接表达式
->* 所以迁移Attribute并不是简单的复制
->* 而是先拆迁(拆解)再重建
-
-## 八、总结
+## 七、总结
 >* 以上规则基本都是可以排列组合使用的
 >* 通过代码生成可以减少重复属性的定义,同时减少重复属性重构时要修改多个类的问题
 >* 间接解决DTO类型复杂的继承关系(修改DTO继承新建DTO等)

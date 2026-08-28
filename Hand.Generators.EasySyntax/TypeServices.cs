@@ -269,8 +269,6 @@ public static partial class GenerateServices
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsVoid(this PredefinedTypeSyntax type)
         => type.Keyword.IsKind(SyntaxKind.VoidKeyword);
-    //public static bool IsArray(this ITypeSymbol symbol)
-    //=> symbol.
     /// <summary>
     /// 空类型
     /// </summary>
@@ -279,6 +277,15 @@ public static partial class GenerateServices
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static NullableTypeSyntax Nullable(this TypeSyntax type)
         => SyntaxFactory.NullableType(type);
+    /// <summary>
+    /// 空类型
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="isNullable"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypeSyntax Nullable(this TypeSyntax type, bool isNullable)
+        => isNullable ? SyntaxFactory.NullableType(type) : type;
     /// <summary>
     /// typeof
     /// </summary>
@@ -302,7 +309,17 @@ public static partial class GenerateServices
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ArrayTypeSyntax Array(this TypeSyntax type, int rank = 1)
-        => SyntaxFactory.ArrayType(type, SyntaxFactory.SingletonList(SyntaxFactory.ArrayRankSpecifier(CheckArraySize(rank))));
+        => Array(type, CheckOmittedArraySize(rank));
+    /// <summary>
+    /// 数组
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="sizes"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ArrayTypeSyntax Array(this TypeSyntax type, params SeparatedSyntaxList<ExpressionSyntax> sizes)
+        => SyntaxFactory.ArrayType(type, SyntaxFactory.SingletonList(SyntaxFactory.ArrayRankSpecifier(sizes)));
+
     #region New
     /// <summary>
     /// 初始化数组
@@ -311,8 +328,24 @@ public static partial class GenerateServices
     /// <param name="elements"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ArrayCreationExpressionSyntax New(this ArrayTypeSyntax type, params ExpressionSyntax[] elements)
-        => SyntaxFactory.ArrayCreationExpression(SyntaxFactory.Token(SyntaxKind.NewKeyword), type, SyntaxFactory.InitializerExpression(SyntaxKind.ArrayInitializerExpression, SyntaxFactory.SeparatedList(elements)));
+    public static ArrayCreationExpressionSyntax New(this ArrayTypeSyntax type, params SeparatedSyntaxList<ExpressionSyntax> elements)
+        => SyntaxFactory.ArrayCreationExpression(SyntaxFactory.Token(SyntaxKind.NewKeyword), type, SyntaxFactory.InitializerExpression(SyntaxKind.ArrayInitializerExpression, elements));
+    /// <summary>
+    /// 初始化空数组
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ArrayCreationExpressionSyntax Empty(this ArrayTypeSyntax type)
+        => SyntaxFactory.ArrayCreationExpression(SyntaxFactory.Token(SyntaxKind.NewKeyword), type, default);
+    /// <summary>
+    /// 初始化空数组
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ArrayCreationExpressionSyntax EmptyArray(this TypeSyntax type)
+        => SyntaxFactory.ArrayCreationExpression(SyntaxFactory.Token(SyntaxKind.NewKeyword), type.Array(SyntaxGenerator.Literal(0)), default);
     /// <summary>
     /// 初始化数组
     /// </summary>
@@ -320,7 +353,7 @@ public static partial class GenerateServices
     /// <param name="elements"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ArrayCreationExpressionSyntax NewArray(this TypeSyntax type, params ExpressionSyntax[] elements)
+    public static ArrayCreationExpressionSyntax NewArray(this TypeSyntax type, params SeparatedSyntaxList<ExpressionSyntax> elements)
         => New(Array(type, 1), elements);
     /// <summary>
     /// 初始化
@@ -339,8 +372,8 @@ public static partial class GenerateServices
     /// <param name="initializer"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ObjectCreationExpressionSyntax New(this TypeSyntax type, IEnumerable<ArgumentSyntax> arguments, InitializerExpressionSyntax? initializer = null)
-        => SyntaxFactory.ObjectCreationExpression(type, SyntaxGenerator.ArgumentList(arguments), initializer);
+    public static ObjectCreationExpressionSyntax New(this TypeSyntax type, SeparatedSyntaxList<ArgumentSyntax> arguments, InitializerExpressionSyntax? initializer = null)
+        => SyntaxFactory.ObjectCreationExpression(type, SyntaxFactory.ArgumentList(arguments), initializer);
     /// <summary>
     /// 初始化
     /// </summary>
@@ -388,8 +421,8 @@ public static partial class GenerateServices
     /// <param name="items"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ObjectCreationExpressionSyntax New(this TypeSyntax type, IEnumerable<ArgumentSyntax> arguments, IEnumerable<AssignmentExpressionSyntax> items)
-        => SyntaxFactory.ObjectCreationExpression(type, SyntaxGenerator.ArgumentList(arguments), SyntaxGenerator.Initializer(items));
+    public static ObjectCreationExpressionSyntax New(this TypeSyntax type, SeparatedSyntaxList<ArgumentSyntax> arguments, IEnumerable<AssignmentExpressionSyntax> items)
+        => SyntaxFactory.ObjectCreationExpression(type, SyntaxFactory.ArgumentList(arguments), SyntaxGenerator.Initializer(items));
     /// <summary>
     /// 初始化
     /// </summary>
@@ -445,8 +478,8 @@ public static partial class GenerateServices
     /// <param name="arguments"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static AttributeSyntax Attribute(this NameSyntax attributeName, IEnumerable<AttributeArgumentSyntax> arguments)
-        => SyntaxFactory.Attribute(attributeName, SyntaxFactory.AttributeArgumentList(SyntaxFactory.SeparatedList(arguments)));
+    public static AttributeSyntax Attribute(this NameSyntax attributeName, SeparatedSyntaxList<AttributeArgumentSyntax> arguments)
+        => SyntaxFactory.Attribute(attributeName, SyntaxFactory.AttributeArgumentList(arguments));
     /// <summary>
     /// 构造Attribute标记
     /// </summary>
@@ -455,7 +488,7 @@ public static partial class GenerateServices
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AttributeSyntax Attribute(this NameSyntax attributeName, IEnumerable<ExpressionSyntax> arguments)
-        => Attribute(attributeName, arguments.Select(static item => item.ToAttributeArgument()));
+        => Attribute(attributeName, [..arguments.Select(static item => item.ToAttributeArgument())]);
     #endregion
     #region Throw
     /// <summary>
@@ -465,7 +498,7 @@ public static partial class GenerateServices
     /// <param name="arguments"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ThrowExpressionSyntax Throw(this TypeSyntax exceptionType, params IEnumerable<ArgumentSyntax> arguments)
+    public static ThrowExpressionSyntax Throw(this TypeSyntax exceptionType, params SeparatedSyntaxList<ExpressionSyntax> arguments)
         => SyntaxFactory.ThrowExpression(New(exceptionType, arguments));
     /// <summary>
     /// 抛出异常
@@ -500,13 +533,11 @@ public static partial class GenerateServices
     /// </summary>
     /// <param name="rank"></param>
     /// <returns></returns>
-    public static SeparatedSyntaxList<ExpressionSyntax> CheckArraySize(int rank = 1)
+    public static SeparatedSyntaxList<ExpressionSyntax> CheckOmittedArraySize(int rank = 1)
     {
-        if (rank <= 0)
-            return SyntaxFactory.SingletonSeparatedList<ExpressionSyntax>(SyntaxFactory.OmittedArraySizeExpression());
-        if (rank == 1)
-            return SyntaxFactory.SingletonSeparatedList<ExpressionSyntax>(SyntaxFactory.OmittedArraySizeExpression());
-        return SyntaxFactory.SeparatedList<ExpressionSyntax>(Enumerable.Repeat(SyntaxFactory.OmittedArraySizeExpression(), rank));
+        if (rank > 1)
+            return SyntaxFactory.SeparatedList<ExpressionSyntax>(Enumerable.Repeat(SyntaxFactory.OmittedArraySizeExpression(), rank));
+        return SyntaxFactory.SingletonSeparatedList<ExpressionSyntax>(SyntaxFactory.OmittedArraySizeExpression());
     }
     /// <summary>
     /// 指针
@@ -516,410 +547,6 @@ public static partial class GenerateServices
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TypeSyntax Pointer(this TypeSyntax type)
         => SyntaxFactory.PointerType(type);
-    #region Variable
-    /// <summary>
-    /// 定义变量
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="variableName"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static VariableDeclarationSyntax Variable(this TypeSyntax type, SyntaxToken variableName)
-        => SyntaxFactory.VariableDeclaration(type, SyntaxFactory.SingletonSeparatedList(SyntaxFactory.VariableDeclarator(variableName)));
-    /// <summary>
-    /// 定义变量
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="variableName"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static VariableDeclarationSyntax Variable(this TypeSyntax type, string variableName)
-        => Variable(type, SyntaxFactory.Identifier(variableName));
-    /// <summary>
-    /// 定义变量
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="variableName"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static VariableDeclarationSyntax Variable(this TypeSyntax type, SyntaxToken variableName, ExpressionSyntax value)
-        => SyntaxFactory.VariableDeclaration(type, SyntaxFactory.SingletonSeparatedList(SyntaxFactory.VariableDeclarator(variableName).WithInitializer(value)));
-    /// <summary>
-    /// 定义变量
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="variableName"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static VariableDeclarationSyntax Variable(this TypeSyntax type, string variableName, ExpressionSyntax value)
-        => Variable(type, SyntaxFactory.Identifier(variableName), value);
-    #endregion
-    #region Catch
-    /// <summary>
-    /// 定义变量
-    /// </summary>
-    /// <param name="catchType"></param>
-    /// <param name="catchName"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static CatchDeclarationSyntax Catch(this TypeSyntax catchType, SyntaxToken catchName)
-        => SyntaxFactory.CatchDeclaration(catchType, catchName);
-    /// <summary>
-    /// 定义变量
-    /// </summary>
-    /// <param name="catchType"></param>
-    /// <param name="catchName"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static CatchDeclarationSyntax Catch(this TypeSyntax catchType, string catchName)
-        => Catch(catchType, SyntaxFactory.Identifier(catchName));
-    #endregion
-    #region Field
-    /// <summary>
-    /// 定义字段
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="variableName"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static FieldDeclarationSyntax Field(this TypeSyntax type, SyntaxToken variableName)
-        => SyntaxFactory.FieldDeclaration(Variable(type, variableName));
-    /// <summary>
-    /// 定义字段
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="variableName"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static FieldDeclarationSyntax Field(this TypeSyntax type, string variableName)
-        => Field(type, SyntaxFactory.Identifier(variableName));
-    /// <summary>
-    /// 定义字段
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="variableName"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static FieldDeclarationSyntax Field(this TypeSyntax type, SyntaxToken variableName, ExpressionSyntax value)
-        => SyntaxFactory.FieldDeclaration(Variable(type, variableName, value));
-    /// <summary>
-    /// 定义字段
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="variableName"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static FieldDeclarationSyntax Field(this TypeSyntax type, string variableName, ExpressionSyntax value)
-        => Field(type, SyntaxFactory.Identifier(variableName), value);
-    #endregion
-    #region Property
-    #region AccessorDeclarationSyntax
-    /// <summary>
-    /// 定义属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <param name="items"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PropertyDeclarationSyntax Property(this TypeSyntax propertyType, string propertyName, params AccessorDeclarationSyntax[] items)
-        => Property(propertyType, SyntaxFactory.Identifier(propertyName), items);
-    /// <summary>
-    /// 定义属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <param name="items"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PropertyDeclarationSyntax Property(this TypeSyntax propertyType, SyntaxToken propertyName, params AccessorDeclarationSyntax[] items)
-        => SyntaxFactory.PropertyDeclaration(default, default, propertyType, default, propertyName, SyntaxFactory.AccessorList(SyntaxGenerator.List(items)), default, default, default);
-    #endregion
-    #region SyntaxKind
-    /// <summary>
-    /// 定义自动属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <param name="kinds">Get/Set/Init</param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PropertyDeclarationSyntax Property(this TypeSyntax propertyType, string propertyName, params SyntaxKind[] kinds)
-        => Property(propertyType, SyntaxFactory.Identifier(propertyName), kinds);
-    /// <summary>
-    /// 定义自动属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <param name="kinds">Get/Set/Init</param>
-    /// <returns></returns>
-    public static PropertyDeclarationSyntax Property(this TypeSyntax propertyType, SyntaxToken propertyName, params SyntaxKind[] kinds)
-    {
-        var count = kinds.Length;
-        var items = new AccessorDeclarationSyntax[count];
-        for (int i = 0; i < count; i++)
-        {
-            // 自动属性(无代码)使用WithSemicolonToken增加;号结束
-            items[i] = SyntaxFactory.AccessorDeclaration(kinds[i])
-                .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
-        }
-        return Property(propertyType, propertyName, items);
-    }
-    #endregion
-    #region expression
-    /// <summary>
-    /// 定义属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <param name="expression"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PropertyDeclarationSyntax Property(this TypeSyntax propertyType, SyntaxToken propertyName, ExpressionSyntax expression)
-        => SyntaxFactory.PropertyDeclaration(default, default, propertyType, default, propertyName, default, SyntaxGenerator.ExpressionBody(expression), default, SyntaxFactory.Token(SyntaxKind.SemicolonToken));
-    /// <summary>
-    /// 定义只读属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <param name="expression"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PropertyDeclarationSyntax Property(this TypeSyntax propertyType, string propertyName, ExpressionSyntax expression)
-        => Property(propertyType, SyntaxFactory.Identifier(propertyName), expression);
-    #endregion
-    #region PropertyGetOnly
-    /// <summary>
-    /// 定义只读属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PropertyDeclarationSyntax GetOnlyProperty(this TypeSyntax propertyType, SyntaxToken propertyName)
-        => Property(propertyType, propertyName, SyntaxKind.GetAccessorDeclaration);
-    /// <summary>
-    /// 定义只读属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <returns></returns>
-    
-    public static PropertyDeclarationSyntax GetOnlyProperty(this TypeSyntax propertyType, string propertyName)
-        => Property(propertyType, propertyName, SyntaxKind.GetAccessorDeclaration);
-    #endregion
-    #region SetOnlyProperty
-    /// <summary>
-    /// 定义可写属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <param name="field"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PropertyDeclarationSyntax SetOnlyProperty(this TypeSyntax propertyType, SyntaxToken propertyName, IdentifierNameSyntax field)
-        => SyntaxFactory.PropertyDeclaration(default, default, propertyType, default, propertyName, default, SyntaxGenerator.ExpressionBody(field.AssignValue()), default, SyntaxFactory.Token(SyntaxKind.SemicolonToken));
-    /// <summary>
-    /// 定义可写属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <param name="field"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PropertyDeclarationSyntax SetOnlyProperty(this TypeSyntax propertyType, string propertyName, IdentifierNameSyntax field)
-        => SetOnlyProperty(propertyType, SyntaxFactory.Identifier(propertyName), field);
-    #endregion
-    #region GetSetProperty
-    /// <summary>
-    /// 定义读写属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PropertyDeclarationSyntax GetSetProperty(this TypeSyntax propertyType, SyntaxToken propertyName)
-        => Property(propertyType, propertyName, SyntaxKind.GetAccessorDeclaration, SyntaxKind.SetAccessorDeclaration);
-    /// <summary>
-    /// 定义读写属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PropertyDeclarationSyntax GetSetProperty(this TypeSyntax propertyType, string propertyName)
-        => Property(propertyType, propertyName, SyntaxKind.GetAccessorDeclaration, SyntaxKind.SetAccessorDeclaration);
-    /// <summary>
-    /// 定义读写属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <param name="field"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PropertyDeclarationSyntax GetSetProperty(this TypeSyntax propertyType, SyntaxToken propertyName, IdentifierNameSyntax field)
-        => propertyType.Property(propertyName, SyntaxGenerator.PropertyGetDeclaration(field), SyntaxGenerator.PropertySetDeclaration(field.AssignValue()));
-    /// <summary>
-    /// 定义读写属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <param name="field"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PropertyDeclarationSyntax GetSetProperty(this TypeSyntax propertyType, string propertyName, IdentifierNameSyntax field)
-        => propertyType.Property(propertyName, SyntaxGenerator.PropertyGetDeclaration(field), SyntaxGenerator.PropertySetDeclaration(field.AssignValue()));
-    #endregion
-    #region GetInitProperty
-    /// <summary>
-    /// 定义读初始化属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PropertyDeclarationSyntax GetInitProperty(this TypeSyntax propertyType, SyntaxToken propertyName)
-        => Property(propertyType, propertyName, SyntaxKind.GetAccessorDeclaration, SyntaxKind.InitAccessorDeclaration);
-    /// <summary>
-    /// 定义读初始化属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PropertyDeclarationSyntax GetInitProperty(this TypeSyntax propertyType, string propertyName)
-        => Property(propertyType, propertyName, SyntaxKind.GetAccessorDeclaration, SyntaxKind.InitAccessorDeclaration);
-    /// <summary>
-    /// 定义读初始化属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <param name="field"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PropertyDeclarationSyntax GetInitProperty(this TypeSyntax propertyType, SyntaxToken propertyName, IdentifierNameSyntax field)
-        => propertyType.Property(propertyName, SyntaxGenerator.PropertyGetDeclaration(field), SyntaxGenerator.PropertyInitDeclaration(field.AssignValue()));
-    /// <summary>
-    /// 定义读初始化属性
-    /// </summary>
-    /// <param name="propertyType"></param>
-    /// <param name="propertyName"></param>
-    /// <param name="field"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PropertyDeclarationSyntax GetInitProperty(this TypeSyntax propertyType, string propertyName, IdentifierNameSyntax field)
-        => propertyType.Property(propertyName, SyntaxGenerator.PropertyGetDeclaration(field), SyntaxGenerator.PropertyInitDeclaration(field.AssignValue()));
-    #endregion
-    #endregion
-    #region Parameter
-    /// <summary>
-    /// 定义参数
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="parameterName"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ParameterSyntax Parameter(this TypeSyntax type, SyntaxToken parameterName)
-        => SyntaxFactory.Parameter(default, default, type, parameterName, null);
-    /// <summary>
-    /// 定义参数
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="parameterName"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ParameterSyntax Parameter(this TypeSyntax type, string parameterName)
-        => Parameter(type, SyntaxFactory.Identifier(parameterName));
-    /// <summary>
-    /// 定义参数
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="parameterName"></param>
-    /// <param name="defaultValue"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ParameterSyntax Parameter(this TypeSyntax type, SyntaxToken parameterName, ExpressionSyntax defaultValue)
-        => SyntaxFactory.Parameter(default, default, type, parameterName, SyntaxFactory.EqualsValueClause(defaultValue));
-    /// <summary>
-    /// 定义参数
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="parameterName"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ParameterSyntax Parameter(this TypeSyntax type, string parameterName, ExpressionSyntax value)
-        => Parameter(type, SyntaxFactory.Identifier(parameterName), value);
-    #endregion
-    #region Method
-    /// <summary>
-    /// 定义方法
-    /// </summary>
-    /// <param name="returnType"></param>
-    /// <param name="methodName"></param>
-    /// <param name="parameters"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static MethodDeclarationSyntax Method(this TypeSyntax returnType, string methodName, params ParameterSyntax[] parameters)
-        => Method(returnType, SyntaxFactory.Identifier(methodName), parameters);
-    /// <summary>
-    /// 定义方法
-    /// </summary>
-    /// <param name="returnType"></param>
-    /// <param name="methodName"></param>
-    /// <param name="parameters"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static MethodDeclarationSyntax Method(this TypeSyntax returnType, SyntaxToken methodName, params ParameterSyntax[] parameters)
-        => SyntaxFactory.MethodDeclaration(returnType, methodName)
-        .WithParameterList(ParameterList(parameters));
-    #endregion
-    #region LocalFunction
-    /// <summary>
-    /// 定义局部函数
-    /// </summary>
-    /// <param name="returnType"></param>
-    /// <param name="functionName"></param>
-    /// <param name="parameters"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static LocalFunctionStatementSyntax LocalFunction(this TypeSyntax returnType, string functionName, params ParameterSyntax[] parameters)
-        => LocalFunction(returnType, SyntaxFactory.Identifier(functionName), parameters);
-    /// <summary>
-    /// 定义局部函数
-    /// </summary>
-    /// <param name="returnType"></param>
-    /// <param name="functionName"></param>
-    /// <param name="parameters"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static LocalFunctionStatementSyntax LocalFunction(this TypeSyntax returnType, SyntaxToken functionName, params ParameterSyntax[] parameters)
-        => SyntaxFactory.LocalFunctionStatement(returnType, functionName)
-        .WithParameterList(ParameterList(parameters));
-    #endregion
-    /// <summary>
-    /// 构造函数
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="parameters"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ConstructorDeclarationSyntax Constructor(this TypeDeclarationSyntax type, params ParameterSyntax[] parameters)
-        => SyntaxGenerator.ConstructorDeclaration(type.Identifier, parameters);
-    #region ParameterList
-    /// <summary>
-    /// 形参列表
-    /// </summary>
-    /// <param name="parameters"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ParameterListSyntax ParameterList(IEnumerable<ParameterSyntax> parameters)
-        => SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(parameters));
-    #endregion
     /// <summary>
     /// 全局命名样式
     /// </summary>
@@ -1075,37 +702,37 @@ public static partial class GenerateServices
             SpecialType.System_Char => SyntaxGenerator.CharType,
             SpecialType.System_DateTime => SyntaxGenerator.DateTimeType,
             SpecialType.System_Object => SyntaxGenerator.ObjectType,
-            SpecialType.System_ValueType => SyntaxFactory.IdentifierName("ValueType").Qualified("System"),
+            SpecialType.System_ValueType => SyntaxFactory.IdentifierName("ValueType").Qualify("System"),
             SpecialType.System_Void => SyntaxGenerator.VoidType,  
-            SpecialType.System_IntPtr => SyntaxFactory.IdentifierName("IntPtr").Qualified("System"),
-            SpecialType.System_UIntPtr => SyntaxFactory.IdentifierName("UIntPtr").Qualified("System"),
-            SpecialType.System_Array => SyntaxFactory.IdentifierName("Array").Qualified("System"),
-            SpecialType.System_Delegate => SyntaxFactory.IdentifierName("Delegate").Qualified("System"),
-            SpecialType.System_MulticastDelegate => SyntaxFactory.IdentifierName("MulticastDelegate").Qualified("System"),
-            SpecialType.System_Enum => SyntaxFactory.IdentifierName("Enum").Qualified("System"),
-            SpecialType.System_IDisposable => SyntaxFactory.IdentifierName("IDisposable").Qualified("System"),
-            SpecialType.System_IAsyncResult => SyntaxFactory.IdentifierName("System.IAsyncResult"),
-            SpecialType.System_Collections_IEnumerable => SyntaxFactory.IdentifierName("IEnumerable").Qualified("System.Collections"),
-            SpecialType.System_Collections_IEnumerator => SyntaxFactory.IdentifierName("IEnumerator").Qualified("System.Collections"),
-            SpecialType.System_AsyncCallback => SyntaxFactory.IdentifierName("AsyncCallback").Qualified("System"),
-            SpecialType.System_ArgIterator => SyntaxFactory.IdentifierName("ArgIterator").Qualified("System"),
-            SpecialType.System_TypedReference => SyntaxFactory.IdentifierName("TypedReference").Qualified("System"),
-            SpecialType.System_RuntimeArgumentHandle => SyntaxFactory.IdentifierName("RuntimeArgumentHandle").Qualified("System"),
-            SpecialType.System_RuntimeFieldHandle => SyntaxFactory.IdentifierName("RuntimeFieldHandle").Qualified("System"),
-            SpecialType.System_RuntimeMethodHandle => SyntaxFactory.IdentifierName("RuntimeMethodHandle").Qualified("System"),
-            SpecialType.System_RuntimeTypeHandle => SyntaxFactory.IdentifierName("RuntimeTypeHandle").Qualified("System"),
-            SpecialType.System_Runtime_CompilerServices_IsVolatile => SyntaxFactory.IdentifierName("IsVolatile").Qualified("System.Runtime.CompilerServices"),
-            SpecialType.System_Runtime_CompilerServices_RuntimeFeature => SyntaxFactory.IdentifierName(".RuntimeFeature").Qualified("System.Runtime.CompilerServices"),
-            SpecialType.System_Runtime_CompilerServices_PreserveBaseOverridesAttribute => SyntaxFactory.IdentifierName("PreserveBaseOverridesAttribute").Qualified("System.Runtime.CompilerServices"),
-            SpecialType.System_Runtime_CompilerServices_InlineArrayAttribute => SyntaxFactory.IdentifierName("InlineArrayAttribute").Qualified("System.Runtime.CompilerServices"),
+            SpecialType.System_IntPtr => SyntaxFactory.IdentifierName("IntPtr").Qualify("System"),
+            SpecialType.System_UIntPtr => SyntaxFactory.IdentifierName("UIntPtr").Qualify("System"),
+            SpecialType.System_Array => SyntaxFactory.IdentifierName("Array").Qualify("System"),
+            SpecialType.System_Delegate => SyntaxFactory.IdentifierName("Delegate").Qualify("System"),
+            SpecialType.System_MulticastDelegate => SyntaxFactory.IdentifierName("MulticastDelegate").Qualify("System"),
+            SpecialType.System_Enum => SyntaxFactory.IdentifierName("Enum").Qualify("System"),
+            SpecialType.System_IDisposable => SyntaxFactory.IdentifierName("IDisposable").Qualify("System"),
+            SpecialType.System_IAsyncResult => SyntaxFactory.IdentifierName("IAsyncResult").Qualify("System"),
+            SpecialType.System_Collections_IEnumerable => SyntaxFactory.IdentifierName("IEnumerable").Qualifies("System", "Collections"),
+            SpecialType.System_Collections_IEnumerator => SyntaxFactory.IdentifierName("IEnumerator").Qualifies("System", "Collections"),
+            SpecialType.System_AsyncCallback => SyntaxFactory.IdentifierName("AsyncCallback").Qualify("System"),
+            SpecialType.System_ArgIterator => SyntaxFactory.IdentifierName("ArgIterator").Qualify("System"),
+            SpecialType.System_TypedReference => SyntaxFactory.IdentifierName("TypedReference").Qualify("System"),
+            SpecialType.System_RuntimeArgumentHandle => SyntaxFactory.IdentifierName("RuntimeArgumentHandle").Qualify("System"),
+            SpecialType.System_RuntimeFieldHandle => SyntaxFactory.IdentifierName("RuntimeFieldHandle").Qualify("System"),
+            SpecialType.System_RuntimeMethodHandle => SyntaxFactory.IdentifierName("RuntimeMethodHandle").Qualify("System"),
+            SpecialType.System_RuntimeTypeHandle => SyntaxFactory.IdentifierName("RuntimeTypeHandle").Qualify("System"),
+            SpecialType.System_Runtime_CompilerServices_IsVolatile => SyntaxFactory.IdentifierName("IsVolatile").Qualifies("System", "Runtime", "CompilerServices"),
+            SpecialType.System_Runtime_CompilerServices_RuntimeFeature => SyntaxFactory.IdentifierName(".RuntimeFeature").Qualifies("System", "Runtime", "CompilerServices"),
+            SpecialType.System_Runtime_CompilerServices_PreserveBaseOverridesAttribute => SyntaxFactory.IdentifierName("PreserveBaseOverridesAttribute").Qualifies("System", "Runtime", "CompilerServices"),
+            SpecialType.System_Runtime_CompilerServices_InlineArrayAttribute => SyntaxFactory.IdentifierName("InlineArrayAttribute").Qualifies("System", "Runtime", "CompilerServices"),
             SpecialType.None => OthersToSyntax(symbol),
-            SpecialType.System_Nullable_T => SyntaxGenerator.OmitGeneric("System.Nullable"),
-            SpecialType.System_Collections_Generic_IEnumerable_T => SyntaxGenerator.OmitGeneric("System.Collections.Generic.IEnumerable"),
-            SpecialType.System_Collections_Generic_IEnumerator_T => SyntaxGenerator.OmitGeneric("System.Collections.Generic.IEnumerator"),
-            SpecialType.System_Collections_Generic_IList_T => SyntaxGenerator.OmitGeneric("System.Collections.Generic.IList"),
-            SpecialType.System_Collections_Generic_ICollection_T => SyntaxGenerator.OmitGeneric("System.Collections.Generic.ICollection"),
-            SpecialType.System_Collections_Generic_IReadOnlyList_T => SyntaxGenerator.OmitGeneric("System.Collections.Generic.IReadOnlyList"),
-            SpecialType.System_Collections_Generic_IReadOnlyCollection_T => SyntaxGenerator.OmitGeneric("System.Collections.Generic.IReadOnlyCollection"),
+            SpecialType.System_Nullable_T => SyntaxGenerator.OmitGeneric("Nullable").Qualify("System"),
+            SpecialType.System_Collections_Generic_IEnumerable_T => SyntaxGenerator.OmitGeneric("IEnumerable").Qualifies("System", "Collections", "Generic"),
+            SpecialType.System_Collections_Generic_IEnumerator_T => SyntaxGenerator.OmitGeneric("IEnumerator").Qualifies("System", "Collections", "Generic"),
+            SpecialType.System_Collections_Generic_IList_T => SyntaxGenerator.OmitGeneric("IList").Qualifies("System", "Collections", "Generic"),
+            SpecialType.System_Collections_Generic_ICollection_T => SyntaxGenerator.OmitGeneric("ICollection").Qualifies("System", "Collections", "Generic"),
+            SpecialType.System_Collections_Generic_IReadOnlyList_T => SyntaxGenerator.OmitGeneric("IReadOnlyList").Qualifies("System", "Collections", "Generic"),
+            SpecialType.System_Collections_Generic_IReadOnlyCollection_T => SyntaxGenerator.OmitGeneric("IReadOnlyCollection").Qualifies("System", "Collections", "Generic"),
             _ => throw new NotSupportedException(),
         };
     }

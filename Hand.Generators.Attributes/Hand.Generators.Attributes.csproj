@@ -6,7 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>Hand</RootNamespace>
 		<PackageId>Hand.Generators.Attributes</PackageId>
-		<Version>$(VersionBase).5</Version>
+		<Version>$(VersionBase).7</Version>
 		<EnForceExtendedAnalyzerRules>true</EnForceExtendedAnalyzerRules>
 		<PackageReadmeFile>readme.md</PackageReadmeFile>
 	</PropertyGroup>

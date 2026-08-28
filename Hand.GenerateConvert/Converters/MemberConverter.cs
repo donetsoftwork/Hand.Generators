@@ -20,7 +20,7 @@ public class MemberConverter(SimpleNameSyntax memberName)
     {
     }
     /// <inheritdoc />
-    public ExpressionSyntax Convert(ExpressionSyntax source)
+    public ExpressionSyntax Convert(SyntaxGenerator generator, ExpressionSyntax source)
         => source.Access(_memberName);
 
     /// <summary>

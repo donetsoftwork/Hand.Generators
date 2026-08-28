@@ -14,13 +14,13 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Hand.Core" Version="0.3.1.11-alpha" />
+		<PackageReference Include="Hand.Core" Version="0.3.1.13-alpha" />
 		<PackageReference Include="Hand.AutoCache" Version="0.3.1.3-alpha" />
-		<PackageReference Include="Hand.MemberValidation" Version="0.3.1.3-alpha" />
+		<PackageReference Include="Hand.MemberValidation" Version="0.3.1.7-alpha" />
 		<PackageReference Include="Hand.Naming" Version="0.3.1.3-alpha" />
 		<PackageReference Include="Hand.ParseXml" Version="0.3.1.4-alpha" />
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="5.6.0" />
-		<PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="5.6.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="5.9.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="5.9.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
 		<PackageReference Include="xunit" Version="2.9.3" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
@@ -29,8 +29,8 @@
 		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="5.6.0" PrivateAssets="all" />
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.6.0" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="5.9.0" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" PrivateAssets="all" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\Hand.Generators.EasySyntax\Hand.Generators.EasySyntax.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
@@ -43,11 +43,6 @@
 
 	<ItemGroup>
 		<Using Include="Xunit" />
-	</ItemGroup>
-
-
-	<ItemGroup>
-		<Folder Include="Members\" />
 	</ItemGroup>
 
 </Project>

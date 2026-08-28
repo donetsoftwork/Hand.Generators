@@ -28,6 +28,7 @@
   <Folder Name="/解决方案项/">
     <File Path=".gitattributes" />
     <File Path=".gitignore" />
+    <File Path="docs/script.md" />
     <File Path="LICENSE.txt" />
     <File Path="package.props" />
     <File Path="readme.md" />

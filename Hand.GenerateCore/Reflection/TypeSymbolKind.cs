@@ -1,25 +1,26 @@
-﻿using System;
-
-namespace Hand.Reflection;
+﻿namespace Hand.Reflection;
 
 /// <summary>
 /// 类型类别
 /// </summary>
-[Flags]
 public enum TypeSymbolKind
 {
     /// <summary>
+    /// 未知类型
+    /// </summary>
+    Unknow = 0,
+    /// <summary>
+    /// 参数
+    /// </summary>
+    Parameter = 1,
+    /// <summary>
     /// 基础类型
     /// </summary>
-    Primitive = 0,
-    /// <summary>
-    /// 可空类型
-    /// </summary>
-    Nullable = 1,
+    Primitive = 2,
     /// <summary>
     /// 枚举类型
     /// </summary>
-    Enum = 2,
+    Enum = 3,
     /// <summary>
     /// 数组类型
     /// </summary>
@@ -27,13 +28,17 @@ public enum TypeSymbolKind
     /// <summary>
     /// 集合类型
     /// </summary>
-    Collection = 8,
+    Collection = 5,
+    /// <summary>
+    /// 泛型
+    /// </summary>
+    Generic = 6,
     /// <summary>
     /// 复合类型
     /// </summary>
-    Complex = 16,
+    Complex = 7,
     /// <summary>
     /// 实体属性类型(Hand.Models.IEntityProperty)
     /// </summary>
-    Entity = 32,
+    Entity = 8,
 }

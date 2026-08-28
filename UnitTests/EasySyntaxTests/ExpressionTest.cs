@@ -189,9 +189,16 @@ public class ExpressionTest
     [Fact]
     public void Qualified()
     {
-        var userName = SyntaxFactory.IdentifierName("Name").Qualified("user");
+        var userName = SyntaxFactory.IdentifierName("Name").Qualify("user");
         var code = userName.ToFullString();
         Assert.Equal("user.Name", code);
+    }
+    [Fact]
+    public void Qualified2()
+    {
+        var userName = SyntaxFactory.IdentifierName("Name").Qualifies("A", "B");
+        var code = userName.ToFullString();
+        Assert.Equal("A.B.Name", code);
     }
     [Fact]
     public void Access()
@@ -210,7 +217,7 @@ public class ExpressionTest
         var other = SyntaxFactory.IdentifierName("other");
         var method = SyntaxGenerator.IntType.Method("Compare", type.Parameter(other.Identifier))
             .ToBuilder()
-            .Return(score.Subtract(score.Qualified(other)));
+            .Return(score.Subtract(score.Qualify(other)));
         var code = method.NormalizeWhitespace().ToFullString();
         Assert.NotEmpty(code);
     }
@@ -279,14 +286,6 @@ public class ExpressionTest
         Assert.Equal("obj as int", code);
     }
     [Fact]
-    public void TypeOf()
-    {
-        //SyntaxFactory.TypeOfExpression(SyntaxGenerator.IntType);
-        var expression = SyntaxGenerator.IntType.TypeOf();
-        var code = expression.NormalizeWhitespace().ToFullString();
-        Assert.Equal("typeof(int)", code);
-    }
-    [Fact]
     public void SuppressNull()
     {
         var expression = SyntaxGenerator.DefaultLiteral.SuppressNull();
@@ -319,7 +318,7 @@ public class ExpressionTest
                 "!",
                 SyntaxTriviaList.Empty))
         ];
-        var interpolation0 = SyntaxFactory.InterpolatedStringExpression(SyntaxFactory.Token(SyntaxKind.InterpolatedStringStartToken), SyntaxGenerator.List(contents));
+        var interpolation0 = SyntaxFactory.InterpolatedStringExpression(SyntaxFactory.Token(SyntaxKind.InterpolatedStringStartToken), [.. contents]);
         var code0 = interpolation0.ToFullString();
         Assert.Equal("$\"Hello {name}!\"", code0);
     }
@@ -344,7 +343,7 @@ public class ExpressionTest
                 SyntaxFactory.Token(SyntaxKind.ColonToken),
                 SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.InterpolatedStringTextToken, "yyyy-MM-dd", "yyyy-MM-dd", SyntaxTriviaList.Empty)))
         ];
-        var interpolation0 = SyntaxFactory.InterpolatedStringExpression(SyntaxFactory.Token(SyntaxKind.InterpolatedStringStartToken), SyntaxGenerator.List(contents));
+        var interpolation0 = SyntaxFactory.InterpolatedStringExpression(SyntaxFactory.Token(SyntaxKind.InterpolatedStringStartToken), [.. contents]);
         var code0 = interpolation0.ToFullString();
         Assert.Equal("$\"Today is: {now:yyyy-MM-dd}\"", code0);
     }

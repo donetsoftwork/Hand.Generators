@@ -1,10 +1,13 @@
 ﻿using Hand.Members;
+using Hand.Reflection;
+using Hand.Types;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 
 namespace Hand;
@@ -292,14 +295,14 @@ public static partial class GenerateCoreServices
     /// <param name="originalSymbol"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static INamedTypeSymbol GetNullable(this Compilation compilation, INamedTypeSymbol originalSymbol)
+    public static ITypeSymbol GetNullable(this Compilation compilation, ITypeSymbol originalSymbol)
     {
         if (originalSymbol.IsValueType)
         {
             originalSymbol = compilation.GetSpecialType(SpecialType.System_Nullable_T)
                 .Construct(originalSymbol);
         }
-        return (INamedTypeSymbol)originalSymbol.WithNullableAnnotation(NullableAnnotation.Annotated);
+        return originalSymbol.WithNullableAnnotation(NullableAnnotation.Annotated);
     }
     /// <summary>
     /// 迭代类型
@@ -341,6 +344,142 @@ public static partial class GenerateCoreServices
     public static INamedTypeSymbol GetICollection(this Compilation compilation, ITypeSymbol originalSymbol)
         => compilation.GetSpecialType(SpecialType.System_Collections_Generic_ICollection_T)
         .Construct(originalSymbol);
+    /// <summary>
+    /// 获取列表类型符号
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetListSymbol(this Compilation compilation)
+        => compilation.GetTypeByMetadataName("System.Collections.Generic.List`1");
+    /// <summary>
+    /// 列表类型
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="originalSymbol"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetList(this Compilation compilation, ITypeSymbol originalSymbol)
+        => GetListSymbol(compilation)?.Construct(originalSymbol);
+    /// <summary>
+    /// 获取HashSet类型符号
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetHashSetSymbol(this Compilation compilation)
+        => compilation.GetTypeByMetadataName("System.Collections.Generic.HashSet`1");
+    /// <summary>
+    /// HashSet类型
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="originalSymbol"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetHashSet(this Compilation compilation, ITypeSymbol originalSymbol)
+        => GetHashSetSymbol(compilation)?.Construct(originalSymbol);
+    /// <summary>
+    /// 获取Queue类型符号
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetQueueSymbol(this Compilation compilation)
+        => compilation.GetTypeByMetadataName("System.Collections.Generic.Queue`1");
+    /// <summary>
+    /// Queue类型
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="originalSymbol"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetQueue(this Compilation compilation, ITypeSymbol originalSymbol)
+        => GetQueueSymbol(compilation)?.Construct(originalSymbol);
+    /// <summary>
+    /// 获取Stack类型符号
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetStackSymbol(this Compilation compilation)
+        => compilation.GetTypeByMetadataName("System.Collections.Generic.Stack`1");
+    /// <summary>
+    /// Stack类型
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="originalSymbol"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetStack(this Compilation compilation, ITypeSymbol originalSymbol)
+        => GetStackSymbol(compilation)?.Construct(originalSymbol);
+    /// <summary>
+    /// 获取BlockingCollection类型符号
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetBlockingCollectionSymbol(this Compilation compilation)
+        => compilation.GetTypeByMetadataName("System.Collections.Concurrent.BlockingCollection`1");
+    /// <summary>
+    /// BlockingCollection类型
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="originalSymbol"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetBlockingCollection(this Compilation compilation, ITypeSymbol originalSymbol)
+        => GetBlockingCollectionSymbol(compilation)?.Construct(originalSymbol);
+    /// <summary>
+    /// 获取ConcurrentQueue类型符号
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetConcurrentQueueSymbol(this Compilation compilation)
+        => compilation.GetTypeByMetadataName("System.Collections.Concurrent.ConcurrentQueue`1");
+    /// <summary>
+    /// ConcurrentQueue类型
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="originalSymbol"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetConcurrentQueue(this Compilation compilation, ITypeSymbol originalSymbol)
+        => GetConcurrentQueueSymbol(compilation)?.Construct(originalSymbol);
+    /// <summary>
+    /// 获取ConcurrentStack类型符号
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetConcurrentStackSymbol(this Compilation compilation)
+        => compilation.GetTypeByMetadataName("System.Collections.Concurrent.ConcurrentStack`1");
+    /// <summary>
+    /// ConcurrentStack类型
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="originalSymbol"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetConcurrentStack(this Compilation compilation, ITypeSymbol originalSymbol)
+        => GetConcurrentStackSymbol(compilation)?.Construct(originalSymbol);
+    /// <summary>
+    /// 获取ConcurrentBag类型符号
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetConcurrentBagSymbol(this Compilation compilation)
+        => compilation.GetTypeByMetadataName("System.Collections.Concurrent.ConcurrentBag`1");
+    /// <summary>
+    /// ConcurrentBag类型
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="originalSymbol"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetConcurrentBag(this Compilation compilation, ITypeSymbol originalSymbol)
+        => GetConcurrentBagSymbol(compilation)?.Construct(originalSymbol);
     #endregion
     /// <summary>
     /// 判断是否含partial修饰符
@@ -579,6 +718,50 @@ public static partial class GenerateCoreServices
     public static bool IsEnum(this ITypeSymbol symbol)
         => symbol.TypeKind == TypeKind.Enum;
     #endregion
+    /// <summary>
+    /// 是否兼容
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="dest"></param>
+    /// <returns></returns>
+    public static bool IsCompatible(this ITypeSymbol source, ITypeSymbol dest)
+    {
+        if (dest.TypeKind == TypeKind.Interface)
+            return IsInterface(source, dest);
+        return IsBase(source, dest);
+    }
+    /// <summary>
+    /// 是否基类
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="baseType"></param>
+    /// <returns></returns>
+    public static bool IsBase(this ITypeSymbol type, ITypeSymbol baseType)
+    {
+        if (type.Equals(baseType, SymbolEqualityComparer.Default))
+            return true;
+        var @base = type.BaseType;
+        if (@base is null)
+            return false;
+        return IsBase(@base, baseType);
+    }
+    /// <summary>
+    /// 是否接口
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="interfaceType"></param>
+    /// <returns></returns>
+    public static bool IsInterface(this ITypeSymbol type, ITypeSymbol interfaceType)
+    {
+        if (type.Equals(interfaceType, SymbolEqualityComparer.Default))
+            return true;
+        foreach (var @interface in type.Interfaces)
+        {
+            if (IsInterface(@interface, interfaceType))
+                return true;
+        }
+        return false;
+    }
     #region IsGenericType
     /// <summary>
     /// 是否泛型定义
@@ -631,4 +814,252 @@ public static partial class GenerateCoreServices
         }
     }
     #endregion
+    /// <summary>
+    /// 类型简化
+    /// </summary>
+    /// <param name="typeInfo"></param>
+    /// <returns></returns>
+    public static ITypeSymbolInfo CheckPoco(this ITypeSymbolInfo typeInfo)
+    {
+        if(typeInfo.IsEntity() && typeInfo is EntityTypeInfo entity)
+            return entity.ElementInfo;
+        return typeInfo;
+    }
+    #region Display
+    /// <summary>
+    /// 展示类型
+    /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="info"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypeSyntax Display(this SyntaxGenerator generator, ITypeSymbolInfo info)
+    {
+        return info.Kind switch
+        {
+            TypeSymbolKind.Primitive => Display(generator, (PrimitiveTypeInfo)info),
+            TypeSymbolKind.Enum => generator.Display(((EnumTypeInfo)info).Symbol, info.IsNullable),
+            TypeSymbolKind.Entity => generator.Display(((EntityTypeInfo)info).Symbol, info.IsNullable),
+            TypeSymbolKind.Complex => generator.Display(((ComplexTypeInfo)info).Symbol, info.IsNullable),
+            TypeSymbolKind.Generic => Display(generator, (GenericTypeInfo)info),
+            TypeSymbolKind.Array => Display(generator, (ArrayTypeInfo)info),
+            TypeSymbolKind.Collection => Display(generator, (CollectionTypeInfo)info),
+            TypeSymbolKind.Parameter => SyntaxFactory.OmittedTypeArgument(),
+            _ => info.Original.ToSyntax().Nullable(info.IsNullable),
+        };
+    }
+    /// <summary>
+    /// 展示基础类型
+    /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="info"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypeSyntax Display(this SyntaxGenerator generator, PrimitiveTypeInfo info)
+        => Display(generator, info.SpecialType).Nullable(info.IsNullable);
+    /// <summary>
+    /// 展示基础类型
+    /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="specialType"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypeSyntax Display(this SyntaxGenerator generator, SpecialType specialType)
+    {
+        return specialType switch
+        {
+            SpecialType.System_Boolean
+                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.BoolKeyword)),
+            SpecialType.System_Byte
+                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ByteKeyword)),
+            SpecialType.System_SByte
+                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.SByteKeyword)),
+            SpecialType.System_Int32
+                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)),
+            SpecialType.System_UInt32
+                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)),
+            SpecialType.System_Int16
+                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ShortKeyword)),
+            SpecialType.System_UInt16
+                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.UShortKeyword)),
+            SpecialType.System_Int64
+                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.LongKeyword)),
+            SpecialType.System_UInt64
+                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ULongKeyword)),
+            SpecialType.System_Single
+                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.FloatKeyword)),
+            SpecialType.System_Double
+                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.DoubleKeyword)),
+            SpecialType.System_Decimal
+                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.DecimalKeyword)),
+            SpecialType.System_String
+                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)),
+            SpecialType.System_Char
+                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.CharKeyword)),
+            SpecialType.System_DateTime
+                => generator.Display("DateTime", "System"),
+            _
+                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ObjectKeyword)),
+        };
+    }
+    /// <summary>
+    /// 展示泛型
+    /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="info"></param>
+    /// <returns></returns>
+    public static TypeSyntax Display(this SyntaxGenerator generator, GenericTypeInfo info)
+    {
+        var elements = info.Elements;
+        var arguments = new List<TypeSyntax>(elements.Length);
+        foreach (var element in elements)
+            arguments.Add(Display(generator, element));
+        var definition = generator.Display(info.Definition);
+        if (definition is GenericNameSyntax generic)
+            return generic.WithTypeArgumentList(SyntaxFactory.TypeArgumentList([.. arguments])).Nullable(info.IsNullable);
+        else if (definition is QualifiedNameSyntax qualified && qualified.Right is GenericNameSyntax right)
+            return right.WithTypeArgumentList(SyntaxFactory.TypeArgumentList([.. arguments])).Qualify(qualified.Left).Nullable(info.IsNullable);
+        else
+            return definition.Nullable(info.IsNullable);
+    }
+    /// <summary>
+    /// 展示数组类型
+    /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="info"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypeSyntax Display(this SyntaxGenerator generator, ArrayTypeInfo info)
+        => Display(generator, info.ElementInfo).Array(info.Symbol.Rank).Nullable(info.IsNullable);
+    /// <summary>
+    /// 展示集合类型
+    /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="info"></param>
+    /// <returns></returns>
+    public static TypeSyntax Display(this SyntaxGenerator generator, CollectionTypeInfo info)
+    {
+        generator.Using("System.Collections.Generic");
+        var element = Display(generator, info.ElementInfo);
+        var type = SyntaxGenerator.Generic(info.Symbol.Name, element);
+        return type.Nullable(info.IsNullable);
+    }
+    #endregion
+    #region DisplayWithoutAnnotated
+    /// <summary>
+    /// 展示类型
+    /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="info"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypeSyntax DisplayWithoutAnnotated(this SyntaxGenerator generator, ITypeSymbolInfo info)
+    {
+        return info.Kind switch
+        {
+            TypeSymbolKind.Primitive => DisplayWithoutAnnotated(generator, (PrimitiveTypeInfo)info),
+            TypeSymbolKind.Enum => DisplayWithoutAnnotated(generator, ((EnumTypeInfo)info).Symbol, info.IsNullable),
+            TypeSymbolKind.Entity => DisplayWithoutAnnotated(generator, ((EntityTypeInfo)info).Symbol, info.IsNullable),
+            TypeSymbolKind.Complex => DisplayWithoutAnnotated(generator, ((ComplexTypeInfo)info).Symbol, info.IsNullable),
+            TypeSymbolKind.Generic => DisplayWithoutAnnotated(generator, (GenericTypeInfo)info),
+            TypeSymbolKind.Array => DisplayWithoutAnnotated(generator, (ArrayTypeInfo)info),
+            TypeSymbolKind.Collection => DisplayWithoutAnnotated(generator, (CollectionTypeInfo)info),
+            TypeSymbolKind.Parameter => SyntaxFactory.OmittedTypeArgument(),
+            _ => ToSyntaxWithoutAnnotated(info.Original, info.IsNullable),
+        };
+    }
+    /// <summary>
+    /// 展示泛型
+    /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="info"></param>
+    /// <returns></returns>
+    public static TypeSyntax DisplayWithoutAnnotated(this SyntaxGenerator generator, GenericTypeInfo info)
+    {
+        var isNullable = info.IsNullable && info.Symbol.IsValueType;
+        var elements = info.Elements;
+        var arguments = new List<TypeSyntax>(elements.Length);
+        foreach (var element in elements)
+            arguments.Add(DisplayWithoutAnnotated(generator, element));
+        var definition = generator.Display(info.Definition);
+        if (definition is GenericNameSyntax generic)
+            return generic.WithTypeArgumentList(SyntaxFactory.TypeArgumentList([.. arguments])).Nullable(isNullable);
+        else if (definition is QualifiedNameSyntax qualified && qualified.Right is GenericNameSyntax right)
+            return right.WithTypeArgumentList(SyntaxFactory.TypeArgumentList([.. arguments])).Qualify(qualified.Left).Nullable(isNullable);
+        else
+            return definition.Nullable(isNullable);
+    }
+    /// <summary>
+    /// 展示数组类型
+    /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="info"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypeSyntax DisplayWithoutAnnotated(this SyntaxGenerator generator, ArrayTypeInfo info)
+        => DisplayWithoutAnnotated(generator, info.ElementInfo).Array(info.Symbol.Rank).Nullable(info.IsNullable && info.Symbol.IsValueType);
+    /// <summary>
+    /// 展示集合类型
+    /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="info"></param>
+    /// <returns></returns>
+    public static TypeSyntax DisplayWithoutAnnotated(this SyntaxGenerator generator, CollectionTypeInfo info)
+    {
+        generator.Using("System.Collections.Generic");
+        var element = DisplayWithoutAnnotated(generator, info.ElementInfo);
+        var type = SyntaxGenerator.Generic(info.Symbol.Name, element);
+        return type.Nullable(info.IsNullable && info.Symbol.IsValueType);
+    }
+    /// <summary>
+    /// 展示类型
+    /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="symbol"></param>
+    /// <param name="isNullable"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static TypeSyntax DisplayWithoutAnnotated(SyntaxGenerator generator, INamedTypeSymbol symbol, bool isNullable)
+        => generator.Display(symbol,isNullable && symbol.IsValueType);
+    /// <summary>
+    /// 展示类型
+    /// </summary>
+    /// <param name="symbol"></param>
+    /// <param name="isNullable"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static TypeSyntax ToSyntaxWithoutAnnotated(ITypeSymbol symbol, bool isNullable)
+        => symbol.ToSyntax().Nullable(isNullable && symbol.IsValueType);
+    /// <summary>
+    /// 忽略空声明
+    /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="info"></param>
+    /// <returns></returns>
+    public static TypeSyntax DisplayWithoutAnnotated(this SyntaxGenerator generator, PrimitiveTypeInfo info)
+    {
+        var specialType = info.SpecialType;
+        var displayName = Display(generator, specialType);
+        if (info.IsNullable)
+        {
+            return specialType switch
+            {
+                SpecialType.System_Object or SpecialType.System_String
+                    => displayName,
+                _
+                    => displayName.Nullable(),
+            };
+        }
+        return displayName;
+    }
+    #endregion
+    /// <summary>
+    /// typeof
+    /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="info"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypeOfExpressionSyntax TypeOf(this SyntaxGenerator generator, ITypeSymbolInfo info)
+        => DisplayWithoutAnnotated(generator, info).TypeOf();
 }

@@ -1,5 +1,4 @@
 ﻿using Hand.Converters;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -8,15 +7,15 @@ namespace Hand.Collections;
 /// <summary>
 /// 转化Enumerable为数组
 /// </summary>
-public class EnumerableToArrayConverter(ExpressionSyntax method)
-     : StaticMethodConverter(method)
+public class EnumerableToArrayConverter(SimpleNameSyntax method)
+     : ExtensionMethodConverter(EnumerableConverter.UsingLinq, method)
 {
-    private static readonly SyntaxToken _methodName = SyntaxFactory.Identifier("System.Linq.Enumerable.ToArray");
+    private static readonly SimpleNameSyntax _methodName = SyntaxFactory.IdentifierName("ToArray");
     /// <summary>
     /// 转化Enumerable为数组
     /// </summary>
     public EnumerableToArrayConverter()
-        : this(SyntaxFactory.IdentifierName(_methodName))
+        : this(_methodName)
     {
     }
 
@@ -26,5 +25,9 @@ public class EnumerableToArrayConverter(ExpressionSyntax method)
     /// <param name="argumentType">类型参数</param>
     /// <returns></returns>
     public static EnumerableToArrayConverter Generic(TypeSyntax argumentType)
-        => new(SyntaxGenerator.Generic(_methodName, argumentType));
+        => new(SyntaxGenerator.Generic(_methodName.Identifier, argumentType));
+    /// <summary>
+    /// 默认实例
+    /// </summary>
+    public static readonly EnumerableToArrayConverter Instance = new();
 }

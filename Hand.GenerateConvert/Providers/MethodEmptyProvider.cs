@@ -12,10 +12,10 @@ public class MethodEmptyProvider: IMethodProvider
     {
     }
 
-    IMethodSymbol? IMethodProvider.GetConvertMethod(ConvertMethodInfo info, INamedTypeSymbol dest)
+    IMethodSymbol? IMethodProvider.GetConvertMethod(ConvertMethodInfo info, ITypeSymbol dest)
         => null;
     /// <summary>
     /// 单例
     /// </summary>
-    public static readonly MethodEmptyProvider Instance = new();
+    public static readonly IMethodProvider Instance = new MethodEmptyProvider();
 }

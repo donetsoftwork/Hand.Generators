@@ -73,7 +73,7 @@ public class InterpolationBuilder(SyntaxKind start, SyntaxKind end)
     /// </summary>
     /// <returns></returns>
     public InterpolatedStringExpressionSyntax Build()
-        => SyntaxFactory.InterpolatedStringExpression(SyntaxFactory.Token(_start), SyntaxGenerator.List(_contents), SyntaxFactory.Token(_end));
+        => SyntaxFactory.InterpolatedStringExpression(SyntaxFactory.Token(_start), [.. _contents], SyntaxFactory.Token(_end));
     /// <summary>
     /// 插值字符串片段
     /// </summary>

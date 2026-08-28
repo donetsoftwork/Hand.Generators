@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<Nullable>enable</Nullable>
-		<Version>$(VersionBase).6</Version>
+		<Version>$(VersionBase).15</Version>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<IsRoslynComponent>true</IsRoslynComponent>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
@@ -16,15 +16,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Hand.MemberValidation" Version="0.3.1.3-alpha">
+		<PackageReference Include="Hand.MemberValidation" Version="0.3.1.7-alpha">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="5.6.0">
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="5.9.0">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.6.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -36,6 +36,7 @@
 			<IncludeAssets>compile;analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</ProjectReference>
+		<ProjectReference Include="..\Hand.Generators.Attributes\Hand.Generators.Attributes.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -26,6 +26,6 @@ public class CompatibleConverter(IConverter compatible, IConverter original)
         => _original;
     #endregion
     /// <inheritdoc />
-    public ExpressionSyntax Convert(ExpressionSyntax source)
-        => _original.Convert(_compatible.Convert(source));
+    public ExpressionSyntax Convert(SyntaxGenerator generator, ExpressionSyntax source)
+        => _original.Convert(generator, _compatible.Convert(generator, source));
 }

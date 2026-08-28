@@ -34,9 +34,9 @@ public class NullableConverter(IConverter original, ExpressionSyntax defaultExpr
         => _defaultExpression;
     #endregion
     /// <inheritdoc />
-    public ExpressionSyntax Convert(ExpressionSyntax source)
+    public ExpressionSyntax Convert(SyntaxGenerator generator, ExpressionSyntax source)
         => source.IsNull()
-        .Conditional(_defaultExpression, _original.Convert(source));
+        .Conditional(_defaultExpression, _original.Convert(generator, source));
     ///// <inheritdoc />
     //public IConverter Nullable(ExpressionSyntax? defaultExpression)
     //    => new NullCoalesceConverter(_original, defaultExpression ?? _defaultExpression);

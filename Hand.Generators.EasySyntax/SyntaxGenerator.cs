@@ -1,4 +1,5 @@
 using Hand.Builders;
+using Hand.Collections;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -18,13 +19,13 @@ namespace Hand;
 /// <param name="fields">字段</param>
 /// <param name="properties">属性</param>
 /// <param name="methods">方法</param>
-public partial class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, List<ConstructorDeclarationSyntax> constructors, List<FieldDeclarationSyntax> fields, List<PropertyDeclarationSyntax> properties, List<MethodDeclarationSyntax> methods)
+public partial class SyntaxGenerator(HashSet<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, List<ConstructorDeclarationSyntax> constructors, List<FieldDeclarationSyntax> fields, List<PropertyDeclarationSyntax> properties, List<MethodDeclarationSyntax> methods)
 {
     #region 配置
     /// <summary>
     /// 引用
     /// </summary>
-    protected readonly List<UsingDirectiveSyntax> _usings = usings;
+    protected readonly HashSet<UsingDirectiveSyntax> _usings = usings;
     /// <summary>
     /// 类型
     /// </summary>
@@ -50,6 +51,10 @@ public partial class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDecl
     /// </summary>
     protected readonly List<MemberDeclarationSyntax> _others = [];
     /// <summary>
+    /// 类名
+    /// </summary>
+    private readonly Dictionary<string, string> _typeNames = [];
+    /// <summary>
     /// 类型
     /// </summary>
     public TypeDeclarationSyntax Type
@@ -62,31 +67,120 @@ public partial class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDecl
     #endregion
     #region Using
     /// <summary>
+    /// 展示类名
+    /// 支持泛型定义不支持闭合泛型
+    /// 闭合泛型请使用Hand.GenerateCore的扩展方法TypeSyntax Display(this SyntaxGenerator generator, GenericTypeInfo info)
+    /// 暂不支持内部类
+    /// </summary>
+    /// <param name="symbol"></param>
+    /// <param name="isNullable"></param>
+    /// <returns></returns>
+    public TypeSyntax Display(INamedTypeSymbol symbol, bool isNullable)
+        => Display(symbol).Nullable(isNullable);
+    /// <summary>
+    /// 展示类名
+    /// 支持泛型定义不支持闭合泛型
+    /// 闭合泛型请使用Hand.GenerateCore的扩展方法TypeSyntax Display(this SyntaxGenerator generator, GenericTypeInfo info)
+    /// 暂不支持内部类
+    /// </summary>
+    /// <param name="symbol"></param>
+    /// <returns></returns>
+    public TypeSyntax Display(INamedTypeSymbol symbol)
+    {
+        var containingNamespace = symbol.ContainingNamespace.ToDisplayString();
+        SimpleNameSyntax type = GetTypeName(symbol);
+        var metadataName = symbol.MetadataName;
+        if (TryGetNamespace(metadataName, out var @namespace))
+        {
+            if (!string.Equals(containingNamespace, @namespace))
+                return type.Qualify(containingNamespace);
+        }
+        else
+        {
+            _typeNames[metadataName] = containingNamespace;
+            Using(containingNamespace);
+        }
+        return type;
+    }
+    /// <summary>
+    /// 获取类型名(支持泛型定义不支持闭合泛型)
+    /// </summary>
+    /// <param name="symbol"></param>
+    /// <returns></returns>
+    public static SimpleNameSyntax GetTypeName(INamedTypeSymbol symbol)
+    {
+        if (symbol.IsGenericType)
+        {
+            var parameters = symbol.TypeParameters;
+            var count = parameters.Length;
+            var arguments = new TypeSyntax[count];
+            for (var i = 0; i < count; i++)
+                arguments[i] = SyntaxFactory.IdentifierName(parameters[i].Name);
+            return SyntaxFactory.GenericName(SyntaxFactory.Identifier(symbol.Name), SyntaxFactory.TypeArgumentList([.. arguments]));
+        }
+        return SyntaxFactory.IdentifierName(symbol.Name);
+    }
+    /// <summary>
+    /// 展示类名
+    /// </summary>
+    /// <param name="typeName"></param>
+    /// <param name="namespace"></param>
+    /// <returns></returns>
+    public TypeSyntax Display(string typeName, string @namespace)
+    {
+        TypeSyntax type;;
+        if (TryGetNamespace(typeName, out var @namespace0))
+        {
+            if (string.Equals(@namespace0, @namespace))
+                type = SyntaxFactory.IdentifierName(typeName);
+            else
+                type = SyntaxFactory.IdentifierName(typeName).Qualify(@namespace);
+        }
+        else
+        {
+            type = SyntaxFactory.IdentifierName(typeName);
+            _typeNames[typeName] = @namespace;
+            Using(@namespace);
+        }
+        return type;
+    }
+    /// <summary>
+    /// 尝试获取命名空间
+    /// </summary>
+    /// <param name="typeName"></param>
+    /// <param name="namespace"></param>
+    /// <returns></returns>
+    protected virtual bool TryGetNamespace(string typeName, out string? @namespace)
+        => _typeNames.TryGetValue(typeName, out @namespace);
+    /// <summary>
     /// 添加Using
     /// </summary>
-    /// <param name="usings"></param>
-    public void Using(params IReadOnlyCollection<UsingDirectiveSyntax> usings)
+    /// <param name="directive"></param>
+    public virtual void Using(UsingDirectiveSyntax directive)
     {
-        if(usings.Count == 0)
+        if(_usings.Contains(directive))
             return;
-        var delta = Plus(_usings, usings);
-        if (delta.Count == 0)
-            return;
-        _usings.AddRange(delta);
+        _usings.Add(directive);
     }
     /// <summary>
     /// 添加Using
     /// </summary>
-    /// <param name="names"></param>
-    public void Using(params IReadOnlyCollection<string> names)
+    /// <param name="namespace"></param>
+    public virtual void Using(string @namespace)
     {
-        if (names.Count == 0)
-            return;
-        var delta = Plus(_usings, names);
-        if (delta.Count == 0)
-            return;
-        _usings.AddRange(delta);
+        var directive = SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName(@namespace));
+        Using(directive);
     }
+    /// <summary>
+    /// 添加using System
+    /// </summary>
+    public void UsingSystem()
+        => Using(SystemDirective);
+    /// <summary>
+    /// 添加using System.Collections.Generic
+    /// </summary>
+    public void UsingCollections()
+        => Using(CollectionDirective);
     /// <summary>
     /// 增加基类
     /// </summary>
@@ -164,10 +258,10 @@ public partial class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDecl
     /// <param name="root"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static CompilationUnitSyntax BuildUnit(List<UsingDirectiveSyntax> usings, MemberDeclarationSyntax root)
+    public static CompilationUnitSyntax BuildUnit(HashSet<UsingDirectiveSyntax> usings, MemberDeclarationSyntax root)
     {
         return SyntaxFactory.CompilationUnit()
-            .WithUsings(List(usings))
+            .WithUsings([.. usings])
             .AddMembers(root)
             .NormalizeWhitespace();
     }
@@ -211,7 +305,7 @@ public partial class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDecl
     /// <param name="members"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static CompilationUnitSyntax Build(List<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, MemberDeclarationSyntax[] members)
+    public static CompilationUnitSyntax Build(HashSet<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, MemberDeclarationSyntax[] members)
         => BuildUnit(usings, CheckMembers(type, members));
     /// <summary>
     /// 构造语法树
@@ -222,7 +316,7 @@ public partial class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDecl
     /// <param name="members"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static CompilationUnitSyntax Build(BaseNamespaceDeclarationSyntax ns, List<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, MemberDeclarationSyntax[] members)
+    public static CompilationUnitSyntax Build(BaseNamespaceDeclarationSyntax ns, HashSet<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, MemberDeclarationSyntax[] members)
         => BuildUnit(usings, ns.AddMembers(CheckMembers(type, members)));
     /// <summary>
     /// 构造语法树
@@ -255,13 +349,11 @@ public partial class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDecl
 
         var parent = type.Parent;
         if (parent is null)
-            return new SyntaxGenerator([], typeNew, [], [], [], []);
+            return new SyntaxGenerator(new(UsingDirectiveComparer.Instance), typeNew, [], [], [], []);
         else if(parent is BaseNamespaceDeclarationSyntax ns)
-            // 清空成员并注释
-            return new NamespaceBuilder(ns.WithMembers([]).WithLeadingTrivia(), [], typeNew, [], [], [], []);
-        else if (parent is CompilationUnitSyntax cu)
-            return new SyntaxGenerator([.. cu.Usings], typeNew, [], [], [], []);
-        return new SyntaxGenerator([], typeNew, [], [], [], []); 
+            // 清空成员与注释
+            return new NamespaceBuilder(ns.WithUsings([]).WithMembers([]).WithLeadingTrivia(), new(UsingDirectiveComparer.Instance), typeNew.WithLeadingTrivia(), [], [], [], []);
+        return new SyntaxGenerator(new(UsingDirectiveComparer.Instance), typeNew, [], [], [], []); 
     }
     #region Create
     /// <summary>
@@ -275,7 +367,7 @@ public partial class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDecl
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static SyntaxGenerator Create(TypeDeclarationSyntax type, List<ConstructorDeclarationSyntax> constructors, List<FieldDeclarationSyntax> fields, List<PropertyDeclarationSyntax> properties, List<MethodDeclarationSyntax> methods)
-        => new([], type, constructors, fields, properties, methods);
+        => new(new(UsingDirectiveComparer.Instance), type, constructors, fields, properties, methods);
     /// <summary>
     /// 生成构造器
     /// </summary>
@@ -283,7 +375,7 @@ public partial class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDecl
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static SyntaxGenerator Create(TypeDeclarationSyntax type)
-        => new([], type, [], [], [], []);
+        => new(new(UsingDirectiveComparer.Instance), type, [], [], [], []);
     /// <summary>
     /// 生成构造器
     /// </summary>
@@ -296,7 +388,7 @@ public partial class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDecl
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static NamespaceBuilder Create(BaseNamespaceDeclarationSyntax ns, TypeDeclarationSyntax type, List<ConstructorDeclarationSyntax> constructors, List<FieldDeclarationSyntax> fields, List<PropertyDeclarationSyntax> properties, List<MethodDeclarationSyntax> methods)
-        => new(ns, [], type, constructors, fields, properties, methods);
+        => new(ns, new(UsingDirectiveComparer.Instance), type, constructors, fields, properties, methods);
     /// <summary>
     /// 生成构造器
     /// </summary>
@@ -305,7 +397,7 @@ public partial class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDecl
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static NamespaceBuilder Create(BaseNamespaceDeclarationSyntax ns, TypeDeclarationSyntax type)
-        => new(ns, [], type, [], [], [], []);
+        => new(ns, new(UsingDirectiveComparer.Instance), type, [], [], [], []);
     /// <summary>
     /// 生成构造器
     /// </summary>
@@ -318,7 +410,7 @@ public partial class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDecl
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static NamespaceBuilder Create(string ns, TypeDeclarationSyntax type, List<ConstructorDeclarationSyntax> constructors, List<FieldDeclarationSyntax> fields, List<PropertyDeclarationSyntax> properties, List<MethodDeclarationSyntax> methods)
-        => new(SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(ns)), [], type, constructors, fields, properties, methods);
+        => new(SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(ns)), new(UsingDirectiveComparer.Instance), type, constructors, fields, properties, methods);
     /// <summary>
     /// 生成构造器
     /// </summary>
@@ -327,6 +419,6 @@ public partial class SyntaxGenerator(List<UsingDirectiveSyntax> usings, TypeDecl
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static NamespaceBuilder Create(string ns, TypeDeclarationSyntax type)
-        => new(SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(ns)), [], type, [], [], [], []);
+        => new(SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(ns)), new(UsingDirectiveComparer.Instance), type, [], [], [], []);
     #endregion
 }

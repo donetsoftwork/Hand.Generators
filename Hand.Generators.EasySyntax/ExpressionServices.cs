@@ -463,8 +463,8 @@ public static partial class GenerateServices
     /// <param name="arguments"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ExpressionSyntax Invocation(this ExpressionSyntax method, params IEnumerable<ArgumentSyntax> arguments)
-        => SyntaxFactory.InvocationExpression(method, SyntaxGenerator.ArgumentList(arguments));
+    public static ExpressionSyntax Invocation(this ExpressionSyntax method, params SeparatedSyntaxList<ArgumentSyntax> arguments)
+        => SyntaxFactory.InvocationExpression(method, SyntaxFactory.ArgumentList(arguments));
     /// <summary>
     /// 调用方法
     /// </summary>
@@ -512,8 +512,8 @@ public static partial class GenerateServices
     /// <param name="arguments"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ExpressionSyntax ConditionalInvocation(this ExpressionSyntax owner, SimpleNameSyntax methodName, IEnumerable<ArgumentSyntax> arguments)
-        => ConditionalInvocation(owner, methodName, SyntaxGenerator.ArgumentList(arguments));
+    public static ExpressionSyntax ConditionalInvocation(this ExpressionSyntax owner, SimpleNameSyntax methodName, SeparatedSyntaxList<ArgumentSyntax> arguments)
+        => ConditionalInvocation(owner, methodName, SyntaxFactory.ArgumentList(arguments));
     /// <summary>
     /// 条件调用方法
     /// </summary>

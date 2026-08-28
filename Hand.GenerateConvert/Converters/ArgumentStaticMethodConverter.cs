@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,7 +41,7 @@ public class ArgumentStaticMethodConverter(ExpressionSyntax method, IEnumerable<
         => _otherArguments;
     #endregion
     /// <inheritdoc />
-    protected override IEnumerable<ArgumentSyntax> CreateArguments(ExpressionSyntax source)
+    protected override SeparatedSyntaxList<ArgumentSyntax> CreateArguments(SyntaxGenerator generator, ExpressionSyntax source)
         => [SyntaxFactory.Argument(source), .. _otherArguments];
     ///// <summary>
     ///// 使用静态方法转化

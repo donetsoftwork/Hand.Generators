@@ -114,6 +114,24 @@ public class SyntaxGeneratorTests
         Assert.StartsWith("Vip king = new(\"King\")", code);
         Assert.Contains("Level = 1", code);
     }
+    [Fact]
+    public void Display()
+    {
+        var typeName = "User";
+        var ns = SyntaxGenerator.NamespaceDeclaration("A");
+        var @class = SyntaxFactory.ClassDeclaration(typeName)
+            .Partial()
+            .WithSemicolonToken();
+        var generator = SyntaxGenerator.Create(ns, @class);
+        var self = generator.Display(typeName, "A").NormalizeWhitespace().ToFullString();
+        Assert.Equal(typeName, self);
+        var a = generator.Display("UserId", "A").NormalizeWhitespace().ToFullString();
+        Assert.Equal("UserId", a);
+        var b = generator.Display("UserId", "B").NormalizeWhitespace().ToFullString();
+        Assert.Equal("B.UserId", b);
+        var b0 = generator.Display(typeName, "B").NormalizeWhitespace().ToFullString();
+        Assert.Equal("B.User", b0);
+    }
 
     //partial class UserId(int original)
     //{

@@ -1,5 +1,6 @@
 ﻿using Hand.Cachers;
 using Hand.Reflection;
+using Hand.Types;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace Hand.Members;
 /// <param name="name"></param>
 /// <param name="original"></param>
 /// <param name="symbolInfo"></param>
-public class ParameterMember(string name, IParameterSymbol original, TypeSymbolInfo symbolInfo)
+public class ParameterMember(string name, IParameterSymbol original, ITypeSymbolInfo symbolInfo)
     : SymbolMember(name, original, symbolInfo)
 {
     /// <inheritdoc />
@@ -37,7 +38,7 @@ public class ParameterMember(string name, IParameterSymbol original, TypeSymbolI
         var members = new Dictionary<string, SymbolMember>(parameters.Length, StringComparer.OrdinalIgnoreCase);
         foreach (var parameter in parameters)
         {
-            var symbol = typeSymbols.GetByType(parameter.Type);
+            var symbol = typeSymbols.Get(parameter.Type);
             if (symbol is null)
                 continue;
             //var name = CamelWordRule.FistToLower(parameter.Name);

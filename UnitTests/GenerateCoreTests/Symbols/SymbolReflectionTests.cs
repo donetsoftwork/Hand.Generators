@@ -30,6 +30,7 @@ public class UserId(int id) : EntityProperty<int>(id);";
             var compilation = SyntaxTreeDriver.DefaultDriver.Compile(syntaxTree);
             var definitionType = GetDeclaredTypeSymbol(compilation, syntaxTree);
             Assert.NotNull(definitionType);
+            Assert.Equal("EntityProperty`1", definitionType.MetadataName);
             Assert.True(definitionType.IsGenericType);
             var intType = compilation.GetSpecialType(SpecialType.System_Int32);  
             // Construct 是 INamedTypeSymbol 的标准泛型构造方法
@@ -38,7 +39,7 @@ public class UserId(int id) : EntityProperty<int>(id);";
             Assert.True(type.IsGenericType(definitionType));
 
             var listType = compilation.GetSpecialType(SpecialType.System_Collections_Generic_IList_T);
-            Assert.NotNull(listType);
+            Assert.Equal("IList`1", listType.MetadataName);
             var intListType = listType.Construct(intType);
             Assert.NotNull(intListType);
             Assert.True(intListType.IsGenericType(listType));

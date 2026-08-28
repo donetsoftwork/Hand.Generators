@@ -8,21 +8,21 @@ namespace Hand.Members;
 /// </summary>
 /// <param name="left"></param>
 /// <param name="right"></param>
-public readonly struct PairTypeSymbolKey(INamedTypeSymbol left, INamedTypeSymbol right)
+public readonly struct PairTypeSymbolKey(ITypeSymbol left, ITypeSymbol right)
      : IEquatable<PairTypeSymbolKey>
 {
     #region 配置
-    private readonly INamedTypeSymbol _left = left;
-    private readonly INamedTypeSymbol _right = right;
+    private readonly ITypeSymbol _left = left;
+    private readonly ITypeSymbol _right = right;
     /// <summary>
     /// 映射源类型
     /// </summary>
-    public INamedTypeSymbol Left
+    public ITypeSymbol Left
         => _left;
     /// <summary>
     /// 映射目标类型
     /// </summary>
-    public INamedTypeSymbol Right
+    public ITypeSymbol Right
         => _right;
     #endregion
     /// <inheritdoc />
@@ -45,7 +45,7 @@ public readonly struct PairTypeSymbolKey(INamedTypeSymbol left, INamedTypeSymbol
     /// </summary>
     /// <param name="left"></param>
     /// <param name="right"></param>
-    public void Deconstruct(out INamedTypeSymbol left, out INamedTypeSymbol right)
+    public void Deconstruct(out ITypeSymbol left, out ITypeSymbol right)
     {
         left = _left;
         right = _right;

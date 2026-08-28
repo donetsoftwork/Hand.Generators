@@ -7,3 +7,9 @@ namespace GenerateConvertTests.Supports;
 /// </summary>
 /// <param name="Original"></param>
 public record UserId(long Original) : IEntityId;
+/// <summary>
+/// 客户Id标识
+/// </summary>
+/// <param name="Original"></param>
+
+public record CustomerId(string Original): IEntityProperty<string>;

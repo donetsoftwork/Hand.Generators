@@ -10,9 +10,10 @@ public interface IConverter
     /// <summary>
     /// 转化方法
     /// </summary>
+    /// <param name="generator"></param>
     /// <param name="source"></param>
     /// <returns></returns>
-    public ExpressionSyntax Convert(ExpressionSyntax source);
+    public ExpressionSyntax Convert(SyntaxGenerator generator, ExpressionSyntax source);
     ///// <summary>
     ///// 获取可空转化器
     ///// </summary>

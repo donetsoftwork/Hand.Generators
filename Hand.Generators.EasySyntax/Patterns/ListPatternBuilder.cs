@@ -30,23 +30,7 @@ public class ListPatternBuilder(SyntaxToken? name = null)
     public IEnumerable<PatternSyntax> Patterns
         => _patterns;
     #endregion
-    ///// <summary>
-    ///// 添加模式
-    ///// </summary>
-    ///// <param name="pattern"></param>
-    ///// <returns></returns>
-    //public ListPatternBuilder Add(PatternSyntax pattern)
-    //{
-    //    _patterns.Add(pattern);
-    //    return this;
-    //}
-    ///// <summary>
-    ///// 添加模式
-    ///// </summary>
-    ///// <param name="pattern"></param>
-    ///// <returns></returns>
-    //public ListPatternBuilder Add(ExpressionSyntax pattern)
-    //    => Add(pattern.ToPattern());
+
     /// <inheritdoc />
     void IPatternCollection.AddPattern(PatternSyntax pattern)
         => _patterns.Add(pattern);

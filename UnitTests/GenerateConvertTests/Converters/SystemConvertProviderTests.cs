@@ -63,8 +63,9 @@ public class SystemConvertProviderTests
         var converter = provider.Get(compilation.GetSpecialType(specialType), compilation.GetIntSymbol());
         Assert.NotNull(converter);
         var source = SyntaxGenerator.Literal("123");
-        var dest = converter.Convert(source);
+        var generator = SyntaxGenerator.Create(SyntaxFactory.ClassDeclaration("TestClass"));
+        var dest = converter.Convert(generator, source);
         var code = dest.NormalizeWhitespace().ToFullString();
-        Assert.Equal("System.Convert.ToInt32(\"123\")", code);
+        Assert.Equal("Convert.ToInt32(\"123\")", code);
     }
 }

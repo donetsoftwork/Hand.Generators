@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Hand.Types;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Hand.Sources;
@@ -9,8 +10,8 @@ namespace Hand.Sources;
 /// <param name="compilation"></param>
 /// <param name="methodName"></param>
 /// <param name="thisType"></param>
-/// <param name="returnType"></param>
-public abstract class MethodSource(Compilation compilation, string methodName, TypeSyntax thisType, TypeSyntax returnType)
+/// <param name="returnInfo"></param>
+public abstract class MethodSource(Compilation compilation, string methodName, TypeSyntax thisType, ITypeSymbolInfo returnInfo)
 {
     #region 配置
     /// <summary>
@@ -28,7 +29,7 @@ public abstract class MethodSource(Compilation compilation, string methodName, T
     /// <summary>
     /// 返回类型
     /// </summary>
-    protected readonly TypeSyntax _returnType = returnType;
+    protected readonly ITypeSymbolInfo _returnInfo = returnInfo;
     /// <summary>
     /// 编译对象
     /// </summary>
@@ -45,54 +46,36 @@ public abstract class MethodSource(Compilation compilation, string methodName, T
     public TypeSyntax ThisType 
         => _thisType;
     /// <summary>
-    /// 返回类型
+    /// 返回类型信息
     /// </summary>
-    public TypeSyntax ReturnType 
-        => _returnType;
+    public ITypeSymbolInfo ReturnInfo
+        => _returnInfo;
     #endregion
 
     /// <summary>
     /// 创建参数列表
     /// </summary>
     /// <returns></returns>
-    public virtual ParameterSyntax[] CreateParameters()
+    public virtual SeparatedSyntaxList<ParameterSyntax> CreateParameters()
         => [];
     /// <summary>
     /// 创建方法声明
     /// </summary>
+    ///  <param name="generator"></param>
     /// <returns></returns>
-    public virtual MethodDeclarationSyntax CreateMethod()
+    public virtual MethodDeclarationSyntax CreateMethod(SyntaxGenerator generator)
     {
-        var method = _returnType.Method(_methodName, CreateParameters())
+        var returnType = generator.Display(_returnInfo);
+        var method = returnType.Method(_methodName, CreateParameters())
             .Public();
-        return BuildBody(method, SyntaxGenerator.ThisExpression);
+        return BuildBody(generator, method, SyntaxGenerator.ThisExpression);
     }
-    ///// <summary>
-    ///// 创建方法声明
-    ///// </summary>
-    ///// <returns></returns>
-    //public MethodDeclarationSyntax CreateMethod(bool isExtension, ParameterSyntax[] parameters, TypeSyntax returnType)
-    //{
-    //    var method = returnType.Method(_methodName, parameters);
-    //    ExpressionSyntax @this;
-    //    if (isExtension)
-    //    {
-    //        // 定义internal的静态扩展方法
-    //        method = method.Internal().Static();
-    //        @this = ExtensionThis;
-    //    }
-    //    else
-    //    {
-    //        method = method.Public();
-    //        @this = SyntaxGenerator.ThisExpression;
-    //    }
-    //    return BuildBody(method, @this);
-    //}
     /// <summary>
     /// 构建方法体
     /// </summary>
+    /// <param name="generator"></param>
     /// <param name="method"></param>
     /// <param name="this"></param>
     /// <returns></returns>
-    public abstract MethodDeclarationSyntax BuildBody(MethodDeclarationSyntax method, ExpressionSyntax @this);
+    public abstract MethodDeclarationSyntax BuildBody(SyntaxGenerator generator, MethodDeclarationSyntax method, ExpressionSyntax @this);
 }

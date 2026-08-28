@@ -28,8 +28,8 @@ public class CreationBuilder(List<ArgumentSyntax> arguments, List<AssignmentExpr
     public ImplicitObjectCreationExpressionSyntax Build()
     {
         if(_items.Count == 0)
-            return SyntaxFactory.ImplicitObjectCreationExpression(SyntaxGenerator.ArgumentList(_arguments), default);
-        return SyntaxFactory.ImplicitObjectCreationExpression(SyntaxGenerator.ArgumentList(_arguments), SyntaxGenerator.Initializer(_items));
+            return SyntaxFactory.ImplicitObjectCreationExpression(SyntaxFactory.ArgumentList([.._arguments]), default);
+        return SyntaxFactory.ImplicitObjectCreationExpression(SyntaxFactory.ArgumentList([.. _arguments]), SyntaxGenerator.Initializer(_items));
     }
     /// <summary>
     /// 初始化

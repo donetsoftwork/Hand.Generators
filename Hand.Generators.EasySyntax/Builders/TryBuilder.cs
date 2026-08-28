@@ -39,6 +39,6 @@ public class TryBuilder()
         foreach (var item in _catches)
             list.Add(item.BuildCatch());
 
-        return SyntaxFactory.TryStatement(SyntaxFactory.Block(_statements), SyntaxGenerator.List(list), _finally?.BuildFinally());
+        return SyntaxFactory.TryStatement(SyntaxFactory.Block(_statements), [.. list], _finally?.BuildFinally());
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Hand;
 using Hand.Reflection;
-using Hand.Symbols;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -41,7 +40,7 @@ public class MyAttribute : Attribute;
         Assert.NotNull(symbol);
         var type = symbol.ContainingType;
         Assert.NotNull(type);
-        Assert.True(SymbolTypeDescriptor.CheckEquals(type, type2));
+        Assert.True(type.Equals(type2, SymbolEqualityComparer.Default));
 
         var targetNode = attribute.Parent?.Parent;
         Assert.NotNull(targetNode);

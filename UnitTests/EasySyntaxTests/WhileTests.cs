@@ -15,7 +15,7 @@ public class WhileTests
         var listType = SyntaxGenerator.Generic("List", SyntaxGenerator.IntType);
         var list = SyntaxFactory.IdentifierName("list");
         // reader.GetFieldValue<int>
-        var getFieldValue = SyntaxGenerator.Generic("GetFieldValue", SyntaxGenerator.IntType).Qualified(reader);
+        var getFieldValue = SyntaxGenerator.Generic("GetFieldValue", SyntaxGenerator.IntType).Qualify(reader);
         // List<int> GetIds(DbDataReader reader)
         var method = listType.Method("GetIds", readerType.Parameter(reader.Identifier))
             .ToBuilder()
@@ -83,7 +83,7 @@ public class WhileTests
         // reader.Read
         var read = reader.Access("Read");
         // reader.GetFieldValue<int>
-        var getFieldValue = Generic("GetFieldValue", IntType).Qualified("reader");
+        var getFieldValue = Generic("GetFieldValue", IntType).Qualify("reader");
         // List<int> GetIds(DbDataReader reader)
         // list.Add
         var add = list.Access("Add");
@@ -113,7 +113,7 @@ public class WhileTests
         // reader.Read
         var read = reader.Access("Read");
         // reader.GetFieldValue<int>
-        var getFieldValue = Generic("GetFieldValue", IntType).Qualified("reader");
+        var getFieldValue = Generic("GetFieldValue", IntType).Qualify("reader");
         // List<int> GetIds(DbDataReader reader)
         // list.Add
         var add = list.Access("Add");
