@@ -169,9 +169,8 @@ namespace CommentModels
         ///转化
         ///</summary>
         ///<param name = "message"></param>
-        public static CreateResponse ToCreateResponse(this Comment @this, string message = "") => new()
+        public static CreateResponse ToCreateResponse(this Comment @this) => new()
         {
-            Message = message,
             Id = @this.Id.Original,
             Content = @this.Content.Original,
             CreateTime = @this.CreateTime.Original,
@@ -312,7 +311,7 @@ namespace CommentModels
     {
         var content = new CommentContent(req.Content);
         var comment = _service.AddComment(content);
-        return Task.FromResult(comment.ToCreateResponse("Success"));
+        return Task.FromResult(comment.ToCreateResponse());
     }
 ~~~
 
@@ -1044,6 +1043,7 @@ partial class UserDto
 >* Key配置主键
 >* Column配置了列名或数据库原始类型
 >* Unique配置唯一索引(支持多列组合唯一)
+>* 需要引用ShadowSql.Core(0.9.2-alpha),否则无法生成代码
 
 ~~~csharp
 [Table("Products")]
@@ -1065,6 +1065,11 @@ public partial class ProductTable;
 ~~~
 
 #### 3.2.2 GenerateTable生成代码
+>* 以下代码可用于CURD操作
+>* 使用Name(同类属性)操作实际自动映射到ProductName字段
+>* 默认插入和修改忽略Id字段
+>* 但是不能用于反向工程生成表
+
 ~~~csharp
 using ShadowSql.Identifiers;
 partial class ProductTable : Table
@@ -1086,7 +1091,50 @@ partial class ProductTable : Table
 }
 ~~~
 
-#### 3.2.2 GenerateTable项目信息
+#### 3.2.3 GenerateTable生成支持反向工程的表结构
+>* 只需要再引用ShadowSql.DDL(0.9.2-alpha)即可,配置代码无需修改
+>* 生成以下代码
+>* 该表结构同样支持CURD操作,还能支持生成Create Table功能
+
+~~~csharp
+using Shadow.DDL.Schemas;
+using Shadow.DDL.Constraints;
+
+namespace GenerateSchemaTableTests;
+partial class ProductTable : TableSchema
+{
+    public ProductTable(string tableName = "Products", string schema = "") : base(tableName, [_id, _name, _categoryId, _model], [_categoryModel], schema)
+    {
+    }
+
+    private static readonly ColumnSchema _id = new ColumnSchema<int>("Id", ColumnType.Identity | ColumnType.Key | ColumnType.NotNull);
+    private new static readonly ColumnSchema _name = new ColumnSchema<string>("ProductName", "Name", ColumnType.Unique | ColumnType.NotNull);
+    private static readonly ColumnSchema _categoryId = new ColumnSchema<int>("CategoryId", ColumnType.NotNull);
+    private static readonly ColumnSchema _model = new ColumnSchema<string>("Model", ColumnType.NotNull);
+    private static readonly UniqueConstraint _categoryModel = new UniqueConstraint("CategoryModel", "CategoryId", "Model");
+    public ColumnSchema Id => _id;
+    public new ColumnSchema Name => _name;
+    public ColumnSchema CategoryId => _categoryId;
+    public ColumnSchema Model => _model;
+}
+~~~
+
+#### 3.2.4 强制生成3.2.2代码
+>* 如果引用了ShadowSql.DDL,但是某个功能不允许含Create Table功能
+>* 这时可以给待生成的类增加基类Table即可
+>* 修改后的配置代码如下
+>* 如果设置了基类为Table或TableSchema,则按指定规则生成
+>* 无设置如果引用包含ShadowSql.DDL则按TableSchema生成
+>* 如果引用包含ShadowSql.Core则按Table生成
+>* 都没引用不生成
+>* 一年多前就有人评论用SourceGenerator生成代码,现在终于把这块补上了
+
+~~~csharp
+[GenerateTable<Product>]
+public partial class ProductTable : Table;
+~~~
+
+#### 3.2.5 GenerateTable项目信息
 >* nuget dotnet add package ShadowSql.GenerateTable --version 0.9.1.1-alpha
 >* github https://github.com/donetsoftwork/Shadow/tree/master/Generators/ShadowSql.GenerateTable
 >* gitee https://gitee.com/donetsoftwork/Shadowtree/master/Generators/ShadowSql.GenerateTable

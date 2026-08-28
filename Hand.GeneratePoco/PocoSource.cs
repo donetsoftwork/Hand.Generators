@@ -162,15 +162,20 @@ public abstract class PocoSource(SyntaxGenerator generator, ConvertBuilder conve
     /// <returns></returns>
     public (TypeSyntax, ITypeSymbolInfo) CheckMemberType(string propertyName, ITypeSymbolInfo sourseInfo)
     {
+        var isNullable = sourseInfo.IsNullable || CheckMemberNullAble(propertyName);
         var propertyInfo = sourseInfo.CheckPoco();
-        var propertySymbol = propertyInfo.Original;
+        var propertySymbol = propertyInfo.Symbol;
         // 自包含属性转化为目标类型
         if (propertySymbol.Equals(_sourseSymbol, SymbolEqualityComparer.Default))
+        {
+            if (isNullable)
+                return (_thisType.Nullable(), _typeInfo.GetNullable(_compilation));
             return (_thisType, _typeInfo);
+        }
 
         var propertyType = _generator.Display(propertyInfo);
-        if (sourseInfo.IsNullable || CheckMemberNullAble(propertyName))
-            return (propertyType.Nullable(), propertyInfo.GetNullable(_compilation));
+        if (isNullable)
+            return (propertyType.CheckNullable(), propertyInfo.GetNullable(_compilation));
         return (propertyType, propertyInfo);
     }
     /// <summary>

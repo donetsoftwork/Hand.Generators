@@ -154,6 +154,11 @@ using Hand.Models;
 
 namespace GeneratePocoTests;
 
+
+public abstract class ResponseBase
+{
+    public string Message { get; set; } = ""Success"";
+}
 /// <summary>
 /// 用户
 /// </summary>
@@ -162,7 +167,7 @@ namespace GeneratePocoTests;
 public record User(int? Id, string Name);
 
 [GeneratePoco<User>()]
-public partial class UserDto
+public partial class UserDto : ResponseBase
 {
     public string? Other { get; set; }
 }
@@ -240,7 +245,7 @@ public partial class UserDto;
         var code = syntaxTree.GetText().ToString();
         Assert.Contains("Id", code);
         Assert.Contains("Name", code);
-        Assert.Contains("UserDto Master", code);
+        Assert.Contains("UserDto? Master", code);
     }
    [Fact]
     public void WithConvertTo()

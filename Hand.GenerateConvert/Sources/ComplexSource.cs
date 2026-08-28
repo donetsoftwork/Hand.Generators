@@ -93,10 +93,6 @@ public class ComplexSource(ConvertBuilder builder, TypeSyntax thisType, ComplexT
                 else
                 {
                     continue;
-                    //defaultValue = DefaultExpressionBuilder.GetParameterDefault(memberInfo);
-                    //parameterName = CamelWordRule.FistToLower(member.Name);
-                    //memberValue = SyntaxFactory.IdentifierName(parameterName);
-                    //builder.Initialize(member.Name, memberValue);
                 }
                 // 增加参数
                 parameters.Add(generator.Display(memberInfo).Parameter(parameterName, defaultValue));
