@@ -2,6 +2,7 @@
 using Hand;
 using Hand.Members;
 using Hand.Providers;
+using Hand.Types;
 
 namespace GenerateConvertTests.Providers;
 

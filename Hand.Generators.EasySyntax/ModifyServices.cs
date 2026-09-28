@@ -69,7 +69,7 @@ public static partial class GenerateServices
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(SyntaxFactory.Token(kind));
     /// <summary>
-    /// 公开
+    /// 公开(字段、属性、方法及类)
     /// </summary>
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
@@ -79,7 +79,7 @@ public static partial class GenerateServices
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_public);
     /// <summary>
-    /// 私有
+    /// 私有(字段、属性、方法及类)
     /// </summary>
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
@@ -89,7 +89,7 @@ public static partial class GenerateServices
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_private);
     /// <summary>
-    /// 保护
+    /// 保护(字段、属性、方法及类)
     /// </summary>
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
@@ -99,7 +99,7 @@ public static partial class GenerateServices
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_protected);
     /// <summary>
-    /// 内部
+    /// 内部(字段、属性、方法及类)
     /// </summary>
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
@@ -109,7 +109,7 @@ public static partial class GenerateServices
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_internal);
     /// <summary>
-    /// 部分
+    /// 部分(属性、方法及类)
     /// </summary>
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
@@ -119,7 +119,7 @@ public static partial class GenerateServices
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_partial);
     /// <summary>
-    /// 抽象
+    /// 抽象(属性、方法及类)
     /// </summary>
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
@@ -129,25 +129,25 @@ public static partial class GenerateServices
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_abstract);
     /// <summary>
-    /// 虚
+    /// 虚(属性和方法)
     /// </summary>
-    /// <typeparam name="TMethod"></typeparam>
-    /// <param name="method"></param>
+    /// <typeparam name="TDeclarationSyntax"></typeparam>
+    /// <param name="declaration"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TMethod Virtual<TMethod>(this TMethod method)
-        where TMethod : BaseMethodDeclarationSyntax
-        => method.Modify(_virtual);
+    public static TDeclarationSyntax Virtual<TDeclarationSyntax>(this TDeclarationSyntax declaration)
+        where TDeclarationSyntax : MemberDeclarationSyntax
+        => declaration.Modify(_virtual);
     /// <summary>
-    /// 重写
+    /// 重写(属性和方法)
     /// </summary>
-    /// <typeparam name="TMethod"></typeparam>
-    /// <param name="method"></param>
+    /// <typeparam name="TDeclarationSyntax"></typeparam>
+    /// <param name="declaration"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TMethod Override<TMethod>(this TMethod method)
-        where TMethod : BaseMethodDeclarationSyntax
-        => method.Modify(_override);
+    public static TDeclarationSyntax Override<TDeclarationSyntax>(this TDeclarationSyntax declaration)
+        where TDeclarationSyntax : MemberDeclarationSyntax
+        => declaration.Modify(_override);
     /// <summary>
     /// 异步
     /// </summary>
@@ -169,7 +169,7 @@ public static partial class GenerateServices
         where TMethod : BaseMethodDeclarationSyntax
         => method.Modify(_extern);
     /// <summary>
-    /// 隐藏
+    /// 隐藏(字段、属性和方法)
     /// </summary>
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
@@ -179,7 +179,7 @@ public static partial class GenerateServices
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_new‌);
     /// <summary>
-    /// 密封
+    /// 密封(属性、方法及类)
     /// </summary>
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
@@ -189,7 +189,7 @@ public static partial class GenerateServices
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_sealed‌);
     /// <summary>
-    /// 静态
+    /// 静态(字段、属性、方法及类)
     /// </summary>
     /// <typeparam name="TDeclarationSyntax"></typeparam>
     /// <param name="declaration"></param>
@@ -207,13 +207,21 @@ public static partial class GenerateServices
     public static LocalFunctionStatementSyntax Static(this LocalFunctionStatementSyntax function)
         => function.WithModifiers(function.Modifiers.Add(_static));
     /// <summary>
-    /// 只读
+    /// 只读字段
     /// </summary>
     /// <param name="field"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FieldDeclarationSyntax ReadOnly(this FieldDeclarationSyntax field)
         => field.Modify(_readonly);
+    /// <summary>
+    /// 只读结构体
+    /// </summary>
+    /// <param name="declaration"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static StructDeclarationSyntax ReadOnly(this StructDeclarationSyntax declaration)
+        => declaration.Modify(_readonly);
     /// <summary>
     /// 易变(多线程访问和修改)
     /// </summary>

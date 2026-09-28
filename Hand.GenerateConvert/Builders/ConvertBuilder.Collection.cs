@@ -1,8 +1,9 @@
-﻿using Hand.Collections;
-using Hand.Converters;
-using Hand.Reflection;
+﻿using Hand.Converters;
+using Hand.Converters.Collections;
+using Hand.Syntax;
 using Hand.Types;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Hand.Builders;
@@ -19,14 +20,16 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? ToCollection(ITypeSymbolInfo source, CollectionTypeInfo dest)
+    public ISyntaxConverter? ToCollection(ITypeSymbolInfo source, CollectionTypeInfo dest)
     {
         return source.Kind switch
         {
-            TypeSymbolKind.Collection => CollectionToCollection((ICollectionSymbolInfo)source, dest),
-            TypeSymbolKind.Array => CollectionToCollection((ICollectionSymbolInfo)source, dest),
+            TypeSymbolKind.Collection => CollectionToCollection((ICollectionTypeInfo)source, dest),
+            TypeSymbolKind.Array => CollectionToCollection((ICollectionTypeInfo)source, dest),
             TypeSymbolKind.Enum => EnumToCollection((EnumTypeInfo)source, dest),
-            TypeSymbolKind.Entity => EntityToCollection((EntityTypeInfo)source, dest),
+            TypeSymbolKind.Enumeration => EnumerationToCollection((EnumerationTypeInfo)source, dest),
+            TypeSymbolKind.Entity => EntityToCollection((EntityPropertyTypeInfo)source, dest),
+            TypeSymbolKind.Void => null,
             _ => OtherToCollection(source, dest),
         };
     }
@@ -36,7 +39,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? CollectionToCollection(ICollectionSymbolInfo source, CollectionTypeInfo dest)
+    public ISyntaxConverter? CollectionToCollection(ICollectionTypeInfo source, CollectionTypeInfo dest)
     {
         var listType = _compilation.GetListSymbol();
         if (listType is null)
@@ -61,7 +64,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? OtherToCollection(ITypeSymbolInfo source, ICollectionSymbolInfo dest)
+    public ISyntaxConverter? OtherToCollection(ITypeSymbolInfo source, ICollectionTypeInfo dest)
     {
         var destElement = dest.ElementInfo;
         if (source.Original.Equals(destElement.Original, SymbolEqualityComparer.Default))
@@ -70,7 +73,7 @@ public partial class ConvertBuilder
         var elementConverter = Get(source, destElement);
         if (elementConverter is null)
             return null;
-        var converter = new CompatibleConverter(elementConverter, ElementToCollectionConverter.Instance);
+        var converter = new CompositeConverter(elementConverter, ElementToCollectionConverter.Instance);
         return CheckSource(converter, source.IsNullable, dest);
     }
     /// <summary>
@@ -81,7 +84,7 @@ public partial class ConvertBuilder
     /// <param name="sourceIsNull"></param>
     /// <param name="sourceIsList"></param>
     /// <returns></returns>
-    public IConverter? CollectionToList(ICollectionSymbolInfo source, ICollectionSymbolInfo dest, bool sourceIsNull, bool sourceIsList)
+    public ISyntaxConverter? CollectionToList(ICollectionTypeInfo source, ICollectionTypeInfo dest, bool sourceIsNull, bool sourceIsList)
     {
         var sourceElement = source.ElementInfo;
         var destElement = dest.ElementInfo;
@@ -90,19 +93,19 @@ public partial class ConvertBuilder
             var elementConverter = Get(sourceElement, destElement);
             if (elementConverter is null)
                 return null;
-            return CheckSource(new ListConverter(elementConverter), sourceIsNull, dest);
+            return CheckSource(ListConverter.Create(elementConverter), sourceIsNull, dest);
         }
         if (sourceElement.Original.IsCompatible(destElement.Original))
         {
-            return CheckSource(EnumerableToListConverter.Instance, sourceIsNull, dest);
+            return CheckSource(LinqConverter.ToList(), sourceIsNull, dest);
         }
         else
         {
             var elementConverter = Get(sourceElement, destElement);
             if (elementConverter is null)
                 return null;
-            var enumerableConverter = new EnumerableConverter(elementConverter);
-            var converter = new CompatibleConverter(enumerableConverter, EnumerableToListConverter.Instance);
+            var selectConverter = ItemLinqConverter.Select(elementConverter);
+            var converter = new CompositeConverter(selectConverter, LinqConverter.ToList());
             return CheckSource(converter, sourceIsNull, dest);
         }
     }
@@ -114,7 +117,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? CollectionToOther(ICollectionSymbolInfo source, ITypeSymbolInfo dest)
+    public ISyntaxConverter? CollectionToOther(ICollectionTypeInfo source, ITypeSymbolInfo dest)
     {
         var converter = GetCommonConversion(source, dest);
         if (converter is not null)
@@ -126,10 +129,10 @@ public partial class ConvertBuilder
         var elementConverter = Get(sourceElement, dest);
         if (elementConverter is null)
             return null;
-        var enumerableConverter = new EnumerableConverter(elementConverter);
+        var selectConverter = ItemLinqConverter.Select(elementConverter);
         var defaultValue = DefaultExpressionBuilder.GetTypedDefault(dest);
         var firstConverter = GetFirstConverter(dest, defaultValue);
-        converter = new CompatibleConverter(enumerableConverter, firstConverter);
+        converter = new CompositeConverter(selectConverter, firstConverter);
         return CheckSource(converter, source.IsNullable, dest);
     }
     /// <summary>
@@ -138,15 +141,15 @@ public partial class ConvertBuilder
     /// <param name="dest"></param>
     /// <param name="defaultValue"></param>
     /// <returns></returns>
-    public static IConverter GetFirstConverter(ITypeSymbolInfo dest, ExpressionSyntax defaultValue)
+    public static ISyntaxConverter GetFirstConverter(ITypeSymbolInfo dest, ExpressionSyntax defaultValue)
     {
         var isNullable = dest.IsNullable || !dest.Original.IsValueType;
+        if (isNullable && defaultValue.IsKind(SyntaxKind.DefaultExpression))
+            return FirstOrDefaultConverter.Create();
         if (SyntaxGenerator.FrameworkMajorVersion >= 6)
-            return new CollectionFirstOrDefaultConverter(defaultValue);
-        else if (isNullable)
-            return new CollectionFirstOrCoalesceConverter(isNullable, defaultValue);
+            return FirstOrDefaultValueConverter.Create(defaultValue);
         else
-            return CollectionFirstOrCoalesceConverter.Generic(dest.Original.ToSyntax().Nullable(), isNullable, defaultValue);
+            return FirstOrCoalesceConverter.Create(defaultValue);
     }
     #endregion
     ///// <summary>

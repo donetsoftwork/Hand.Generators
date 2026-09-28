@@ -1,8 +1,8 @@
 ﻿using Hand.Arguments;
 using Hand.Builders;
-using Hand.Converters;
 using Hand.Members;
-using Hand.Reflection;
+using Hand.Parameters;
+using Hand.Syntax;
 using Hand.Types;
 using Hand.Words;
 using Microsoft.CodeAnalysis;
@@ -37,6 +37,7 @@ public class ComplexSource(ConvertBuilder builder, TypeSyntax thisType, ComplexT
     }
     #region 配置
     private readonly ConvertBuilder _builder = builder;
+    private new readonly ComplexTypeInfo _returnInfo = returnInfo;
     private readonly MemberArgument[] _arguments = arguments;
     #endregion
 
@@ -68,7 +69,7 @@ public class ComplexSource(ConvertBuilder builder, TypeSyntax thisType, ComplexT
             var memberInfo = member.SymbolInfo;
             var sourceMember = argument.Source;
             ExpressionSyntax memberValue;
-            if (sourceMember is null || (_builder.Get(sourceMember.SymbolInfo, memberInfo) is not IConverter memberConverter))
+            if (sourceMember is null || (_builder.Get(sourceMember.SymbolInfo, memberInfo) is not ISyntaxConverter memberConverter))
             {
                 string parameterName;
                 ExpressionSyntax defaultValue;
@@ -95,7 +96,7 @@ public class ComplexSource(ConvertBuilder builder, TypeSyntax thisType, ComplexT
                     continue;
                 }
                 // 增加参数
-                parameters.Add(generator.Display(memberInfo).Parameter(parameterName, defaultValue));
+                parameters.Add(memberInfo.Display(generator).Parameter(parameterName, defaultValue));
                 comment.AddParam(parameterName, member.Summary);
             }
             else 

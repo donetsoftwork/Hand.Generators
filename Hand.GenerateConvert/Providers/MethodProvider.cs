@@ -1,6 +1,5 @@
-﻿using Hand.Members;
+﻿using Hand.Methods;
 using Hand.Reflection;
-using Hand.Symbols;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
@@ -51,7 +50,7 @@ public class MethodProvider(INamedTypeSymbol symbol)
     /// <param name="filter"></param>
     /// <returns></returns>
     public static IMethodSymbol? GetStaticMethod(INamedTypeSymbol declare, INamedTypeSymbol source, ITypeSymbol dest, Func<IMethodSymbol, bool> filter)
-        => GetMethod(SymbolReflection.GetMethods(declare).Where(m => SymbolTypeDescriptor.CheckEquals(dest, m.ReturnType) && SymbolTypeDescriptor.MatchFirst(m.Parameters, source)), filter);
+        => GetMethod(SymbolReflection.GetMethods(declare).Where(m => dest.Equals(m.ReturnType, SymbolEqualityComparer.Default) && SymbolReflection.MatchFirst(m.Parameters, source)), filter);
     /// <summary>
     /// 获取实例方法
     /// </summary>
@@ -60,7 +59,7 @@ public class MethodProvider(INamedTypeSymbol symbol)
     /// <param name="filter"></param>
     /// <returns></returns>
     public static IMethodSymbol? GetInstanceMethod(INamedTypeSymbol source, ITypeSymbol dest, Func<IMethodSymbol, bool> filter)
-        => GetMethod(SymbolReflection.GetMethods(source).Where(m => SymbolTypeDescriptor.CheckEquals(dest, m.ReturnType)), filter);
+        => GetMethod(SymbolReflection.GetMethods(source).Where(m => dest.Equals(m.ReturnType, SymbolEqualityComparer.Default)), filter);
     /// <summary>
     /// 获取参数最好的方法
     /// </summary>

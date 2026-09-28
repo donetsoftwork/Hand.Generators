@@ -777,7 +777,7 @@ public class PatternTests
         var pointType = SyntaxFactory.IdentifierName("Point");
         var x = SyntaxFactory.IdentifierName("x");
         var y = SyntaxFactory.IdentifierName("y");
-        var pattern = SyntaxGenerator.VarParenthesizedPattern(x.Identifier, y.Identifier);
+        var pattern = SyntaxGenerator.VarPattern(x.Identifier, y.Identifier);
         var body = point.SwitchExpression()
             .Case(pattern, pointType.New([x.PreMinus(), y]))
                 .When(x.LessThan(y))

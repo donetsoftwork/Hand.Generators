@@ -5,6 +5,7 @@
   <Folder Name="/docs/">
     <File Path="docs/attribute.md" />
     <File Path="docs/documentation.md" />
+    <File Path="docs/naming.md" />
     <File Path="docs/notes.md" />
     <File Path="docs/pack.md" />
     <File Path="docs/partial.md" />
@@ -17,13 +18,20 @@
     <File Path="docs/type.md" />
   </Folder>
   <Folder Name="/UnitTests/">
+    <Project Path="UnitTests/DocumentationTests/DocumentationTests.csproj" Id="ee27baab-f5c1-4ff2-92a4-578cdf4c4e42" />
     <Project Path="UnitTests/EasySyntaxTests/EasySyntaxTests.csproj" />
+    <Project Path="UnitTests/EnumsTests/EnumsTests.csproj" Id="8bebf053-125c-42f8-a676-248f6ef8b69a" />
     <Project Path="UnitTests/GenerateCachedPropertyTests/GenerateCachedPropertyTests.csproj" />
-    <Project Path="UnitTests/GenerateConvertTests/GenerateConvertTests.csproj" Id="178af3f5-b51a-45ea-9845-adc0d8d72c91" />
+    <Project Path="UnitTests/GenerateConvertTests/GenerateConvertTests.csproj" />
     <Project Path="UnitTests/GenerateCoreTests/GenerateCoreTests.csproj" />
+    <Project Path="UnitTests/GenerateEnumerationTests/GenerateEnumerationTests.csproj" Id="4b8adfe1-f176-4315-bd90-5ac0c68591b4" />
     <Project Path="UnitTests/GeneratePocoTests/GeneratePocoTests.csproj" />
     <Project Path="UnitTests/GeneratePropertyTests/GeneratePropertyTests.csproj" />
+    <Project Path="UnitTests/GeneratorsTests/GeneratorsTests.csproj" Id="60554d11-d9a7-42fd-8d8f-e02ff09217bc" />
+    <Project Path="UnitTests/NamingTests/NamingTests.csproj" Id="db699c4a-ef64-41c5-a52a-01b39fa5e706" />
+    <Project Path="UnitTests/ReflectionTests/ReflectionTests.csproj" Id="2982342a-b449-4cfc-a5f9-66f29e8dc2fc" />
     <Project Path="UnitTests/SyntaxScriptingTests/SyntaxScriptingTests.csproj" Id="68fc116d-9e18-48f9-902f-c0a9807a920f" />
+    <Project Path="UnitTests/TypesTests/TypesTests.csproj" Id="341a5e1b-941a-4422-8b18-ca011715d28f" />
   </Folder>
   <Folder Name="/解决方案项/">
     <File Path=".gitattributes" />
@@ -39,7 +47,16 @@
   <Project Path="Hand.GeneratePoco/Hand.GeneratePoco.csproj" Id="53da44b9-eec7-4841-97e8-747c5455b424" />
   <Project Path="Hand.GenerateProperty/Hand.GenerateProperty.csproj" />
   <Project Path="Hand.Generators.Attributes/Hand.Generators.Attributes.csproj" />
+  <Project Path="Hand.Generators.Converters/Hand.Generators.Converters.csproj" Id="bfc2211a-afba-4dd3-aa15-5fd4c209c808" />
+  <Project Path="Hand.Generators.Documentation/Hand.Generators.Documentation.csproj" Id="202517a7-4073-4c49-b287-7af83f9b20d7" />
   <Project Path="Hand.Generators.EasySyntax/Hand.Generators.EasySyntax.csproj" />
+  <Project Path="Hand.Generators.Enums/Hand.Generators.Enums.csproj" Id="c5f8151d-62d1-47fc-a9f3-6aa643a11e8f" />
+  <Project Path="Hand.Generators.Generators/Hand.Generators.Generators.csproj" Id="47f55d17-da68-45b3-9ac8-57866c72264d" />
+  <Project Path="Hand.Generators.Members/Hand.Generators.Members.csproj" />
+  <Project Path="Hand.Generators.Naming/Hand.Generators.Naming.csproj" Id="796174e9-f73d-4fb7-a9f2-5197a8c873b5" />
+  <Project Path="Hand.Generators.Reflection/Hand.Generators.Reflection.csproj" Id="668085a6-58b9-4362-8a51-9925e1db7e02" />
   <Project Path="Hand.Generators.SyntaxScripting/Hand.Generators.SyntaxScripting.csproj" Id="59a10285-4520-427a-8299-8265784e8d50" />
+  <Project Path="Hand.Generators.System/Hand.Generators.System.csproj" Id="1edb8362-7e83-4d26-8f57-bc7ddd1d1f65" />
+  <Project Path="Hand.Generators.Types/Hand.Generators.Types.csproj" Id="291d40a4-3810-43b4-9a2c-c2a329c63cd0" />
   <Project Path="Hello/Hello.csproj" Id="deb3a5d0-7796-4860-9e79-ba5f6d26a93d" />
 </Solution>

@@ -291,6 +291,7 @@ public static partial class GenerateServices
     /// </summary>
     /// <param name="type"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TypeOfExpressionSyntax TypeOf(this TypeSyntax type)
         => SyntaxFactory.TypeOfExpression(type);
     /// <summary>
@@ -299,6 +300,7 @@ public static partial class GenerateServices
     /// <param name="type"></param>
     /// <param name="expression"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static CastExpressionSyntax Cast(this TypeSyntax type, ExpressionSyntax expression)
         => SyntaxFactory.CastExpression(type, expression);
     /// <summary>
@@ -319,7 +321,6 @@ public static partial class GenerateServices
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ArrayTypeSyntax Array(this TypeSyntax type, params SeparatedSyntaxList<ExpressionSyntax> sizes)
         => SyntaxFactory.ArrayType(type, SyntaxFactory.SingletonList(SyntaxFactory.ArrayRankSpecifier(sizes)));
-
     #region New
     /// <summary>
     /// 初始化数组
@@ -586,6 +587,7 @@ public static partial class GenerateServices
     /// </summary>
     /// <param name="type"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNullable(this INamedTypeSymbol type)
         => type.NullableAnnotation == NullableAnnotation.Annotated || IsGenericType(type, SpecialType.System_Nullable_T);
     #endregion
@@ -595,6 +597,7 @@ public static partial class GenerateServices
     /// <param name="type"></param>
     /// <param name="genericType"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsGenericType(this INamedTypeSymbol type, SpecialType genericType)
         => type.IsGenericType && type.ConstructedFrom.SpecialType == genericType;
     /// <summary>
@@ -651,12 +654,9 @@ public static partial class GenerateServices
     /// <param name="symbol"></param>
     /// <param name="nullable"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TypeSyntax ToSyntax(this INamedTypeSymbol symbol, bool nullable)
-    {
-        if (nullable)
-            return CheckNullable(ToSyntax((ITypeSymbol)symbol));
-        return ToSyntax((ITypeSymbol)symbol);
-    }
+        => nullable ? CheckNullable(ToSyntax(symbol)) : ToSyntax(symbol);
     /// <summary>
     /// 类型符号转化为类型语法
     /// </summary>
@@ -668,13 +668,14 @@ public static partial class GenerateServices
             return SyntaxFactory.NullableType(ToSyntax(symbol.TypeArguments[0]));
         if (symbol.NullableAnnotation == NullableAnnotation.Annotated)
             return SyntaxFactory.NullableType(ToSyntax(symbol.ConstructedFrom));
-        return ToDisplayName(symbol);
+        return ToSyntaxCore(symbol);
     }
     /// <summary>
     /// IArrayTypeSymbol转TypeSyntax
     /// </summary>
     /// <param name="arraySymbol"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TypeSyntax ToSyntax(this IArrayTypeSymbol arraySymbol)
         => ToSyntax(arraySymbol.ElementType).Array();
     /// <summary>
@@ -683,6 +684,20 @@ public static partial class GenerateServices
     /// <param name="symbol"></param>
     /// <returns></returns>
     public static TypeSyntax ToSyntax(this ITypeSymbol symbol)
+    {
+        if (symbol is INamedTypeSymbol namedType)
+            return ToSyntax(namedType);
+        if (symbol is IArrayTypeSymbol arraySymbol)
+            return ToSyntax(arraySymbol);
+        return ToDisplayName(symbol);
+    }
+    /// <summary>
+    /// 类型符号转化为类型语法(不处理Nullable)
+    /// </summary>
+    /// <param name="symbol"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static TypeSyntax ToSyntaxCore(this INamedTypeSymbol symbol)
     {
         return symbol.SpecialType switch
         {
@@ -725,7 +740,7 @@ public static partial class GenerateServices
             SpecialType.System_Runtime_CompilerServices_RuntimeFeature => SyntaxFactory.IdentifierName(".RuntimeFeature").Qualifies("System", "Runtime", "CompilerServices"),
             SpecialType.System_Runtime_CompilerServices_PreserveBaseOverridesAttribute => SyntaxFactory.IdentifierName("PreserveBaseOverridesAttribute").Qualifies("System", "Runtime", "CompilerServices"),
             SpecialType.System_Runtime_CompilerServices_InlineArrayAttribute => SyntaxFactory.IdentifierName("InlineArrayAttribute").Qualifies("System", "Runtime", "CompilerServices"),
-            SpecialType.None => OthersToSyntax(symbol),
+            SpecialType.None => ToDisplayName(symbol),
             SpecialType.System_Nullable_T => SyntaxGenerator.OmitGeneric("Nullable").Qualify("System"),
             SpecialType.System_Collections_Generic_IEnumerable_T => SyntaxGenerator.OmitGeneric("IEnumerable").Qualifies("System", "Collections", "Generic"),
             SpecialType.System_Collections_Generic_IEnumerator_T => SyntaxGenerator.OmitGeneric("IEnumerator").Qualifies("System", "Collections", "Generic"),
@@ -735,19 +750,6 @@ public static partial class GenerateServices
             SpecialType.System_Collections_Generic_IReadOnlyCollection_T => SyntaxGenerator.OmitGeneric("IReadOnlyCollection").Qualifies("System", "Collections", "Generic"),
             _ => throw new NotSupportedException(),
         };
-    }
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="symbol"></param>
-    /// <returns></returns>
-    private static TypeSyntax OthersToSyntax(this ITypeSymbol symbol)
-    {
-        if (symbol is INamedTypeSymbol namedType)
-            return ToSyntax(namedType);
-        if (symbol is IArrayTypeSymbol arraySymbol)
-            return ToSyntax(arraySymbol);
-        return ToDisplayName(symbol);
     }
     /// <summary>
     /// 生成器特性

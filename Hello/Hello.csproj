@@ -12,6 +12,7 @@
 		<NoWarn>$(NoWarn);NU5128;RS1041</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
+		<PackageReference Include="Hand.MemberValidation" Version="0.3.2.2-alpha" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="5.9.0">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
@@ -30,6 +31,7 @@
 			<IncludeAssets>compile;analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</ProjectReference>
+		<ProjectReference Include="..\Hand.Generators.Generators\Hand.Generators.Generators.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="$(OutputPath)\netstandard2.0\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/netstandard2.0/cs" Visible="false" />

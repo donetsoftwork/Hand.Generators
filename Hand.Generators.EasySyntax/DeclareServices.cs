@@ -420,6 +420,26 @@ public static partial class GenerateServices
     public static VariableDeclarationSyntax Variable(this TypeSyntax type, string variableName, ExpressionSyntax value)
         => Variable(type, SyntaxFactory.Identifier(variableName), value);
     #endregion
+    #region OutArgument
+    /// <summary>
+    /// 输出实参
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="variableName"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ArgumentSyntax OutArgument(this TypeSyntax type, SyntaxToken variableName)
+        => SyntaxFactory.Argument(default, _out, SyntaxFactory.DeclarationExpression(type, SyntaxFactory.SingleVariableDesignation(variableName)));
+    /// <summary>
+    /// 输出实参
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="variableName"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ArgumentSyntax OutArgument(this TypeSyntax type, string variableName)
+        => OutArgument(type, SyntaxFactory.Identifier(variableName));
+    #endregion
     #region Catch
     /// <summary>
     /// 定义变量

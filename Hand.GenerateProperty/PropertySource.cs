@@ -1,12 +1,11 @@
 using Hand.Builders;
+using Hand.Naming;
 using Hand.Reflection;
 using Hand.Sources;
-using Hand.Symbols;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Hand.GenerateProperty;
 
@@ -22,13 +21,14 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
     : IGeneratorSource
 {
     #region 配置
-    private readonly SymbolTypeDescriptor _descriptor = GetDescriptor(compilation, symbol);
+    private readonly CompositeProvider _descriptor = CompositeProvider.DeclaredOnly(symbol);
     private readonly TypeDeclarationSyntax _type = type;
+    private readonly Compilation _compilation = compilation;
     private readonly INamedTypeSymbol _symbol = symbol;
-    private readonly bool _nullable = SymbolReflection.CheckNullable(symbol);
+    private readonly bool _nullable = symbol.IsNullable();
     private readonly INamedTypeSymbol _originalSymbol = originalSymbol;
     private readonly TypeSyntax _originalType = originalSymbol.ToSyntax();
-    private readonly bool _originalNullable = SymbolReflection.CheckNullable(originalSymbol);
+    private readonly bool _originalNullable = originalSymbol.IsNullable();
     private readonly PropertyRule _rule = rule;
     /// <summary>
     /// 类型
@@ -55,9 +55,9 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
         var builder = SyntaxGenerator.Clone(_type);
         IdentifierNameSyntax member = BuildOriginal(builder);
         if (_rule.ToStringMethod)
-            builder.AddOther(BuildToString(member, _originalType, _originalNullable));
+            builder.AddMethod(BuildToString(member, _originalType, _originalNullable));
         if (_rule.GetHashCodeMethod)
-            builder.AddOther(BuildGetHashCode(member, _originalNullable));
+            builder.AddMethod(BuildGetHashCode(member, _originalNullable));
         return builder;
     }
     /// <summary>
@@ -68,14 +68,14 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
     public IdentifierNameSyntax BuildOriginal(SyntaxGenerator builder)
     {
         IdentifierNameSyntax member;
-        if (_symbol.IsRecord && !_descriptor.Constructors.Any())
+        if (_symbol.IsRecord && !_descriptor.HasConstructor())
         {
             member = SyntaxFactory.IdentifierName("Original");
             builder.AddParameter(_originalType.Parameter(member.Identifier));
             return member;
         }
         member = BuildProperty(builder);
-        if (_rule.Constructor && _descriptor.GetConstructor(_originalSymbol) == null)
+        if (_rule.Constructor && !_descriptor.ConstructorContains(_originalSymbol))
         {
             var original = SyntaxFactory.IdentifierName("original");
             var constructor = _type.Constructor(_originalType.Parameter(original.Identifier))
@@ -83,7 +83,7 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
                 .ToBuilder()
                 .AddExpression(member.Assign(original))
                 .End();
-            builder.AddOther(constructor);
+            builder.AddConstructor(constructor);
         }
         if (!_symbol.IsRecord)
             BuildEqualOperator(builder, member);
@@ -96,9 +96,10 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
     /// <returns></returns>
     public IdentifierNameSyntax BuildProperty(SyntaxGenerator builder)
     {
-        var Original = SyntaxFactory.IdentifierName("Original");
+        const string propertyName = "Original";
+        var Original = SyntaxFactory.IdentifierName(propertyName);
         // 属性Original已存在,忽略
-        if (_descriptor.GetProperty(Original.Identifier.ValueText) is not null)
+        if (_descriptor.Contains(propertyName))
             return Original;
         if (_rule.Field)
         {
@@ -124,8 +125,8 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
             }
             var property = _originalType.Property(Original.Identifier, accessorList.ToArray())
                 .Public();
-            builder.AddOther(field);
-            builder.AddOther(property);
+            builder.AddField(field);
+            builder.AddProperty(property);
             return _original;
         }
         else
@@ -138,7 +139,7 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
             }
             var property = _originalType.Property(Original.Identifier, accessorList.ToArray())
                 .Public();
-            builder.AddOther(property);
+            builder.AddProperty(property);
             return Original;
         }
     }
@@ -150,20 +151,15 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
     public void BuildEqualOperator(SyntaxGenerator builder, IdentifierNameSyntax original)
     {
         var type = SyntaxFactory.ParseTypeName(_symbol.Name);
-        bool hasEquals;
-        var equalsMethod = _descriptor.GetMethod("Equals", false, [_symbol]);
+        var hasEquals = _descriptor.MethodContains("Equals", _symbol);
         // 定义 Equals
         if (_rule.EqualsMethod)
         {
-            if (equalsMethod is null)
-                builder.AddOther(BuildEquals(type, _nullable, original, _originalNullable));
+            if (!hasEquals)
+                builder.AddMethod(BuildEquals(type, _nullable, original, _originalNullable));
             hasEquals = true;
-            if (_descriptor.GetMethod("Equals", false, [_descriptor.Compilation.GetObjectSymbol()]) is null)
-                builder.AddOther(SyntaxGenerator.ObjectEqualsDeclaration(type));
-        }
-        else
-        {
-            hasEquals = equalsMethod is not null;
+            if (!_descriptor.MethodContains("Equals", [_compilation.GetObjectSymbol()]))
+                builder.AddMethod(SyntaxGenerator.ObjectEqualsDeclaration(type));
         }
         // 重载需要调用Equals
         if (hasEquals && _rule.Operator)
@@ -232,45 +228,6 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
         return expression;
     }
     /// <summary>
-    /// 生成Equals和重载运算符
-    /// </summary>
-    /// <param name="builder"></param>
-    /// <param name="descriptor"></param>
-    /// <param name="rule"></param>
-    /// <param name="original"></param>
-    /// <param name="originalNullCondition"></param>
-    public static void BuildEqualOperator(SyntaxGenerator builder, SymbolTypeDescriptor descriptor, PropertyRule rule, IdentifierNameSyntax original, bool originalNullCondition)
-    {
-        var symbol = descriptor.Symbol;
-        // record默认实现Equals和重载运算符,无需生成
-        //if (symbol.IsRecord)
-        //    return;
-        var type = SyntaxFactory.IdentifierName(symbol.Name);
-        var nullable = SymbolReflection.CheckNullable(symbol);
-        bool hasEquals;
-        var equalsMethod = descriptor.GetMethod("Equals", false, [symbol]);
-        // 定义 Equals
-        if (rule.EqualsMethod)
-        {
-            if (equalsMethod is null)
-                builder.AddOther(BuildEquals(type, nullable, original, originalNullCondition));
-            hasEquals = true;
-            if (descriptor.GetMethod("Equals", false, [descriptor.Compilation.GetObjectSymbol()]) is null)
-                builder.AddOther(SyntaxGenerator.ObjectEqualsDeclaration(type));
-        }
-        else
-        {
-            hasEquals = equalsMethod is not null;
-        }
-        // 重载需要调用Equals
-        if (hasEquals && rule.Operator)
-        {
-            builder.AddOthers(
-                SyntaxGenerator.BuildEqualOperator(type, nullable),
-                SyntaxGenerator.BuildNotEqualOperator(type, nullable));
-        }
-    }
-    /// <summary>
     /// 生成Equals
     /// </summary>
     /// <param name="type"></param>
@@ -282,7 +239,7 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
     {
         var parameter = type.Parameter("other");
         var method = SyntaxGenerator.BoolType.Method("Equals", parameter)
-            .Public();
+            .Public();        
         StatementBuilder<MethodDeclarationSyntax> methodBuilder = method.ToBuilder();
         var other = parameter.ToIdentifierName();
         if (nullable)
@@ -328,23 +285,6 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
             // return Original.Equals(other.Original);
             return methodBuilder.Return(original.Access("Equals").Invocation([other.Access(original)]));
         }
-    }
-    /// <summary>
-    /// 获取类型信息
-    /// </summary>
-    /// <param name="compilation"></param>
-    /// <param name="symbol"></param>
-    /// <returns></returns>
-    public static SymbolTypeDescriptor GetDescriptor(Compilation compilation, INamedTypeSymbol symbol)
-    {
-        // 提取字段、属性、构造函数、方法和运算符重载等信息
-        var builder = new SymbolTypeBuilder()
-            .WithField()
-            .WithProperty()
-            .WithConstructor()
-            .WithOperator()
-            .WithMethod();
-        return builder.Build(compilation, symbol);
     }
     #endregion
 }

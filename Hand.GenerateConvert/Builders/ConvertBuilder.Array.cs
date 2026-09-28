@@ -1,6 +1,7 @@
 ﻿using Hand.Collections;
 using Hand.Converters;
-using Hand.Reflection;
+using Hand.Converters.Collections;
+using Hand.Syntax;
 using Hand.Types;
 using Microsoft.CodeAnalysis;
 
@@ -18,14 +19,16 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? ToArray(ITypeSymbolInfo source, ArrayTypeInfo dest)
+    public ISyntaxConverter? ToArray(ITypeSymbolInfo source, ArrayTypeInfo dest)
     {
         return source.Kind switch
         {
             TypeSymbolKind.Array => ArrayToArray((ArrayTypeInfo)source, dest),
             TypeSymbolKind.Collection => CollectionToArray((CollectionTypeInfo)source, dest),
             TypeSymbolKind.Enum => EnumToCollection((EnumTypeInfo)source, dest),
-            TypeSymbolKind.Entity => EntityToCollection((EntityTypeInfo)source, dest),
+            TypeSymbolKind.Enumeration => EnumerationToCollection((EnumerationTypeInfo)source, dest),
+            TypeSymbolKind.Entity => EntityToCollection((EntityPropertyTypeInfo)source, dest),
+            TypeSymbolKind.Void => null,
             _ => OtherToCollection(source, dest),
         };
     }
@@ -35,12 +38,12 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? ArrayToArray(ArrayTypeInfo source, ArrayTypeInfo dest)
+    public ISyntaxConverter? ArrayToArray(ArrayTypeInfo source, ArrayTypeInfo dest)
     {
         var elementConverter = Get(source.ElementInfo, dest.ElementInfo);
         if (elementConverter is null)
             return null;
-        return CheckSource(new ArrayConverter(elementConverter), source.IsNullable, dest);
+        return CheckSource(ArrayConverter.Create(elementConverter), source.IsNullable, dest);
     }
     /// <summary>
     /// 集合转化为数组
@@ -48,21 +51,21 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? CollectionToArray(CollectionTypeInfo source, ArrayTypeInfo dest)
+    public ISyntaxConverter? CollectionToArray(CollectionTypeInfo source, ArrayTypeInfo dest)
     {
         var sourceElement = source.ElementInfo;
         var destElement = dest.ElementInfo;
         if (sourceElement.Original.Equals(destElement.Original, SymbolEqualityComparer.Default))
         {
-            return CheckSource(EnumerableToArrayConverter.Instance, source.IsNullable, dest);
+            return CheckSource(LinqConverter.ToArray(), source.IsNullable, dest);
         }
         else
         {
             var elementConverter = Get(sourceElement, destElement);
             if (elementConverter is null)
                 return null;
-            var enumerableConverter = new EnumerableConverter(elementConverter);
-            var converter = new CompatibleConverter(enumerableConverter, EnumerableToArrayConverter.Instance);
+            var selectConverter = ItemLinqConverter.Select(elementConverter);
+            var converter = new CompositeConverter(selectConverter, LinqConverter.ToArray());
             return CheckSource(converter, source.IsNullable, dest);
         }
     }

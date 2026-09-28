@@ -1,4 +1,5 @@
 ﻿using Hand.Models;
+using Hand.Primitives;
 
 namespace GeneratePocoTests.Supports;
 

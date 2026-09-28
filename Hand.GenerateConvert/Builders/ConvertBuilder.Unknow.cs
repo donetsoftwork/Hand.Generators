@@ -1,5 +1,5 @@
-﻿using Hand.Converters;
-using Hand.Reflection;
+﻿using Hand.Reflection;
+using Hand.Syntax;
 using Hand.Types;
 using Microsoft.CodeAnalysis;
 
@@ -16,13 +16,14 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? ToUnknow(ITypeSymbolInfo source, ITypeSymbolInfo dest)
+    public ISyntaxConverter? ToUnknow(ITypeSymbolInfo source, ITypeSymbolInfo dest)
     {
         return source.Kind switch
         {
             TypeSymbolKind.Primitive => PrimitiveToUnknow((PrimitiveTypeInfo)source, dest),
             TypeSymbolKind.Enum => EnumToUnknow((EnumTypeInfo)source, dest),
-            TypeSymbolKind.Entity => EntityToUnknow((EntityTypeInfo)source, dest),
+            TypeSymbolKind.Entity => EntityToUnknow((EntityPropertyTypeInfo)source, dest),
+            TypeSymbolKind.Void => null,
             _ => GetCommonConversion(source, dest),
         };
     }
@@ -32,9 +33,9 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? PrimitiveToUnknow(PrimitiveTypeInfo source, ITypeSymbolInfo dest)
+    public ISyntaxConverter? PrimitiveToUnknow(PrimitiveTypeInfo source, ITypeSymbolInfo dest)
     {
-        IConverter? converter;
+        ISyntaxConverter? converter;
         if (dest.Symbol is INamedTypeSymbol namedType)
         {
             (_, converter) = GetConverter(_compilation, source.Symbol, namedType);

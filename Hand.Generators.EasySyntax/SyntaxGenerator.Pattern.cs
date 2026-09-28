@@ -157,32 +157,30 @@ public partial class SyntaxGenerator
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static VarPatternSyntax VarPattern(string variableName)
         => SyntaxFactory.VarPattern(SyntaxFactory.SingleVariableDesignation(SyntaxFactory.Identifier(variableName)));
-    #endregion
-    #region VarParenthesizedPattern
     /// <summary>
     /// var括号模式
     /// </summary>
     /// <param name="variables"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static VarPatternSyntax VarParenthesizedPattern(params IEnumerable<SingleVariableDesignationSyntax> variables)
-        => SyntaxFactory.VarPattern(SyntaxFactory.ParenthesizedVariableDesignation(SyntaxFactory.SeparatedList<VariableDesignationSyntax>(variables)));
+    public static VarPatternSyntax VarPattern(params SeparatedSyntaxList<VariableDesignationSyntax> variables)
+        => SyntaxFactory.VarPattern(SyntaxFactory.ParenthesizedVariableDesignation(variables));
     /// <summary>
     /// var括号模式
     /// </summary>
     /// <param name="variables"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static VarPatternSyntax VarParenthesizedPattern(params IEnumerable<SyntaxToken> variables)
-        => VarParenthesizedPattern(variables.Select(static name => SyntaxFactory.SingleVariableDesignation(name)));
+    public static VarPatternSyntax VarPattern(params IEnumerable<SyntaxToken> variables)
+        => SyntaxFactory.VarPattern(ParenthesizedVariable(variables));
     /// <summary>
     /// var括号模式
     /// </summary>
     /// <param name="variables"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static VarPatternSyntax VarParenthesizedPattern(params IEnumerable<string> variables)
-        => VarParenthesizedPattern(variables.Select(static name => SyntaxFactory.Identifier(name)));
+    public static VarPatternSyntax VarPattern(params IEnumerable<string> variables)
+        => SyntaxFactory.VarPattern(ParenthesizedVariable(variables));
     #endregion
     /// <summary>
     /// or模式

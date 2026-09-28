@@ -88,4 +88,28 @@ public static partial class GenerateServices
         collection.Add(value.ToArgument(name));
         return collection;
     }
+    /// <summary>
+    /// in
+    /// </summary>
+    /// <param name="argument"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ArgumentSyntax In(this ArgumentSyntax argument)
+        => argument.WithRefKindKeyword(_in);
+    /// <summary>
+    /// ref
+    /// </summary>
+    /// <param name="argument"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ArgumentSyntax Ref(this ArgumentSyntax argument)
+        => argument.WithRefKindKeyword(_ref);
+    /// <summary>
+    /// out
+    /// </summary>
+    /// <param name="argument"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ArgumentSyntax Out(this ArgumentSyntax argument)
+        => argument.WithRefKindKeyword(_out);
 }

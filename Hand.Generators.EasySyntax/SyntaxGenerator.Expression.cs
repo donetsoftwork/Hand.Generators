@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace Hand;
@@ -155,14 +156,25 @@ public partial class SyntaxGenerator
     public static CollectionExpressionSyntax Collection(params ExpressionSyntax[] items)
         => SyntaxFactory.CollectionExpression(SyntaxFactory.SeparatedList(Array.ConvertAll<ExpressionSyntax, CollectionElementSyntax>(items, static item => SyntaxFactory.ExpressionElement(item))));
     #endregion
+    #region Tuple
+    /// <summary>
+    /// 元组表达式
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TupleExpressionSyntax Tuple(params SeparatedSyntaxList<ArgumentSyntax> arguments)
+        => SyntaxFactory.TupleExpression(arguments);
     /// <summary>
     /// 元组表达式
     /// </summary>
     /// <param name="items"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TupleExpressionSyntax Tuple(params ExpressionSyntax[] items)
-        => SyntaxFactory.TupleExpression(SyntaxFactory.SeparatedList(Array.ConvertAll(items, static item => SyntaxFactory.Argument(item))));
+    public static TupleExpressionSyntax Tuple(params IEnumerable<ExpressionSyntax> items)
+        => Tuple([.. items.Select(SyntaxFactory.Argument)]);
+    #endregion
+    #region Initializer
     /// <summary>
     /// 初始化
     /// </summary>
@@ -170,7 +182,8 @@ public partial class SyntaxGenerator
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static InitializerExpressionSyntax Initializer(params IEnumerable<AssignmentExpressionSyntax> items)
-        => SyntaxFactory.InitializerExpression(SyntaxKind.ObjectInitializerExpression, SyntaxFactory.SeparatedList<ExpressionSyntax>(items));
+        => SyntaxFactory.InitializerExpression(SyntaxKind.ObjectInitializerExpression, [.. items]);
+    #endregion
     /// <summary>
     /// 表达式方法体
     /// </summary>

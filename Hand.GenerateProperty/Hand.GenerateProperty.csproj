@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<Nullable>enable</Nullable>
-		<Version>$(VersionBase).15</Version>
+		<Version>$(VersionBase).0-alpha</Version>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<IsRoslynComponent>true</IsRoslynComponent>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
@@ -16,7 +16,19 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Hand.MemberValidation" Version="0.3.1.7-alpha">
+		<PackageReference Include="Hand.Core" Version="0.3.2.5-alpha">
+			<IncludeAssets>compile; analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Hand.AutoCache" Version="0.3.2.1-alpha">
+			<IncludeAssets>compile; analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Hand.MemberValidation" Version="0.3.2.2-alpha">
+			<IncludeAssets>compile; analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Hand.Validation" Version="0.3.2.2-alpha">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
@@ -28,7 +40,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Hand.GenerateCore\Hand.GenerateCore.csproj">
+		<ProjectReference Include="..\Hand.Generators.Generators\Hand.Generators.Generators.csproj">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</ProjectReference>
+		<ProjectReference Include="..\Hand.Generators.Naming\Hand.Generators.Naming.csproj">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</ProjectReference>
+		<ProjectReference Include="..\Hand.Generators.Reflection\Hand.Generators.Reflection.csproj">
 			<IncludeAssets>compile;analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</ProjectReference>

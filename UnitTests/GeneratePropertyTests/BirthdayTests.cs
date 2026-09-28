@@ -1,7 +1,6 @@
 using Hand;
-using Hand.Entities;
 using Hand.GenerateProperty;
-using Hand.Models;
+using Hand.Primitives;
 
 namespace GeneratePropertyTests;
 
@@ -22,7 +21,7 @@ public class BirthdayTests
     {
         var source = @"
 using Hand.Entities;
-using Hand.Models;
+using Hand.Primitives;
 namespace GeneratePropertyTests;
 
 [GenerateProperty("")]

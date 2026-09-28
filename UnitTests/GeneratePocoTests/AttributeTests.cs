@@ -1,4 +1,5 @@
 ﻿using Hand;
+using Hand.Attributes;
 using Hand.Cachers;
 using Hand.Reflection;
 using Microsoft.CodeAnalysis;
@@ -52,7 +53,7 @@ public class AttributeTests
         var parameterSymbol = constructor.Parameters.FirstOrDefault();
         Assert.NotNull(parameterSymbol);
         var attributeCacher = new AttributeSymbolCacher(compilation);
-        var attribute = attributeCacher.GetAttributes(parameterSymbol, AttributeTargets.Property)
+        var attribute = attributeCacher.CheckByTarget(parameterSymbol.GetAttributes(), AttributeTargets.Property)
             .FirstOrDefault();
         Assert.NotNull(attribute);
         var attributeNamespaces = new List<string>();

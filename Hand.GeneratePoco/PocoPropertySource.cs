@@ -1,6 +1,9 @@
-﻿using Hand.Builders;
+﻿using Hand.Arguments;
+using Hand.Builders;
 using Hand.Entities;
+using Hand.Fields;
 using Hand.Members;
+using Hand.Properties;
 using Hand.Types;
 using Hand.Words;
 using Microsoft.CodeAnalysis;
@@ -8,6 +11,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Hand.GeneratePoco;
 
@@ -27,17 +31,19 @@ public class PocoPropertySource(TypeDeclarationSyntax type, ConvertBuilder conve
     public override SyntaxGenerator Generate()
     {
         //var generator = SyntaxGenerator.Clone(_type);
-        var sourceMembers = ConvertBuilder.GetSourceMembers(_convertBuilder.TypeCacher, _sourseSymbol, _recognizers);
+        //var sourceMembers = ConvertBuilder.GetSourceMembers(_convertBuilder.TypeBuilder, _fromSymbol, _fromRecognizers);
+        var sourceMembers = ConvertBuilder.Recognize(_fromSourceMembers, _fromRecognizers);
         var arguments = new List<MemberArgument>(sourceMembers.Count);
         var kind = CheckAccessorKind(_useInit);
         foreach (var item in sourceMembers)
         {
             var name = item.Key;
-            if (_memberNames.Contains(name))
-                continue;
-            var argument = _useField ? CheckFieldMember(_generator, name, item.Value, kind) :
-                CheckMember(_generator, name, item.Value, kind);
-            arguments.Add(argument);
+            // 判断属性是否重名
+            if (_naming.TryDeclareProperty(name))
+            {
+                var argument = CheckMember(_generator, name, item.Value, kind);
+                arguments.Add(argument);
+            }
         }
         CheckConvert(_generator, sourceMembers, arguments);
         //// 设置Xml备注
@@ -48,60 +54,68 @@ public class PocoPropertySource(TypeDeclarationSyntax type, ConvertBuilder conve
     /// 处理成员
     /// </summary>
     /// <param name="generator"></param>
-    /// <param name="name"></param>
+    /// <param name="propertyName"></param>
     /// <param name="sourseMember"></param>
     /// <param name="kind"></param>
     /// <returns></returns>
-    public MemberArgument CheckFieldMember(SyntaxGenerator generator, string name, SymbolMember sourseMember, SyntaxKind kind)
+    public MemberArgument CheckMember(SyntaxGenerator generator, string propertyName, IMemberInfo sourseMember, SyntaxKind kind)
     {
-        var (memberType, memberSymbolInfo) = CheckMemberType(name, sourseMember.SymbolInfo);
-        var fieldName = UnderWordRule.UnderLower(name);
+        if (_useField)
+        {
+            var fieldName = UnderWordRule.UnderLower(propertyName);
+            // 判断字段是否重名
+            if (_naming.TryDeclareField(fieldName))
+                return CheckFieldMember(generator, propertyName, fieldName, sourseMember, kind);
+        }
+        var (memberType, symbolInfo) = CheckMemberType(propertyName, sourseMember.SymbolInfo);
+        var property = CreateProperty(memberType, propertyName, kind, symbolInfo)
+            .Public();
+        if (_generateAttribute)
+            property = generator.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember, AttributeTargets.Property));
+        var summary = sourseMember.XmlElement;
+        if (summary is not null)
+            property = property.WithSummary(summary);
+        generator.AddProperty(property);
+
+        var member = new PropertyDeclarationMember(symbolInfo, property, true, sourseMember.Summary);
+        SourceMember(propertyName, member);
+        return new(member, sourseMember);
+    }
+    /// <summary>
+    /// 处理成员
+    /// </summary>
+    /// <param name="generator"></param>
+    /// <param name="propertyName"></param>
+    /// <param name="fieldName"></param>
+    /// <param name="sourseMember"></param>
+    /// <param name="kind"></param>
+    /// <returns></returns>
+    public MemberArgument CheckFieldMember(SyntaxGenerator generator, string propertyName, string fieldName, IMemberInfo sourseMember, SyntaxKind kind)
+    {
+        var (memberType, symbolInfo) = CheckMemberType(propertyName, sourseMember.SymbolInfo);
         var fieldExpression = SyntaxFactory.IdentifierName(fieldName);
-        var field = CreateField(memberType, fieldName, memberSymbolInfo)
+        var field = CreateField(memberType, fieldName, symbolInfo)
             .Private();
 
         var getDeclaration = SyntaxGenerator.PropertyGetDeclaration(fieldExpression);
         var accessorDeclaration = SyntaxFactory.AccessorDeclaration(kind)
             .WithExpressionBody(SyntaxGenerator.ExpressionBody(fieldExpression.AssignValue()))
             .WithSemicolonToken();
-        var property = memberType.Property(name, getDeclaration, accessorDeclaration)
+        var property = memberType.Property(propertyName, getDeclaration, accessorDeclaration)
             .Public();
         if (_generateAttribute)
-            property = generator.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember.Original, AttributeTargets.Property));
-        var summary = sourseMember.Element;
+            property = generator.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember, AttributeTargets.Property));
+        var summary = sourseMember.XmlElement;
         if (summary is not null)
             property = property.WithSummary(summary);
         generator.AddField(field);
         generator.AddProperty(property);
-        string summaryFunc() => sourseMember.Summary;
-        var fieldMember = new FieldDeclarationMember(fieldName, memberSymbolInfo, field, summaryFunc);
-        var propertyMember = new PropertyDeclarationMember(memberSymbolInfo, property, summaryFunc);
+        var fieldMember = new FieldDeclarationMember(fieldName, symbolInfo, field, false, sourseMember.Summary);
+        var propertyMember = new PropertyDeclarationMember(symbolInfo, property, true, sourseMember.Summary);
+        SourceMember(propertyName, fieldMember);
         var reversedArgument = new MemberArgument(sourseMember, fieldMember);
         // 源成员映射到字段,需要手动反转为属性映射源成员
         return new MemberReversedArgument(propertyMember, sourseMember, reversedArgument);
-    }
-    /// <summary>
-    /// 处理成员
-    /// </summary>
-    /// <param name="generator"></param>
-    /// <param name="name"></param>
-    /// <param name="sourseMember"></param>
-    /// <param name="kind"></param>
-    /// <returns></returns>
-    public MemberArgument CheckMember(SyntaxGenerator generator, string name, SymbolMember sourseMember, SyntaxKind kind)
-    {
-        var (memberType, memberSymbolInfo) = CheckMemberType(name, sourseMember.SymbolInfo);
-        var property = CreateProperty(memberType, name, kind, memberSymbolInfo)
-            .Public();
-        if (_generateAttribute)
-            property = generator.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember.Original, AttributeTargets.Property));
-        var summary = sourseMember.Element;
-        if (summary is not null)
-            property = property.WithSummary(summary);
-        generator.AddProperty(property);
-
-        var member = new PropertyDeclarationMember(memberSymbolInfo, property, () => sourseMember.Summary);
-        return new(member, sourseMember);
     }
     /// <summary>
     /// 构造属性

@@ -1,5 +1,7 @@
 ﻿using Hand.Converters;
+using Hand.Converters.Members;
 using Hand.Reflection;
+using Hand.Syntax;
 using Hand.Types;
 using Microsoft.CodeAnalysis;
 
@@ -17,15 +19,17 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? ToEntity(ITypeSymbolInfo source, EntityTypeInfo dest)
+    public ISyntaxConverter? ToEntity(ITypeSymbolInfo source, EntityPropertyTypeInfo dest)
     {
         return source.Kind switch
         {
             TypeSymbolKind.Enum => EnumToEntity((EnumTypeInfo)source, dest),
+            TypeSymbolKind.Enumeration => EnumerationToEntity((EnumerationTypeInfo)source, dest),
             TypeSymbolKind.Primitive => PrimitiveToEntity((PrimitiveTypeInfo)source, dest),
-            TypeSymbolKind.Entity => EntityToEntity((EntityTypeInfo)source, dest),
+            TypeSymbolKind.Entity => EntityToEntity((EntityPropertyTypeInfo)source, dest),
             TypeSymbolKind.Complex => ComplexToEntity((ComplexTypeInfo)source, dest),
             TypeSymbolKind.Generic => ComplexToEntity((ComplexTypeInfo)source, dest),
+            TypeSymbolKind.Void => null,
             _ => OtherToEntity(source, dest),
         };
     }
@@ -35,7 +39,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? EntityToEntity(EntityTypeInfo source, EntityTypeInfo dest)
+    public ISyntaxConverter? EntityToEntity(EntityPropertyTypeInfo source, EntityPropertyTypeInfo dest)
     {
         (_, var converter) = GetConverter(_compilation, source.Symbol, dest.Symbol);
         if (converter is not null)
@@ -52,7 +56,7 @@ public partial class ConvertBuilder
         if (converter is null)
             return null;
         // 先获取Original,再转为子类型, 再转为实体属性
-        return CheckSource(new CompatibleConverter(new CompatibleConverter(MemberConverter.Original, elementConverter), converter), source.IsNullable, dest);
+        return CheckSource(new CompositeConverter(new CompositeConverter(MemberConverter.Original, elementConverter), converter), source.IsNullable, dest);
     }    
     /// <summary>
     /// 基础类型转化实体属性
@@ -60,7 +64,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? PrimitiveToEntity(PrimitiveTypeInfo source, EntityTypeInfo dest)
+    public ISyntaxConverter? PrimitiveToEntity(PrimitiveTypeInfo source, EntityPropertyTypeInfo dest)
     {
         var sourceSymbol = source.Symbol;
         var destSymbol = dest.Symbol;
@@ -78,7 +82,7 @@ public partial class ConvertBuilder
         if (elementConverter is null)
             return null;
         // 先转为子类型, 再转为实体属性
-        return CheckSource(new CompatibleConverter(elementConverter, converter), source.IsNullable, dest);
+        return CheckSource(new CompositeConverter(elementConverter, converter), source.IsNullable, dest);
     }
     /// <summary>
     /// 复杂类型转实体属性
@@ -86,7 +90,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? ComplexToEntity(ComplexTypeInfo source, EntityTypeInfo dest)
+    public ISyntaxConverter? ComplexToEntity(ComplexTypeInfo source, EntityPropertyTypeInfo dest)
     {
         var converter = ComplexToOther(source, dest);
         if (converter is not null)
@@ -99,7 +103,7 @@ public partial class ConvertBuilder
         if (entityConverter is null)
             return null;
         // 先转为子类型, 再转为实体属性
-        converter = new CompatibleConverter(elementConverter, entityConverter);
+        converter = new CompositeConverter(elementConverter, entityConverter);
         return CheckSource(converter, source.IsNullable, dest);
     }
     /// <summary>
@@ -108,7 +112,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? OtherToEntity(ITypeSymbolInfo source, EntityTypeInfo dest)
+    public ISyntaxConverter? OtherToEntity(ITypeSymbolInfo source, EntityPropertyTypeInfo dest)
     {
         var converter = GetCommonConversion(source, dest);
         if (converter is not null)
@@ -122,7 +126,7 @@ public partial class ConvertBuilder
         if (entityConverter is null)
             return null;
         // 先转为子类型, 再转为实体属性
-        converter = new CompatibleConverter(elementConverter, entityConverter);
+        converter = new CompositeConverter(elementConverter, entityConverter);
         return CheckSource(converter, source.IsNullable, dest);
     }
     #endregion
@@ -133,7 +137,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? EntityToPrimitive(EntityTypeInfo source, PrimitiveTypeInfo dest)
+    public ISyntaxConverter? EntityToPrimitive(EntityPropertyTypeInfo source, PrimitiveTypeInfo dest)
     {
         (_, var converter) = GetConverter(_compilation, source.Symbol, dest.Symbol);
         if (converter is not null)
@@ -146,7 +150,7 @@ public partial class ConvertBuilder
             return EntityToString(source);
         var elementConverter = Get(elementInfo, dest);
         if (elementConverter is not null)
-            return new CompatibleConverter(MemberConverter.Original, elementConverter);
+            return new CompositeConverter(MemberConverter.Original, elementConverter);
         return null;
     }
     /// <summary>
@@ -155,7 +159,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? EntityToCollection(EntityTypeInfo source, ICollectionSymbolInfo dest)
+    public ISyntaxConverter? EntityToCollection(EntityPropertyTypeInfo source, ICollectionTypeInfo dest)
     {
         var converter = OtherToCollection(source, dest);
         if (converter is not null)
@@ -165,7 +169,7 @@ public partial class ConvertBuilder
         if (elementConverter is null)
             return null;
         // 先转为子类型, 再转为集合
-        converter = new CompatibleConverter(MemberConverter.Original, elementConverter);
+        converter = new CompositeConverter(MemberConverter.Original, elementConverter);
         return CheckSource(converter, source.IsNullable, dest);
     }
     /// <summary>
@@ -174,7 +178,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? EntityToComplex(EntityTypeInfo source, ComplexTypeInfo dest)
+    public ISyntaxConverter? EntityToComplex(EntityPropertyTypeInfo source, ComplexTypeInfo dest)
     {
         (_, var converter) = GetConverter(_compilation, source.Symbol, dest.Symbol);
         if (converter is not null)
@@ -187,7 +191,7 @@ public partial class ConvertBuilder
         if (elementConverter is null)
             return null;
         // 先转为子类型, 再转为复杂类型
-        converter = new CompatibleConverter(MemberConverter.Original, elementConverter);
+        converter = new CompositeConverter(MemberConverter.Original, elementConverter);
         return CheckSource(converter, source.IsNullable, dest);
     }
     /// <summary>
@@ -196,7 +200,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? EntityToUnknow(EntityTypeInfo source, ITypeSymbolInfo dest)
+    public ISyntaxConverter? EntityToUnknow(EntityPropertyTypeInfo source, ITypeSymbolInfo dest)
     {
         var converter = GetCommonConversion(source, dest);
         if (converter is not null)

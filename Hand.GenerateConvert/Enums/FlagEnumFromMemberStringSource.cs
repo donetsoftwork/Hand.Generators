@@ -23,7 +23,7 @@ public class FlagEnumFromMemberStringSource(Compilation compilation, EnumTypeInf
     /// <inheritdoc />
     public override MethodDeclarationSyntax BuildBody(SyntaxGenerator generator, MethodDeclarationSyntax method, ExpressionSyntax @this)
     {
-        var returnType = generator.Display(_returnInfo);
+        var returnType = _returnInfo.Display(generator);
         var localFunction = SyntaxFactory.IdentifierName("Local" + _methodName);
         var localBuilder = returnType.LocalFunction(localFunction.Identifier, SyntaxGenerator.StringType.Parameter(ExtensionMethodSource.ExtensionThis.Identifier))
             .Static()

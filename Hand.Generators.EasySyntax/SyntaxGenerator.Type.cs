@@ -92,7 +92,14 @@ public partial class SyntaxGenerator
     /// <summary>
     /// var
     /// </summary>
-    public static IdentifierNameSyntax VarType => SyntaxFactory.IdentifierName("var");
+    public static IdentifierNameSyntax VarType => 
+        SyntaxFactory.IdentifierName(
+            SyntaxFactory.Identifier(
+                SyntaxFactory.TriviaList(),
+                SyntaxKind.VarKeyword,
+                "var",
+                "var",
+                SyntaxFactory.TriviaList()));
     ///// <summary>
     ///// IDisposable
     ///// </summary>

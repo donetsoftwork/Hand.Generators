@@ -1,10 +1,9 @@
 using GeneratePropertyTests.Sources;
 using Hand;
-using Hand.Entities;
 using Hand.Filters;
 using Hand.GenerateProperty;
 using Hand.Generators;
-using Hand.Models;
+using Hand.Primitives;
 using Hand.Transform;
 
 namespace GeneratePropertyTests;
@@ -37,7 +36,7 @@ public class UserNameTests
     public void Generate()
     {
         var source = @"
-using Hand.Entities;
+using Hand.Primitives;
 using Hand.Models;
 namespace GeneratePropertyTests;
 
@@ -60,14 +59,14 @@ public partial record UserName : IEntityProperty<string>;
     public void SourceText()
     {
         var source = @"
-using Hand.Entities;
+using Hand.Primitives;
 using Hand.Models;
 namespace GeneratePropertyTests;
 
 [GenerateProperty]
 public partial record UserName : IEntityProperty<string>;
 ";
-        var generator = new ValuesGenerator<AttributeContext>("Hand.Entities.GeneratePropertyAttribute", new SyntaxFilter(), PassTransform.Instance, new SourceTextExecutor());
+        var generator = new ValuesGenerator<AttributeContext>("Hand.Primitives.GeneratePropertyAttribute", new SyntaxFilter(), PassTransform.Instance, new SourceTextExecutor());
         var service = SyntaxTreeDriver.CreateDefaultDriver()
             .Reference<IEntityProperty<string>>()
             .Reference<GeneratePropertyAttribute>();

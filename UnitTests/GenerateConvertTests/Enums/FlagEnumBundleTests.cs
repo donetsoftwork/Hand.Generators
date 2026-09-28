@@ -1,7 +1,9 @@
 ﻿using GenerateConvertTests.Supports;
 using Hand;
-using Hand.Enums;
+using Hand.Enums.Builders;
+using Hand.Enums.Bundles;
 using Hand.Reflection;
+using Hand.Types;
 
 namespace GenerateConvertTests.Enums;
 
@@ -30,7 +32,8 @@ public class FlagEnumBundleTests
         var id = field.GetDocumentationCommentId();
         Assert.NotNull(id);
         var builder = new EnumBundleBuilder(compilation);
-        var bundle = builder.Get(type);
+        var typeInfo = new EnumTypeInfo(type, type, true, false);
+        var bundle = builder.Get(typeInfo);
         Assert.NotNull(bundle);
         var key = bundle.GetFieldByName("Key");
         Assert.NotNull(key);

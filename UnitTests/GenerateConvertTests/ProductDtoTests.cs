@@ -11,7 +11,6 @@ public class ProductDtoTests
     {
         var source = @"
 using GenerateConvertTests.Supports;
-//using GenerateConvertTests.DTO;
 using Hand.Mapping;
 
 namespace GenerateConvertTests.DTO;
@@ -22,6 +21,40 @@ public partial class ProductDto
     public int ProductId { get; set; }
     public string? ProductName { get; set; }
     public MyColorDTO ProductColor { get; set; }
+    public UserDTO[] ProductUser { get; set; }
+}
+";
+        var driver = SyntaxTreeDriver.CreateDefaultDriver()
+            .Reference(typeof(GenerateConvertAttribute<>))
+            .Reference<Product>();
+        var result = driver.Generate<ConvertGenerator>(source)
+            .GetRunResult();
+        var syntaxTree = result.GeneratedTrees.FirstOrDefault();
+        Assert.NotNull(syntaxTree);
+        var code = syntaxTree.GetText().ToString();
+        Assert.Contains("ToProduct", code);
+    }
+    [Fact]
+    public void Partial()
+    {
+        // partial类只有在同个程序集下才能生效
+        var source = @"
+using GenerateConvertTests.Supports;
+using Hand.Mapping;
+
+namespace Tests;
+
+public partial class UserDTO
+{
+    public long Id { get; set; }
+    public string Name { get; set; }
+    public int Sex { get; set; }
+}
+[GenerateConvert<Product>]
+public partial class ProductDto
+{
+    public int ProductId { get; set; }
+    public string? ProductName { get; set; }
     public UserDTO[] ProductUser { get; set; }
 }
 ";

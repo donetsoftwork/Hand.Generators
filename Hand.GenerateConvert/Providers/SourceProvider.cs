@@ -1,5 +1,7 @@
 ﻿using Hand.Members;
+using Hand.Methods;
 using Hand.Sources;
+using Hand.Types;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -64,10 +66,11 @@ public class SourceProvider(TypeNameInfo typeInfo, string symbolName, IMethodPro
     /// <inheritdoc />
     public ConvertSourceInfo ConvertTo(string dest)
     {
-        //string destName = dest.Name;
-        //var info = ConvertMethodInfo.Create(dest, _symbolName, _isExtension, "To");
-        //GetConvertMethod(info, dest)
-        return new(this, _typeInfo, ConvertMethodInfo.Create(dest, _symbolName, _isExtension, "To"), _isPartial, _isExtension);
+        if (_isExtension)
+            return new(this, _typeInfo, ConvertMethodInfo.Create(dest, _symbolName, true, "To"), true, true, true);
+        if (_isPartial)
+            return new(this, _typeInfo, ConvertMethodInfo.Create(dest, _symbolName, false, "To"), true, false, false);
+        return new(this, _typeInfo, ConvertMethodInfo.Create(dest, _symbolName, false, "To"), false, false, false);
     }
     ///// <inheritdoc />
     //public ConvertSourceInfo ConvertFrom(string source)
@@ -123,11 +126,10 @@ public class SourceProvider(TypeNameInfo typeInfo, string symbolName, IMethodPro
     /// <returns></returns>
     public static SourceProvider CreateByExtension(Compilation compilation, INamedTypeSymbol symbol, bool isInternal)
     {
-        var currentAssembly = compilation.Assembly;
         var typeInfo = TypeNameInfo.GetExtensionInfo(symbol, isInternal);
         var extension = compilation.GetTypeByMetadataName(typeInfo.FullName);
         var original = MethodProvider.Create(symbol, extension);
-        return new(typeInfo, symbol.Name, original, CheckExtensionIsPartial(currentAssembly, extension), true);
+        return new(typeInfo, symbol.Name, original, compilation.CheckIsPartial(extension), true);
     }
     /// <summary>
     /// 构造生成源提供者
@@ -149,14 +151,14 @@ public class SourceProvider(TypeNameInfo typeInfo, string symbolName, IMethodPro
         }
         return CreateByExtension(compilation, symbol, isInternal);
     }
-    /// <summary>
-    /// 检查扩展类是否是partial
-    /// </summary>
-    /// <param name="currentAssembly"></param>
-    /// <param name="extension"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool CheckExtensionIsPartial(IAssemblySymbol currentAssembly, INamedTypeSymbol? extension)
-        => extension is null || !SymbolEqualityComparer.Default.Equals(currentAssembly, extension.ContainingAssembly) || extension.IsPartial();
+    ///// <summary>
+    ///// 检查扩展类是否是partial
+    ///// </summary>
+    ///// <param name="current"></param>
+    ///// <param name="symbol"></param>
+    ///// <returns></returns>
+    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //public static bool CheckTypeIsPartial(IAssemblySymbol current, INamedTypeSymbol? symbol)
+    //    => symbol is null || !SymbolEqualityComparer.Default.Equals(current, symbol.ContainingAssembly) || symbol.IsPartial();
     #endregion
 }

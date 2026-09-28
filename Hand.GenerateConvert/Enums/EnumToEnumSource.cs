@@ -1,5 +1,7 @@
 ﻿using Hand.Builders;
 using Hand.Converters;
+using Hand.Enums.Bundles;
+using Hand.Enums.Fields;
 using Hand.Sources;
 using Hand.Types;
 using Microsoft.CodeAnalysis;
@@ -82,10 +84,10 @@ public class EnumToEnumSource(Compilation compilation, TypeSyntax sourceType, En
                  .AddExpression(result.OrAssign(SyntaxGenerator.Literal(flag)))
                  .End();
         }
-        var returnType = generator.Display(_returnInfo);
+        var returnType = _destInfo.Display(generator);
         // return (TEnum)result;
         return builder.Return(CastConverter.Convert(result, returnType))
-            .WithSummary(ConvertBuilder.GetMethodSummary(_returnInfo));
+            .WithSummary(ConvertBuilder.GetMethodSummary(_destInfo));
     }
     /// <summary>
     /// 位域转枚举
@@ -101,7 +103,7 @@ public class EnumToEnumSource(Compilation compilation, TypeSyntax sourceType, En
         var builder = method.ToBuilder();
         var memberCheck = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var members = new List<FlagEnumField>(sourceFields.Count);
-        var enumType = generator.Display(_returnInfo);
+        var enumType = _returnInfo.Display(generator);
         foreach (var sourceField in sourceFields)
         {
             if (sourceField.Flag == 0UL)
@@ -157,7 +159,7 @@ public class EnumToEnumSource(Compilation compilation, TypeSyntax sourceType, En
         var members = new List<IEnumField>(sourceFields.Length);
         // @this switch {
         var @switch = @this.SwitchExpression();
-        var enumType = generator.Display(_returnInfo);
+        var enumType = _returnInfo.Display(generator);
         foreach (var sourceField in sourceFields)
         {
             var name = sourceField.Name;

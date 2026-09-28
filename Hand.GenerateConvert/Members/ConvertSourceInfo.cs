@@ -1,7 +1,10 @@
-﻿using Hand.Collections;
-using Hand.Converters;
+﻿using Hand.Converters.Methods;
 using Hand.Creational;
+using Hand.Methods;
 using Hand.Providers;
+using Hand.Syntax;
+using Hand.Types;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace Hand.Members;
@@ -14,8 +17,9 @@ namespace Hand.Members;
 /// <param name="methodInfo"></param>
 /// <param name="isPartial"></param>
 /// <param name="isStatic"></param>
-public class ConvertSourceInfo(SourceProvider provider, TypeNameInfo typeInfo, ConvertMethodInfo methodInfo, bool isPartial, bool isStatic)
-    : ICreator<IConverter>
+/// <param name="isExtension"></param>
+public class ConvertSourceInfo(SourceProvider provider, TypeNameInfo typeInfo, ConvertMethodInfo methodInfo, bool isPartial, bool isStatic, bool isExtension = true)
+    : ICreator<ISyntaxConverter>
 {
     #region 配置
     private readonly SourceProvider _provider = provider;
@@ -23,6 +27,7 @@ public class ConvertSourceInfo(SourceProvider provider, TypeNameInfo typeInfo, C
     private readonly ConvertMethodInfo _methodInfo = methodInfo;
     private readonly bool _isPartial = isPartial;
     private readonly bool _isStatic = isStatic;
+    private readonly bool _isExtension = isExtension;
 
     /// <summary>
     /// 生成源提供者
@@ -49,16 +54,37 @@ public class ConvertSourceInfo(SourceProvider provider, TypeNameInfo typeInfo, C
     /// </summary>
     public bool IsPartial 
         => _isPartial;
+    /// <summary>
+    /// 是否扩展方法
+    /// </summary>
+    public bool IsExtension 
+        => _isExtension;
     #endregion
 
     /// <summary>
     /// 获取方法转化器
     /// </summary>
     /// <returns></returns>
-    public IConverter Create()
+    public ISyntaxConverter Create()
     {
+        if (_isExtension)
+            return MethodConverter.CreateExtensionMethod(_typeInfo.Namespace, _methodInfo.Name);
         if (_isStatic)
-            return new ExtensionMethodConverter(_typeInfo.Namespace, SyntaxFactory.IdentifierName(_methodInfo.Name));
-        return new InstanceMethodConverter(SyntaxFactory.IdentifierName(_methodInfo.Name));
+            return StaticMethodConverter.Create(_typeInfo, SyntaxFactory.IdentifierName(_methodInfo.Name));
+        return MethodConverter.Create(SyntaxFactory.IdentifierName(_methodInfo.Name));
+    }
+    /// <summary>
+    /// 获取方法转化器
+    /// </summary>
+    /// <param name="method"></param>
+    /// <returns></returns>
+    public static ISyntaxConverter GetConverter(IMethodSymbol method)
+    {
+        if (method.IsExtensionMethod)
+            return MethodConverter.CreateExtensionMethod(method.ContainingType.ContainingNamespace.ToDisplayString(), method.Name);
+        if (method.IsStatic)
+            return StaticMethodConverter.Create(method.ContainingType, method.Name);
+
+        return MethodConverter.Create(SyntaxFactory.IdentifierName(method.Name));
     }
 }

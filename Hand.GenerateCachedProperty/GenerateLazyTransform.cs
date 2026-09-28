@@ -1,6 +1,6 @@
-﻿using Hand.Generators;
-using Hand.Reflection;
-using Hand.Symbols;
+﻿using Hand.Attributes;
+using Hand.Generators;
+using Hand.Naming;
 using Hand.Transform;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -51,7 +51,7 @@ public class GenerateLazyTransform : IGeneratorTransform<GenerateLazySource>
         }
         // 判断是否已经存在同名属性
         // 不存在才返回
-        if (source is not null && CheckSource(source, compilation))
+        if (source is not null && CheckSource(source))
             return source;
         return null;
     }
@@ -59,23 +59,20 @@ public class GenerateLazyTransform : IGeneratorTransform<GenerateLazySource>
     /// 判断延迟缓存源对象是否合法
     /// </summary>
     /// <param name="source"></param>
-    /// <param name="compilation"></param>
     /// <returns></returns>
-    public static bool CheckSource(GenerateLazySource source, Compilation compilation)
+    public static bool CheckSource(GenerateLazySource source)
     {
-        var descriptor = new SymbolTypeBuilder()
-            .WithProperty()
-            .WithField()
-            .Build(compilation, source.Symbol);
+        var provider = TypedProvider.Create(source.Symbol);
+        
         // 存在同名属性不生成
-        if(descriptor.GetProperty(source.PropertyName) is not null)
+        if(provider.Contains(source.PropertyName))
             return false;
         // 存在同名字段不生成
-        if (descriptor.GetField(source.ValueName) is not null)
+        if (provider.Contains(source.ValueName))
             return false;
-        if (descriptor.GetField(source.StateName) is not null)
+        if (provider.Contains(source.StateName))
             return false;
-        if (descriptor.GetField(source.LockName) is not null)
+        if (provider.Contains(source.LockName))
             return false;
         return true;
     }
@@ -108,19 +105,6 @@ public class GenerateLazyTransform : IGeneratorTransform<GenerateLazySource>
         if (SyntaxGenerator.FrameworkMajorVersion >= 9)
             return SyntaxGenerator.LockType;
         return SyntaxGenerator.ObjectType;
-    }
-    /// <summary>
-    /// 获取类型信息
-    /// </summary>
-    /// <param name="compilation"></param>
-    /// <param name="symbol"></param>
-    /// <returns></returns>
-    public static SymbolTypeDescriptor GetDescriptor(Compilation compilation, INamedTypeSymbol symbol)
-    {
-        // 提取字段、属性、构造函数、方法和运算符重载等信息
-        var builder = new SymbolTypeBuilder()
-            .WithProperty();
-        return builder.Build(compilation, symbol);
     }
     /// <summary>
     /// 单例

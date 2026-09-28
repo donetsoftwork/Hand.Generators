@@ -2,8 +2,6 @@ using Hand;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Linq.Expressions;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace EasySyntaxTests;
 

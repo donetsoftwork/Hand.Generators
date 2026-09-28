@@ -1,6 +1,9 @@
 ﻿using Hand;
-using Hand.Cachers;
+using Hand.Builders;
 using Hand.Converters;
+using Hand.Converters.Constructors;
+using Hand.Converters.System;
+using Hand.Types;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -22,12 +25,12 @@ public class CompatibleConverterTests
         var semanticModel = compilation.GetSemanticModel(syntaxTree);
         var symbol = semanticModel.GetDeclaredSymbol(type);
         Assert.NotNull(symbol);
-        var typeInfos = new TypeSymbolCacher(compilation);
+        var typeInfos = new TypeInfoBuilder(compilation);
         var typeInfo = typeInfos.Get(symbol);
         var generator = SyntaxGenerator.Create(type);
         var compatible = new SystemConverter(SyntaxFactory.IdentifierName("ToInt32"));
         var original = new ConstructorConverter(typeInfo);
-        var converter = new CompatibleConverter(compatible, original);
+        var converter = new CompositeConverter(compatible, original);
         var source = SyntaxFactory.IdentifierName("value");
         var dest = converter.Convert(generator, source);
         var code = dest.NormalizeWhitespace().ToFullString();

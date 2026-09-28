@@ -15,7 +15,7 @@ public class SyntaxGeneratorTests
             .WithSemicolonToken();
         var code0 = @class.NormalizeWhitespace().ToFullString();
         var generator = SyntaxGenerator.Clone(@class);
-        var code = generator.Build().ToFullString();
+        var code = generator.Build().NormalizeWhitespace().ToFullString();
         Assert.Equal(code0, code);
     }
     [Fact]
@@ -26,7 +26,7 @@ public class SyntaxGeneratorTests
             .WithSemicolonToken();
         var code0 = record.NormalizeWhitespace().ToFullString();
         var generator = SyntaxGenerator.Clone(record);
-        var code = generator.Build().ToFullString();
+        var code = generator.Build().NormalizeWhitespace().ToFullString();
         Assert.Equal(code0, code);
     }
     [Fact]
@@ -37,7 +37,7 @@ public class SyntaxGeneratorTests
             .WithSemicolonToken();
         var code0 = record.NormalizeWhitespace().ToFullString();
         var generator = SyntaxGenerator.Clone(record);
-        var code = generator.Build().ToFullString();
+        var code = generator.Build().NormalizeWhitespace().ToFullString();
         Assert.Equal(code0, code);
     }
     [Fact]
@@ -52,8 +52,8 @@ public class SyntaxGeneratorTests
         generator.Parameter(SyntaxGenerator.IntType, original.Identifier);
         var property = SyntaxGenerator.IntType.GetOnlyProperty("Original")
             .WithInitializer(original);
-        generator.AddOther(property);
-        var code = generator.Build().ToFullString();
+        generator.AddProperty(property);
+        var code = generator.Build().NormalizeWhitespace().ToFullString();
         Assert.NotEmpty(code);
     }
     [Fact]
@@ -70,7 +70,7 @@ public class SyntaxGeneratorTests
         generator.Parameter(SyntaxGenerator.IntType, level.Identifier);
         var baseType = SyntaxGenerator.PrimaryConstructorBaseType("Customer", name);
         generator.AddBaseType(baseType);
-        var code = generator.Build().ToFullString();
+        var code = generator.Build().NormalizeWhitespace().ToFullString();
         Assert.NotEmpty(code);
     }
     [Fact]

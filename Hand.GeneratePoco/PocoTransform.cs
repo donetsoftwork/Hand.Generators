@@ -1,4 +1,5 @@
-﻿using Hand.Builders;
+﻿using Hand.Attributes;
+using Hand.Builders;
 using Hand.Cachers;
 using Hand.Converters;
 using Hand.Entities;
@@ -27,32 +28,32 @@ public class PocoTransform : IGeneratorTransform<PocoSource>
             return null;
         if (context.TargetNode is not TypeDeclarationSyntax type)
             return null;
-        if (context.TargetSymbol is not INamedTypeSymbol typeSymbol)
+        if (context.TargetSymbol is not INamedTypeSymbol toSymbol)
             return null;
         var compilation = context.SemanticModel.Compilation;
-        var typeCacher = new TypeSymbolCacher(compilation);
-        if (typeCacher.Get(typeSymbol) is not ComplexTypeInfo typeInfo)
+        var typeCacher = new TypeInfoBuilder(compilation);
+        if (typeCacher.Get(toSymbol) is not ComplexTypeInfo toInfo)
             return null;
 
         var attribute = context.Attributes.FirstOrDefault();
         if (attribute is null) 
             return null;
-        var sourseSymbol = ConvertBuilder.CheckToSymbol(attribute);
-        if (sourseSymbol is null || sourseSymbol.Equals(typeSymbol, SymbolEqualityComparer.IncludeNullability))
+        var fromSymbol = ConvertBuilder.CheckToSymbol(attribute);
+        if (fromSymbol is null || fromSymbol.Equals(toSymbol, SymbolEqualityComparer.IncludeNullability))
             return null;
-        if (typeCacher.Get(sourseSymbol) is not ComplexTypeInfo sourseInfo)
+        if (typeCacher.Get(fromSymbol) is not ComplexTypeInfo fromInfo)
             return null;
         var isRecord = IsRecord(type);
-        var initializer = CheckInitializeKind(attribute, CheckDefaultKind(typeSymbol, isRecord));
+        var initializer = CheckInitializeKind(attribute, CheckDefaultKind(toSymbol, isRecord));
 
         var convertBuilder = new ConvertBuilder(compilation, typeCacher, SystemConvertProvider.Create(compilation), new(compilation), []);
         if (isRecord && initializer == InitializeKind.Constructor)
-            return new PocoRecordSource(type, convertBuilder, typeInfo, sourseInfo, attribute);
+            return new PocoRecordSource(type, convertBuilder, toInfo, fromInfo, attribute);
         if ((initializer & InitializeKind.Constructor) == InitializeKind.Constructor)
-            return new PocoConstructorSource(type, convertBuilder, typeInfo, sourseInfo, attribute, initializer);
+            return new PocoConstructorSource(type, convertBuilder, toInfo, fromInfo, attribute, initializer);
         if (initializer == InitializeKind.Field)
-            return new PocoFieldSource(type, convertBuilder, typeInfo, sourseInfo, attribute);
-        return new PocoPropertySource(type, convertBuilder, typeInfo, sourseInfo, attribute, initializer);
+            return new PocoFieldSource(type, convertBuilder, toInfo, fromInfo, attribute);
+        return new PocoPropertySource(type, convertBuilder, toInfo, fromInfo, attribute, initializer);
     }
     /// <summary>
     /// 是否记录类型

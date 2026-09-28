@@ -1,9 +1,11 @@
-﻿using Hand.Cachers;
+﻿using Hand.Arguments;
 using Hand.Converters;
+using Hand.Converters.Constructors;
+using Hand.Converters.Members;
 using Hand.Members;
 using Hand.Reflection;
 using Hand.Sources;
-using Hand.Symbols;
+using Hand.Syntax;
 using Hand.Types;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
@@ -23,16 +25,18 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? ToComplex(ITypeSymbolInfo source, ComplexTypeInfo dest)
+    public ISyntaxConverter? ToComplex(ITypeSymbolInfo source, ComplexTypeInfo dest)
     {
         return source.Kind switch
         {
             TypeSymbolKind.Complex => ComplexToComplex((ComplexTypeInfo)source, dest),
             TypeSymbolKind.Generic => ComplexToComplex((ComplexTypeInfo)source, dest),
             TypeSymbolKind.Enum => EnumToComplex((EnumTypeInfo)source, dest),
-            TypeSymbolKind.Entity => EntityToComplex((EntityTypeInfo)source, dest),
-            TypeSymbolKind.Array => CollectionToOther((ICollectionSymbolInfo)source, dest),
-            TypeSymbolKind.Collection => CollectionToOther((ICollectionSymbolInfo)source, dest),
+            TypeSymbolKind.Enumeration => ComplexToComplex((ComplexTypeInfo)source, dest),
+            TypeSymbolKind.Entity => EntityToComplex((EntityPropertyTypeInfo)source, dest),
+            TypeSymbolKind.Array => CollectionToOther((ICollectionTypeInfo)source, dest),
+            TypeSymbolKind.Collection => CollectionToOther((ICollectionTypeInfo)source, dest),
+            TypeSymbolKind.Void => null,
             _ => OtherToComplex(source, dest),
         };
     }
@@ -42,7 +46,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? ComplexToComplex(ComplexTypeInfo source, ComplexTypeInfo dest)
+    public ISyntaxConverter? ComplexToComplex(ComplexTypeInfo source, ComplexTypeInfo dest)
     {
         (var convertToInfo, var converter) = GetConverter(_compilation, source.Symbol, dest.Symbol);
         if (converter is not null)
@@ -55,7 +59,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? OtherToComplex(ITypeSymbolInfo source, ComplexTypeInfo dest)
+    public ISyntaxConverter? OtherToComplex(ITypeSymbolInfo source, ComplexTypeInfo dest)
     {
         var converter = GetCommonConversion(source, dest);
         if (converter is not null)
@@ -79,15 +83,15 @@ public partial class ConvertBuilder
     /// <param name="destInfo"></param>
     /// <param name="convertToInfo"></param>
     /// <returns></returns>
-    public IConverter? ComplexToComplex(ComplexTypeInfo sourceInfo, ComplexTypeInfo destInfo, ConvertSourceInfo convertToInfo)
+    public ISyntaxConverter? ComplexToComplex(ComplexTypeInfo sourceInfo, ComplexTypeInfo destInfo, ConvertSourceInfo convertToInfo)
     {
         if (!convertToInfo.IsPartial)
             return null;
-        var parameters = SymbolMember.GetTargetMembers(_typeCacher, destInfo.Symbol, true);
+        var parameters = SymbolMember.GetTargetMembers(_typeBuilder, destInfo.Symbol, true);
         if (parameters.Count == 0)
             return null;
         var converter = Save(sourceInfo, destInfo, convertToInfo);
-        var arguments = Map(_typeCacher, parameters.Values, sourceInfo.Symbol).ToArray();
+        var arguments = Map(_typeBuilder, parameters.Values, sourceInfo.Symbol).ToArray();
         var typeInfo = convertToInfo.TypeInfo;
         var symbolName = convertToInfo.Provider.SymbolName;
         var methodName = convertToInfo.MethodInfo.Name;
@@ -104,11 +108,11 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? ComplexToOther(ComplexTypeInfo source, ITypeSymbolInfo dest)
+    public ISyntaxConverter? ComplexToOther(ComplexTypeInfo source, ITypeSymbolInfo dest)
     {
         var sourceSymbol = source.Symbol;
         var destSymbol = dest.Symbol;
-        IConverter? converter;
+        ISyntaxConverter? converter;
         if (destSymbol is INamedTypeSymbol namedType)
         {
             (_, converter) = GetConverter(_compilation, sourceSymbol, namedType);
@@ -123,7 +127,7 @@ public partial class ConvertBuilder
             var itemType = item.Type;
             if (itemType.Equals(destSymbol, SymbolEqualityComparer.Default))
             {
-                var itemInfo = _typeCacher.Get(itemType);
+                var itemInfo = _typeBuilder.Get(itemType);
                 if (itemInfo is null)
                     continue;
                 var memberConverter = new MemberConverter(item.Name);
@@ -135,7 +139,7 @@ public partial class ConvertBuilder
             var itemType = item.Type;
             if (itemType.Equals(destSymbol, SymbolEqualityComparer.Default))
             {
-                var itemInfo = _typeCacher.Get(itemType);
+                var itemInfo = _typeBuilder.Get(itemType);
                 if (itemInfo is null)
                     continue;
                 var memberConverter = new MemberConverter(item.Name);
@@ -211,7 +215,7 @@ public partial class ConvertBuilder
     /// <param name="sourceSymbol"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public static IConverter? ConstructorBySingle(ITypeSymbol sourceSymbol, ComplexTypeInfo dest)
+    public static ISyntaxConverter? ConstructorBySingle(ITypeSymbol sourceSymbol, ComplexTypeInfo dest)
         => ConstructorBySingle(SymbolReflection.GetConstructors(dest.Symbol), sourceSymbol, dest);
     /// <summary>
     /// 尝试单参数构造函数
@@ -220,9 +224,9 @@ public partial class ConvertBuilder
     /// <param name="sourceSymbol"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public static IConverter? ConstructorBySingle(IEnumerable<IMethodSymbol> constructors, ITypeSymbol sourceSymbol, ComplexTypeInfo dest)
+    public static ISyntaxConverter? ConstructorBySingle(IEnumerable<IMethodSymbol> constructors, ITypeSymbol sourceSymbol, ComplexTypeInfo dest)
     {
-        var constructor = constructors.Where(m => SymbolTypeDescriptor.MatchSingle(m.Parameters, sourceSymbol))
+        var constructor = constructors.Where(m => SymbolReflection.MatchSingle(m.Parameters, sourceSymbol))
             .OrderBy(m => m.Parameters.Length)
             .FirstOrDefault();
         if (constructor is not null)
@@ -236,14 +240,14 @@ public partial class ConvertBuilder
     /// <param name="sourceSymbol"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? ConstructorByCompatibleParameter(IEnumerable<IMethodSymbol> constructors, ITypeSymbol sourceSymbol, ComplexTypeInfo dest)
+    public ISyntaxConverter? ConstructorByCompatibleParameter(IEnumerable<IMethodSymbol> constructors, ITypeSymbol sourceSymbol, ComplexTypeInfo dest)
     {
         foreach (var item in constructors.Where(m => m.Parameters.Length == 1))
         {
             var parameter = item.Parameters[0];
             if (parameter.Type is not INamedTypeSymbol parameterType)
                 continue;
-            var parameterInfo = _typeCacher.Get(parameterType);
+            var parameterInfo = _typeBuilder.Get(parameterType);
             if (parameterInfo is null)
                 continue;
             var parameterSymbol = parameterInfo.Symbol;
@@ -253,7 +257,7 @@ public partial class ConvertBuilder
             if (compatibleConverter is null)
                 return null;
             var constructorConverter = new ConstructorConverter(dest);
-            var converter = new CompatibleConverter(compatibleConverter, constructorConverter);
+            var converter = new CompositeConverter(compatibleConverter, constructorConverter);
             return converter;
         }
         return null;
@@ -265,7 +269,7 @@ public partial class ConvertBuilder
     /// <param name="members"></param>
     /// <param name="sourceSymbol"></param>
     /// <returns></returns>
-    public static IEnumerable<MemberArgument> Map(TypeSymbolCacher typeSymbols, IEnumerable<Member> members, INamedTypeSymbol sourceSymbol)
+    public static IEnumerable<MemberArgument> Map(TypeInfoBuilder typeSymbols, IEnumerable<IMemberInfo> members, INamedTypeSymbol sourceSymbol)
     {
         var sourceMembers = SymbolMember.GetSourceMembers(typeSymbols, sourceSymbol);
         return Map(members, sourceMembers);
@@ -276,13 +280,16 @@ public partial class ConvertBuilder
     /// <param name="members">成员</param>
     /// <param name="sourceMembers">来源</param>
     /// <returns></returns>
-    public static IEnumerable<MemberArgument> Map(IEnumerable<Member> members, IDictionary<string, SymbolMember> sourceMembers)
+    public static IEnumerable<MemberArgument> Map(IEnumerable<IMemberInfo> members, IDictionary<string, IMemberInfo> sourceMembers)
     {
         foreach (var member in members)
         {
-            var name = member.Name;
-            sourceMembers.TryGetValue(name, out var source);
-            yield return new MemberArgument(member, source);
+            if (sourceMembers.TryGetValue(member.Name, out var source))
+                yield return new MemberArgument(member, source);
+            // 构造函数参数即使匹配不上也要保留
+            else if (member.IsParameter())
+                yield return new MemberArgument(member, null);
+
         }
     }
     /// <summary>
@@ -292,7 +299,7 @@ public partial class ConvertBuilder
     /// <param name="sourceMembers">来源</param>
     /// <param name="references">参考规则</param>
     /// <returns></returns>
-    public static List<MemberArgument> Map(IEnumerable<Member> members, IDictionary<string, SymbolMember> sourceMembers, List<MemberArgument> references)
+    public static List<MemberArgument> Map(IEnumerable<IMemberInfo> members, IDictionary<string, IMemberInfo> sourceMembers, List<MemberArgument> references)
     {
         var arguments = Map(members, sourceMembers)
             .ToList();
@@ -305,13 +312,14 @@ public partial class ConvertBuilder
     /// <param name="targetMembers"></param>
     /// <param name="publicMembers"></param>
     /// <returns></returns>
-    public static IEnumerable<MemberArgument> ReversedMap(IDictionary<string, SymbolMember> sourceMembers, IEnumerable<SymbolMember> targetMembers, IDictionary<string, SymbolMember> publicMembers)
+    public static IEnumerable<MemberArgument> ReversedMap(IDictionary<string, IMemberInfo> sourceMembers, IEnumerable<IMemberInfo> targetMembers, IDictionary<string, IMemberInfo> publicMembers)
     {
         foreach (var member in targetMembers)
         {
             var name = member.Name;
             sourceMembers.TryGetValue(name, out var source);
-            if ((member.Kind == MemberKind.Parameter || member.Original.DeclaredAccessibility != Accessibility.Public)
+
+            if ((member.IsParameter() || !member.IsPublic)
                 && publicMembers.TryGetValue(name, out var publicMember))
             {
                 var reversedArgument = new MemberArgument(source, publicMember);

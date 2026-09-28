@@ -6,7 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>Hand</RootNamespace>
 		<PackageId>Hand.Generators.Attributes</PackageId>
-		<Version>$(VersionBase).7</Version>
+		<Version>$(VersionBase).0-alpha</Version>
 		<EnForceExtendedAnalyzerRules>true</EnForceExtendedAnalyzerRules>
 		<PackageReadmeFile>readme.md</PackageReadmeFile>
 	</PropertyGroup>
@@ -15,5 +15,5 @@
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="$(OutputPath)\netstandard2.0\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-	</ItemGroup>
+	</ItemGroup>	
 </Project>

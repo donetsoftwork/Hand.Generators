@@ -1,4 +1,4 @@
-﻿using Hand.Members;
+﻿using Hand.Types;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -43,7 +43,7 @@ public class ExtensionMethodSource(MethodSource original, TypeNameInfo info)
     {
         var thisParameter = _original.ThisType.Parameter(ExtensionThis.Identifier)
             .This();
-        var returnType = generator.Display(_original.ReturnInfo);
+        var returnType = _original.ReturnInfo.Display(generator);
         var method = returnType.Method(_original.MethodName, [thisParameter, .. _original.CreateParameters()])
             .Public()
             .Static();

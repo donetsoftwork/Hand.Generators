@@ -21,7 +21,7 @@ public class HelloSource(ClassDeclarationSyntax type, INamedTypeSymbol symbol)
     {
         var builder = SyntaxGenerator.Clone(_type);
         var method = GenerateMethod();
-        builder.AddOther(method);
+        builder.AddMethod(method);
         return builder;
     }
     /// <summary>

@@ -1,11 +1,9 @@
-using Hand.Builders;
 using Hand.Collections;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace Hand;
@@ -53,17 +51,12 @@ public partial class SyntaxGenerator(HashSet<UsingDirectiveSyntax> usings, TypeD
     /// <summary>
     /// 类名
     /// </summary>
-    private readonly Dictionary<string, string> _typeNames = [];
+    private readonly Dictionary<string, string> _metadataNames = [];
     /// <summary>
     /// 类型
     /// </summary>
     public TypeDeclarationSyntax Type
         => _type;
-    /// <summary>
-    /// 成员
-    /// </summary>
-    public IEnumerable<MemberDeclarationSyntax> Members
-        => _fields.Concat<MemberDeclarationSyntax>(_properties).Concat(_methods).Concat(_others);
     #endregion
     #region Using
     /// <summary>
@@ -97,7 +90,7 @@ public partial class SyntaxGenerator(HashSet<UsingDirectiveSyntax> usings, TypeD
         }
         else
         {
-            _typeNames[metadataName] = containingNamespace;
+            _metadataNames[metadataName] = containingNamespace;
             Using(containingNamespace);
         }
         return type;
@@ -128,7 +121,7 @@ public partial class SyntaxGenerator(HashSet<UsingDirectiveSyntax> usings, TypeD
     /// <returns></returns>
     public TypeSyntax Display(string typeName, string @namespace)
     {
-        TypeSyntax type;;
+        TypeSyntax type;
         if (TryGetNamespace(typeName, out var @namespace0))
         {
             if (string.Equals(@namespace0, @namespace))
@@ -139,7 +132,33 @@ public partial class SyntaxGenerator(HashSet<UsingDirectiveSyntax> usings, TypeD
         else
         {
             type = SyntaxFactory.IdentifierName(typeName);
-            _typeNames[typeName] = @namespace;
+            _metadataNames[typeName] = @namespace;
+            Using(@namespace);
+        }
+        return type;
+    }
+    /// <summary>
+    /// 展示泛型
+    /// </summary>
+    /// <param name="typeName"></param>
+    /// <param name="namespace"></param>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    public TypeSyntax GenericDisplay(string typeName, string @namespace, params TypeSyntax[] arguments)
+    {
+        TypeSyntax type;
+        var metadataName = $"{typeName}`{arguments.Length}";
+        if (TryGetNamespace(metadataName, out var @namespace0))
+        {
+            if (string.Equals(@namespace0, @namespace))
+                type = Generic(typeName, arguments);
+            else
+                type = Generic(typeName, arguments).Qualify(@namespace);
+        }
+        else
+        {
+            type = Generic(typeName, arguments);
+            _metadataNames[metadataName] = @namespace;
             Using(@namespace);
         }
         return type;
@@ -151,7 +170,7 @@ public partial class SyntaxGenerator(HashSet<UsingDirectiveSyntax> usings, TypeD
     /// <param name="namespace"></param>
     /// <returns></returns>
     protected virtual bool TryGetNamespace(string typeName, out string? @namespace)
-        => _typeNames.TryGetValue(typeName, out @namespace);
+        => _metadataNames.TryGetValue(typeName, out @namespace);
     /// <summary>
     /// 添加Using
     /// </summary>
@@ -240,12 +259,6 @@ public partial class SyntaxGenerator(HashSet<UsingDirectiveSyntax> usings, TypeD
     /// <summary>
     /// 增加成员
     /// </summary>
-    /// <param name="member"></param>
-    public void AddOther(MemberDeclarationSyntax member)
-        => _others.Add(member);
-    /// <summary>
-    /// 增加成员
-    /// </summary>
     /// <param name="members"></param>
     public void AddOthers(params MemberDeclarationSyntax[] members)
         => _others.AddRange(members);
@@ -262,8 +275,7 @@ public partial class SyntaxGenerator(HashSet<UsingDirectiveSyntax> usings, TypeD
     {
         return SyntaxFactory.CompilationUnit()
             .WithUsings([.. usings])
-            .AddMembers(root)
-            .NormalizeWhitespace();
+            .AddMembers(root);
     }
     /// <summary>
     /// 处理成员
@@ -314,10 +326,11 @@ public partial class SyntaxGenerator(HashSet<UsingDirectiveSyntax> usings, TypeD
     /// <param name="usings"></param>
     /// <param name="type"></param>
     /// <param name="members"></param>
+    /// <param name="otherTypes"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static CompilationUnitSyntax Build(BaseNamespaceDeclarationSyntax ns, HashSet<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, MemberDeclarationSyntax[] members)
-        => BuildUnit(usings, ns.AddMembers(CheckMembers(type, members)));
+    public static CompilationUnitSyntax Build(BaseNamespaceDeclarationSyntax ns, HashSet<UsingDirectiveSyntax> usings, TypeDeclarationSyntax type, MemberDeclarationSyntax[] members, IEnumerable<TypeDeclarationSyntax> otherTypes)
+        => BuildUnit(usings, ns.AddMembers([CheckMembers(type, members), .. otherTypes]));
     /// <summary>
     /// 构造语法树
     /// </summary>

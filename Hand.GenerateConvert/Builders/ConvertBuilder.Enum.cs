@@ -1,7 +1,9 @@
 ﻿using Hand.Converters;
 using Hand.Enums;
+using Hand.Enums.Bundles;
 using Hand.Members;
 using Hand.Reflection;
+using Hand.Syntax;
 using Hand.Types;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -15,20 +17,22 @@ namespace Hand.Builders;
 public partial class ConvertBuilder
 {
     /// <summary>
-    /// 转化为数组
+    /// 转化为枚举
     /// </summary>
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? ToEnum(ITypeSymbolInfo source, EnumTypeInfo dest)
+    public ISyntaxConverter? ToEnum(ITypeSymbolInfo source, EnumTypeInfo dest)
     {
         return source.Kind switch
         {
             TypeSymbolKind.Enum => EnumToEnum((EnumTypeInfo)source, dest),
+            TypeSymbolKind.Enumeration => EnumerationToEnum((EnumerationTypeInfo)source, dest),
             TypeSymbolKind.Primitive => PrimitiveToEnum((PrimitiveTypeInfo)source, dest),
-            TypeSymbolKind.Entity => EntityToEnum((EntityTypeInfo)source, dest),
+            TypeSymbolKind.Entity => EntityToEnum((EntityPropertyTypeInfo)source, dest),
             TypeSymbolKind.Complex => ComplexToEnum((ComplexTypeInfo)source, dest),
             TypeSymbolKind.Generic => ComplexToEnum((ComplexTypeInfo)source, dest),
+            TypeSymbolKind.Void => null,
             _ => OtherToEnum(source, dest),
         };
     }
@@ -38,14 +42,12 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? EnumToEnum(EnumTypeInfo source, EnumTypeInfo dest)
+    public ISyntaxConverter? EnumToEnum(EnumTypeInfo source, EnumTypeInfo dest)
     {
-        var sourceSymbol = source.Symbol;
-        var destSymbol = dest.Symbol;
-        (var convertToInfo, var converter) = GetConverter(_compilation, sourceSymbol, destSymbol);
+        (var convertToInfo, var converter) = GetConverter(_compilation, source.Symbol, dest.Symbol);
         if (converter is not null)
             return CheckSource(converter, source.IsNullable, dest);
-        converter = EnumToEnum(source, dest, _bundles.Get(sourceSymbol), _bundles.Get(destSymbol), convertToInfo);
+        converter = EnumToEnum(source, dest, _bundles.Get(source), _bundles.Get(dest), convertToInfo);
         if (converter is null)
             return null;
         return CheckSource(converter, source.IsNullable, dest);
@@ -57,23 +59,22 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? PrimitiveToEnum(PrimitiveTypeInfo source, EnumTypeInfo dest)
+    public ISyntaxConverter? PrimitiveToEnum(PrimitiveTypeInfo source, EnumTypeInfo dest)
     {
         var sourceSymbol = source.Symbol;
-        var destSymbol = dest.Symbol;
-        (var convertToInfo, var converter) = GetConverter(_compilation, sourceSymbol, destSymbol);
+        (var convertToInfo, var converter) = GetConverter(_compilation, sourceSymbol, dest.Symbol);
         if (converter is not null)
             return CheckSource(converter, source.IsNullable, dest);
         // string转枚举
         if (sourceSymbol.IsString())
-            return EnumFromString(dest, _bundles.Get(destSymbol), convertToInfo);
+            return EnumFromString(dest, _bundles.Get(dest), convertToInfo);
         if (sourceSymbol.IsNumericType())
             return CheckSource(new CastConverter(dest), source.IsNullable, dest);
         var underConverter = PrimitiveToPrimitive(source, dest.ElementInfo);
         if (underConverter is null)
             return null;
         // 先转为底层类型, 再转为枚举类型
-        converter = new CompatibleConverter(underConverter, new CastConverter(dest));
+        converter = new CompositeConverter(underConverter, new CastConverter(dest));
         return CheckSource(converter, source.IsNullable, dest);
     }
     /// <summary>
@@ -82,7 +83,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? ComplexToEnum(ComplexTypeInfo source, EnumTypeInfo dest)
+    public ISyntaxConverter? ComplexToEnum(ComplexTypeInfo source, EnumTypeInfo dest)
     {
         var converter = ComplexToOther(source, dest);
         if (converter is not null)
@@ -92,7 +93,7 @@ public partial class ConvertBuilder
         if (underConverter is null)
             return null;
         // 先转为底层类型, 再转为枚举
-        converter = new CompatibleConverter(underConverter, new CastConverter(dest));
+        converter = new CompositeConverter(underConverter, new CastConverter(dest));
         return CheckSource(converter, source.IsNullable, dest);
     }
     /// <summary>
@@ -101,7 +102,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? OtherToEnum(ITypeSymbolInfo source, EnumTypeInfo dest)
+    public ISyntaxConverter? OtherToEnum(ITypeSymbolInfo source, EnumTypeInfo dest)
     {
         var converter = GetCommonConversion(source, dest);
         if (converter is not null)
@@ -112,7 +113,7 @@ public partial class ConvertBuilder
         if (underConverter is null)
             return null;
         // 先转为底层类型, 再转为枚举
-        converter = new CompatibleConverter(underConverter, new CastConverter(dest));
+        converter = new CompositeConverter(underConverter, new CastConverter(dest));
         return CheckSource(converter, source.IsNullable, dest);
     }
     #endregion
@@ -123,7 +124,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? EnumToPrimitive(EnumTypeInfo source, PrimitiveTypeInfo dest)
+    public ISyntaxConverter? EnumToPrimitive(EnumTypeInfo source, PrimitiveTypeInfo dest)
     {
         var sourceSymbol = source.Symbol;
         var destSymbol = dest.Symbol;
@@ -145,7 +146,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? EnumToComplex(EnumTypeInfo source, ComplexTypeInfo dest)
+    public ISyntaxConverter? EnumToComplex(EnumTypeInfo source, ComplexTypeInfo dest)
     {
         var sourceSymbol = source.Symbol;
         var destSymbol = dest.Symbol;
@@ -160,35 +161,16 @@ public partial class ConvertBuilder
         if (underConverter is null)
             return null;
         // 先转为底层类型, 再转为复杂类型
-        converter = new CompatibleConverter(new CastConverter(under), underConverter);
+        converter = new CompositeConverter(new CastConverter(under), underConverter);
         return CheckSource(converter, source.IsNullable, dest);
     }
-    ///// <summary>
-    ///// 枚举转集合
-    ///// </summary>
-    ///// <param name="source"></param>
-    ///// <param name="dest"></param>
-    ///// <returns></returns>
-    //public IConverter? EnumToArray(EnumTypeInfo source, ArrayTypeInfo dest)
-    //{
-    //    var converter = OtherToArray(source, dest);
-    //    if (converter is not null)
-    //        return converter;
-    //    var under = source.ElementInfo;
-    //    var underConverter = OtherToArray(under, dest);
-    //    if (underConverter is null)
-    //        return null;
-    //    // 先转为底层类型, 再转为复杂类型
-    //    converter = new CompatibleConverter(new CastConverter(under.Symbol.ToSyntax()), underConverter);
-    //    return CheckSource(converter, source.IsNullable, dest);
-    //}
     /// <summary>
     /// 枚举转集合
     /// </summary>
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? EnumToCollection(EnumTypeInfo source, ICollectionSymbolInfo dest)
+    public ISyntaxConverter? EnumToCollection(EnumTypeInfo source, ICollectionTypeInfo dest)
     {
         var converter = OtherToCollection(source, dest);
         if (converter is not null)
@@ -198,7 +180,7 @@ public partial class ConvertBuilder
         if (underConverter is null)
             return null;
         // 先转为底层类型, 再转为复杂类型
-        converter = new CompatibleConverter(new CastConverter(under), underConverter);
+        converter = new CompositeConverter(new CastConverter(under), underConverter);
         return CheckSource(converter, source.IsNullable, dest);
     }
     /// <summary>
@@ -207,7 +189,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? EnumToUnknow(EnumTypeInfo source, ITypeSymbolInfo dest)
+    public ISyntaxConverter? EnumToUnknow(EnumTypeInfo source, ITypeSymbolInfo dest)
     {
         var converter = GetCommonConversion(source, dest);
         if (converter is not null)
@@ -218,7 +200,7 @@ public partial class ConvertBuilder
         if (underConverter is null)
             return null;
         // 先转为底层类型, 再转为未知类型
-        converter = new CompatibleConverter(new CastConverter(underInfo), underConverter);
+        converter = new CompositeConverter(new CastConverter(underInfo), underConverter);
         return CheckSource(converter, source.IsNullable, dest);
     }
     #endregion
@@ -229,7 +211,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? EntityToEnum(EntityTypeInfo source, EnumTypeInfo dest)
+    public ISyntaxConverter? EntityToEnum(EntityPropertyTypeInfo source, EnumTypeInfo dest)
     {
         var sourceSymbol = source.Symbol;
         var destSymbol = dest.Symbol;
@@ -240,7 +222,7 @@ public partial class ConvertBuilder
         if (underConverter is null)
             return null;
         // 先转为底层类型, 再转为枚举类型
-        converter = new CompatibleConverter(underConverter, new CastConverter(dest));
+        converter = new CompositeConverter(underConverter, new CastConverter(dest));
         return CheckSource(converter, source.IsNullable, dest);
     }
     /// <summary>
@@ -249,7 +231,7 @@ public partial class ConvertBuilder
     /// <param name="source"></param>
     /// <param name="dest"></param>
     /// <returns></returns>
-    public IConverter? EnumToEntity(EnumTypeInfo source, EntityTypeInfo dest)
+    public ISyntaxConverter? EnumToEntity(EnumTypeInfo source, EntityPropertyTypeInfo dest)
     {
         var sourceSymbol = source.Symbol;
         var destSymbol = dest.Symbol;
@@ -264,7 +246,7 @@ public partial class ConvertBuilder
         if (entityConverter is null)
             return null;
         // 先转为子类型, 再转为实体属性
-        converter = new CompatibleConverter(underConverter, entityConverter);
+        converter = new CompositeConverter(underConverter, entityConverter);
         return CheckSource(converter, source.IsNullable, dest);
     }
     #endregion
@@ -275,10 +257,10 @@ public partial class ConvertBuilder
     /// <param name="destInfo"></param>
     /// <param name="convertToInfo"></param>
     /// <returns></returns>
-    public IConverter? FromEnum(EnumTypeInfo sourceInfo, ITypeSymbolInfo destInfo, ConvertSourceInfo convertToInfo)
+    public ISyntaxConverter? FromEnum(EnumTypeInfo sourceInfo, ITypeSymbolInfo destInfo, ConvertSourceInfo convertToInfo)
     {
-        var enumBundle = _bundles.Get(sourceInfo.Symbol);
-        var underType = enumBundle.UnderType;
+        var enumBundle = _bundles.Get(sourceInfo);
+        var underType = sourceInfo.Element;
         // 底层类型直接转
         // 正常情况下该逻辑应该不会命中, 之前ConvertBuilder的ClassifyCommonConversion逻辑会覆盖
         //if (SymbolTypeDescriptor.CheckEquals(underType, destType))
@@ -289,9 +271,9 @@ public partial class ConvertBuilder
         //if (destType.IsString())
         //    return ToStringConverter.Instance;
         var destSymbol = destInfo.Symbol;
-        if (destInfo.IsEnum() && destInfo is EnumTypeInfo enumType)
+        if (destInfo.Kind == TypeSymbolKind.Enum && destInfo is EnumTypeInfo enumType)
         {
-            var destBundle = _bundles.Get(enumType.Symbol);
+            var destBundle = _bundles.Get(enumType);
             // 枚举转枚举
             if (destBundle is not null)
                 return EnumToEnum(sourceInfo, enumType, enumBundle, destBundle, convertToInfo);
@@ -300,7 +282,7 @@ public partial class ConvertBuilder
         if (original is null)
             return null;
         // 先转为底层类型, 再转目标类型
-        return new CompatibleConverter(new CastConverter(sourceInfo.ElementInfo), original);
+        return new CompositeConverter(new CastConverter(sourceInfo.ElementInfo), original);
     }
     /// <summary>
     ///其他类型转Enum
@@ -309,14 +291,14 @@ public partial class ConvertBuilder
     /// <param name="destInfo"></param>
     /// <param name="convertToInfo"></param>
     /// <returns></returns>
-    public IConverter? ToEnum(ITypeSymbolInfo sourceInfo, EnumTypeInfo destInfo, ConvertSourceInfo convertToInfo)
+    public ISyntaxConverter? ToEnum(ITypeSymbolInfo sourceInfo, EnumTypeInfo destInfo, ConvertSourceInfo convertToInfo)
     {
-        var enumBundle = _bundles.Get(destInfo.Symbol);
+        var enumBundle = _bundles.Get(destInfo);
         var sourceSymbol = sourceInfo.Symbol;
         // string转枚举
         if (sourceSymbol.IsString())
             return EnumFromString(destInfo, enumBundle, convertToInfo);
-        var underType = enumBundle.UnderType;
+        var underType = destInfo.Element;
         // 底层类型直接转
         // 正常情况下该逻辑应该不会命中, 之前ConvertBuilder的ClassifyCommonConversion逻辑会覆盖
         //if (SymbolTypeDescriptor.CheckEquals(underType, sourceType))
@@ -331,7 +313,21 @@ public partial class ConvertBuilder
         if (compatible is null)
             return null;
         // 先转为底层类型, 再转为枚举类型
-        return new CompatibleConverter(compatible, new CastConverter(destInfo));
+        return new CompositeConverter(compatible, new CastConverter(destInfo));
+    }
+    /// <summary>
+    /// string转Enum
+    /// </summary>
+    /// <param name="enumInfo"></param>
+    /// <returns></returns>
+    public ISyntaxConverter EnumFromString(EnumTypeInfo enumInfo)
+    {
+        var enumInfoSymbol = enumInfo.Symbol;
+        var sourceSymbol = _compilation.GetSpecialType(SpecialType.System_String);
+        (var convertToInfo, var converter) = GetConverter(_compilation, sourceSymbol, enumInfoSymbol);
+        if (converter is not null)
+            return converter;
+        return EnumFromString(enumInfo, _bundles.Get(enumInfo), convertToInfo);
     }
     /// <summary>
     /// string转Enum
@@ -340,37 +336,19 @@ public partial class ConvertBuilder
     /// <param name="bundle"></param>
     /// <param name="convertToInfo"></param>
     /// <returns></returns>
-    private IConverter EnumFromString(EnumTypeInfo enumInfo, IEnumBundle bundle, ConvertSourceInfo convertToInfo)
+    public ISyntaxConverter EnumFromString(EnumTypeInfo enumInfo, IEnumBundle bundle, ConvertSourceInfo convertToInfo)
     {
         // 枚举特殊成员
         var members = bundle.Fields
             .Where(field => !string.IsNullOrWhiteSpace(field.Member))
             .ToArray();
-        var enumSymbol = enumInfo.Symbol;
         // 默认通过Enum.Parse转化
         if (members.Length == 0)
-            return new EnumParseConverter(enumSymbol.ToSyntax(), true);
+            return EnumParseConverter.Create(enumInfo, true);
 
-        //var enumProvider = SourceProvider.CreateByExtension(compilation, enumType);
-        //var convertFromInfo = enumProvider.ConvertFrom(stringType.Name);
-        //var convertFromMethod = enumProvider.GetConvertMethod(convertFromInfo.MethodInfo, stringType);
-        //if(convertFromMethod is null)
-        //{
-        //    var stringProvider = SourceProvider.CreateByExtension(compilation, stringType);
-        //    var convertToInfo = stringProvider.ConvertTo(enumType.Name);
-        //    var convertToMethod = stringProvider.GetConvertMethod(convertToInfo.MethodInfo, enumType);
-        //}
-
-        //var stringProvider = SourceProvider.CreateByExtension(_compilation, stringType);
-        //var convertToInfo = stringProvider.ConvertTo(enumType.Name);
-        //var methodInfo = convertToInfo.MethodInfo;
-        //var convertToMethod = stringProvider.GetConvertMethod(methodInfo, enumType);
-        //var typeInfo = convertToInfo.TypeInfo;
-        //if (convertToMethod is not null)
-        //    return new StaticMethodConverter(typeInfo.Type.Access(convertToMethod.Name));
         // 扩展类非partial,无法扩展,直接使用Enum.Parse转化
         if (!convertToInfo.IsPartial)
-            return new EnumParseConverter(enumSymbol.ToSyntax(), true);
+            return EnumParseConverter.Create(enumInfo, true);
         
         var typeInfo = convertToInfo.TypeInfo;
         var methodName = convertToInfo.MethodInfo.Name;
@@ -387,9 +365,9 @@ public partial class ConvertBuilder
         //return new StaticMethodConverter(typeInfo.Type.Access(methodName));
         return convertToInfo.Create();
     }
-    private IConverter? EnumToEnum(EnumTypeInfo sourceInfo, EnumTypeInfo destInfo, IEnumBundle sourceBundle, IEnumBundle destBundle, ConvertSourceInfo convertToInfo)
+    private ISyntaxConverter? EnumToEnum(EnumTypeInfo sourceInfo, EnumTypeInfo destInfo, IEnumBundle sourceBundle, IEnumBundle destBundle, ConvertSourceInfo convertToInfo)
     {
-        //var methodInfo = convertToInfo.MethodInfo;        
+        //var methodInfo = convertToInfo.MethodInfo;
         //if (convertToMethod is not null)
         //    return new StaticMethodConverter(typeInfo.Type.Access(convertToMethod.Name));
         // 扩展类非partial,无法扩展,不支持

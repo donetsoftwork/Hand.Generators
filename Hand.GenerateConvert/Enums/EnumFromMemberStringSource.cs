@@ -18,6 +18,7 @@ public class EnumFromMemberStringSource(Compilation compilation, EnumTypeInfo en
     : MethodSource(compilation, methodName, SyntaxGenerator.StringType, enumInfo)
 {
     #region 配置
+    private readonly EnumTypeInfo _enumInfo = enumInfo;
     private readonly IEnumField[] _members = members;
 
     /// <summary>
@@ -31,7 +32,7 @@ public class EnumFromMemberStringSource(Compilation compilation, EnumTypeInfo en
     public override MethodDeclarationSyntax BuildBody(SyntaxGenerator generator, MethodDeclarationSyntax method, ExpressionSyntax @this)
     {
         return BuildBody(generator, method.ToBuilder(), @this)
-            .WithSummary(ConvertBuilder.GetMethodSummary(_returnInfo));
+            .WithSummary(ConvertBuilder.GetMethodSummary(_enumInfo));
     }
     /// <summary>
     /// 构造方法主体
@@ -42,8 +43,7 @@ public class EnumFromMemberStringSource(Compilation compilation, EnumTypeInfo en
     /// <param name="this"></param>
     public TMethod BuildBody<TMethod>(SyntaxGenerator generator, BodyBuilder<TMethod> builder, ExpressionSyntax @this)
     {
-        var enumType = generator.Display(_returnInfo);
-        var parseConverter = new EnumParseConverter(enumType, true);
+        var enumType = _enumInfo.Display(generator);
         foreach (var member in _members)
         {
             //if (string.Equals(this, member.Member, System.StringComparison.OrdinalIgnoreCase‌))
@@ -51,6 +51,6 @@ public class EnumFromMemberStringSource(Compilation compilation, EnumTypeInfo en
             builder.If(StringCompareMethods.Equals(@this, SyntaxGenerator.Literal(member.Member), StringCompareMethods.OrdinalIgnoreCase))
                 .Return(member.GetExpression(enumType));
         }
-        return builder.Return(parseConverter.Convert(generator, @this));
+        return builder.Return(EnumParseConverter.Convert(generator, @this, _enumInfo, true));
     }
 }

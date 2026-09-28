@@ -131,7 +131,7 @@ class User
     [Fact]
     public void CompileClass()
     {
-        string sourceText = @"
+        var sourceText = @"
 namespace EasySyntaxTests;
 class User
 {
@@ -147,7 +147,7 @@ class User
     [Fact]
     public void CompileRecord()
     {
-        string sourceText = "public record User(string Name);";
+        var sourceText = "public record User(string Name);";
         SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var compilation = CSharpCompilation.Create("Tests", [syntaxTree]);
         INamedTypeSymbol? userSymbol = compilation.GetTypeByMetadataName("User");
@@ -156,7 +156,7 @@ class User
     [Fact]
     public void ExpressionBody()
     {
-        string sourceText = @"
+        var sourceText = @"
 public class A
 {
     private int _value;
@@ -168,7 +168,56 @@ public class A
         var typeDeclaration = syntaxTree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         Assert.NotNull(typeDeclaration);
     }
+    [Fact]
+    public void OutArgument()
+    {
+        var sourceText = @"
+        var dic = new Dictionary<string, int>();
+        dic.TryGetValue(""name"", out var value);";
+        SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var arguments = syntaxTree.GetRoot()
+            .DescendantNodes()
+            .OfType<ArgumentSyntax>()
+            .ToArray();
+        Assert.Equal(2, arguments.Length);
+        ArgumentSyntax id = arguments[1];
+        Assert.True(id.RefKindKeyword.IsKind(SyntaxKind.OutKeyword));
+    }
+    [Fact]
+    public void Deconstruct()
+    {
+        var sourceText = "(int id, string name) = (1, \"Jxj\");";
+        SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var tuples = syntaxTree.GetRoot()
+            .DescendantNodes()
+            .OfType<TupleExpressionSyntax>()
+            .ToArray();
+        Assert.Equal(2, tuples.Length);
+    }
+    [Fact]
+    public void Deconstruct2()
+    {
+        var sourceText = "var (id, name) = (1, \"Jxj\");";
+        SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var declarations = syntaxTree.GetRoot()
+            .DescendantNodes()
+            .OfType<DeclarationExpressionSyntax>()
+            .ToArray();
+        Assert.Single(declarations);
+    }
+    [Fact]
+    public void Deconstruct3()
+    {
+        var sourceText = "(_, string name) = (1, \"Jxj\");";
+        SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var tuples = syntaxTree.GetRoot()
+            .DescendantNodes()
+            .OfType<TupleExpressionSyntax>()
+            .ToArray();
+        Assert.Equal(2, tuples.Length);
+        var arguments = tuples[0].Arguments;
+        Assert.Equal(2, arguments.Count);
+        var argument = arguments[0];
+        Assert.True(argument.Expression is IdentifierNameSyntax);
+    }
 }
-
-
-

@@ -15,8 +15,8 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Hand.Core" Version="0.3.1.13-alpha" />
-		<PackageReference Include="Hand.MemberValidation" Version="0.3.1.7-alpha" />
+		<PackageReference Include="Hand.Core" Version="0.3.2.5-alpha" />
+		<PackageReference Include="Hand.MemberValidation" Version="0.3.2.2-alpha" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
 		<PackageReference Include="xunit" Version="2.9.3" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
@@ -32,7 +32,10 @@
 		<ProjectReference Include="..\..\Hand.GenerateCore\Hand.GenerateCore.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
 		<ProjectReference Include="..\..\Hand.GenerateProperty\Hand.GenerateProperty.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
 		<ProjectReference Include="..\..\Hand.Generators.Attributes\Hand.Generators.Attributes.csproj" />
+		<ProjectReference Include="..\..\Hand.Generators.Generators\Hand.Generators.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+		<ProjectReference Include="..\..\Hand.Generators.Reflection\Hand.Generators.Reflection.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
 		<ProjectReference Include="..\..\Hand.Generators.EasySyntax\Hand.Generators.EasySyntax.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+		<ProjectReference Include="..\..\Hand.Generators.Naming\Hand.Generators.Naming.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
 
 		<ProjectReference Include="..\..\Hand.Generators.SyntaxScripting\Hand.Generators.SyntaxScripting.csproj" />
 	</ItemGroup>

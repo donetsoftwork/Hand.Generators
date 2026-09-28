@@ -4,7 +4,7 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<RootNamespace>Hand</RootNamespace>
-		<Version>$(VersionBase).17-alpha</Version>
+		<Version>$(VersionBase).0-alpha</Version>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<EnableNETAnalyzers>True</EnableNETAnalyzers>
 		<IsRoslynComponent>true</IsRoslynComponent>
@@ -19,23 +19,31 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Hand.Naming" Version="0.3.1.3-alpha">
+		<PackageReference Include="Hand.Core" Version="0.3.2.5-alpha">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Hand.ParseXml" Version="0.3.1.4-alpha">
+		<PackageReference Include="Hand.AutoCache" Version="0.3.2.1-alpha">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Hand.AutoCache" Version="0.3.1.3-alpha">
+		<PackageReference Include="Hand.Naming" Version="0.3.2.1-alpha">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Hand.MemberValidation" Version="0.3.1.7-alpha">
+		<PackageReference Include="Hand.ParseXml" Version="0.3.2.1-alpha">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Hand.Projections" Version="0.3.1.9-alpha">
+		<PackageReference Include="Hand.MemberValidation" Version="0.3.2.2-alpha">
+			<IncludeAssets>compile; analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Hand.Validation" Version="0.3.2.2-alpha">
+			<IncludeAssets>compile; analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Hand.Projections" Version="0.3.2.1-alpha">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
@@ -53,11 +61,48 @@
 			<IncludeAssets>compile;analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</ProjectReference>
+		<ProjectReference Include="..\Hand.Generators.Converters\Hand.Generators.Converters.csproj">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</ProjectReference>
+		<ProjectReference Include="..\Hand.Generators.Documentation\Hand.Generators.Documentation.csproj">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</ProjectReference>
+		<ProjectReference Include="..\Hand.Generators.Enums\Hand.Generators.Enums.csproj">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</ProjectReference>
+		<ProjectReference Include="..\Hand.Generators.Generators\Hand.Generators.Generators.csproj">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</ProjectReference>
+		<ProjectReference Include="..\Hand.Generators.Members\Hand.Generators.Members.csproj">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</ProjectReference>
+		<ProjectReference Include="..\Hand.Generators.Naming\Hand.Generators.Naming.csproj">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</ProjectReference>
+		<ProjectReference Include="..\Hand.Generators.System\Hand.Generators.System.csproj">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</ProjectReference>
+		<ProjectReference Include="..\Hand.Generators.Types\Hand.Generators.Types.csproj">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</ProjectReference>
+		<ProjectReference Include="..\Hand.Generators.Reflection\Hand.Generators.Reflection.csproj">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</ProjectReference>
 		<ProjectReference Include="..\Hand.Generators.EasySyntax\Hand.Generators.EasySyntax.csproj">
 			<IncludeAssets>compile;analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</ProjectReference>
 		<ProjectReference Include="..\Hand.Generators.Attributes\Hand.Generators.Attributes.csproj" />
+
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />

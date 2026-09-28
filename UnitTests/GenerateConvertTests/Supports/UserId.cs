@@ -1,4 +1,4 @@
-﻿using Hand.Models;
+﻿using Hand.Primitives;
 
 namespace GenerateConvertTests.Supports;
 
@@ -12,4 +12,4 @@ public record UserId(long Original) : IEntityId;
 /// </summary>
 /// <param name="Original"></param>
 
-public record CustomerId(string Original): IEntityProperty<string>;
+public record CustomerId(string Original) : IEntityProperty<string>;

@@ -19,5 +19,5 @@ public class PropertyGenerator()
     /// <summary>
     /// Attribute标记
     /// </summary>
-    public const string Attribute = "Hand.Entities.GeneratePropertyAttribute";
+    public const string Attribute = "Hand.Primitives.GeneratePropertyAttribute";
 }

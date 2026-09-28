@@ -1,6 +1,6 @@
 ﻿using Hand;
-using Hand.Collections;
-using Hand.Converters;
+using Hand.Converters.Collections;
+using Hand.Converters.Methods;
 using Hand.Mapping;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -13,8 +13,8 @@ public class CollectionTests
     public void ConvertAll()
     {
         var generator = SyntaxGenerator.Create(SyntaxFactory.ClassDeclaration("TestClass"));
-        var itemConverter = new InstanceMethodConverter(SyntaxFactory.IdentifierName("ToDTO"));
-        var converter = new ArrayConverter(itemConverter);
+        var itemConverter = MethodConverter.Create(SyntaxFactory.IdentifierName("ToDTO"));
+        var converter = ArrayConverter.Create(itemConverter);
         var source = SyntaxFactory.IdentifierName("userArray");
         var dest = converter.Convert(generator, source);
         var code = dest.NormalizeWhitespace().ToFullString();

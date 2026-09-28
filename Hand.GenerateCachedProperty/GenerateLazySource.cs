@@ -87,17 +87,17 @@ public abstract class GenerateLazySource(TypeDeclarationSyntax type, INamedTypeS
             .Public();
         if (_isStatic)
         {
-            builder.AddOther(_valueField.Static());
-            builder.AddOther(_stateField.Static());
-            builder.AddOther(_lockField.Static());
-            builder.AddOther(property.Static());
+            builder.AddField(_valueField.Static());
+            builder.AddField(_stateField.Static());
+            builder.AddField(_lockField.Static());
+            builder.AddProperty(property.Static());
         }
         else
         {
-            builder.AddOther(_valueField);
-            builder.AddOther(_stateField);
-            builder.AddOther(_lockField);
-            builder.AddOther(property);
+            builder.AddField(_valueField);
+            builder.AddField(_stateField);
+            builder.AddField(_lockField);
+            builder.AddProperty(property);
         }
         
         return builder;

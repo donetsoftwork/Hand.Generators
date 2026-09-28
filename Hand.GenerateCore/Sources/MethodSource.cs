@@ -1,4 +1,4 @@
-﻿using Hand.Types;
+﻿using Hand.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -11,7 +11,7 @@ namespace Hand.Sources;
 /// <param name="methodName"></param>
 /// <param name="thisType"></param>
 /// <param name="returnInfo"></param>
-public abstract class MethodSource(Compilation compilation, string methodName, TypeSyntax thisType, ITypeSymbolInfo returnInfo)
+public abstract class MethodSource(Compilation compilation, string methodName, TypeSyntax thisType, ISyntaxDisplay<TypeSyntax> returnInfo)
 {
     #region 配置
     /// <summary>
@@ -29,7 +29,7 @@ public abstract class MethodSource(Compilation compilation, string methodName, T
     /// <summary>
     /// 返回类型
     /// </summary>
-    protected readonly ITypeSymbolInfo _returnInfo = returnInfo;
+    protected readonly ISyntaxDisplay<TypeSyntax> _returnInfo = returnInfo;
     /// <summary>
     /// 编译对象
     /// </summary>
@@ -48,7 +48,7 @@ public abstract class MethodSource(Compilation compilation, string methodName, T
     /// <summary>
     /// 返回类型信息
     /// </summary>
-    public ITypeSymbolInfo ReturnInfo
+    public ISyntaxDisplay<TypeSyntax> ReturnInfo
         => _returnInfo;
     #endregion
 
@@ -65,7 +65,7 @@ public abstract class MethodSource(Compilation compilation, string methodName, T
     /// <returns></returns>
     public virtual MethodDeclarationSyntax CreateMethod(SyntaxGenerator generator)
     {
-        var returnType = generator.Display(_returnInfo);
+        var returnType = _returnInfo.Display(generator);
         var method = returnType.Method(_methodName, CreateParameters())
             .Public();
         return BuildBody(generator, method, SyntaxGenerator.ThisExpression);

@@ -1,6 +1,8 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace Hand;
@@ -95,6 +97,32 @@ public partial class SyntaxGenerator
         return SyntaxFactory.ClassDeclaration(typeName);
     }
     #endregion
+    #region ParenthesizedVariable
+    /// <summary>
+    /// 括号变量(用于解构)
+    /// </summary>
+    /// <param name="variables"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ParenthesizedVariableDesignationSyntax ParenthesizedVariable(params SeparatedSyntaxList<VariableDesignationSyntax> variables)
+        => SyntaxFactory.ParenthesizedVariableDesignation(variables);
+    /// <summary>
+    /// 括号变量(用于解构)
+    /// </summary>
+    /// <param name="variables"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ParenthesizedVariableDesignationSyntax ParenthesizedVariable(params IEnumerable<SyntaxToken> variables)
+        => ParenthesizedVariable([.. variables.Select(static name => SyntaxFactory.SingleVariableDesignation(name))]);
+    /// <summary>
+    /// 括号变量(用于解构)
+    /// </summary>
+    /// <param name="variables"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ParenthesizedVariableDesignationSyntax ParenthesizedVariable(params IEnumerable<string> variables)
+        => ParenthesizedVariable(variables.Select(static name => SyntaxFactory.Identifier(name)));
+    #endregion
     #region ConstructorDeclaration
     /// <summary>
     /// 定义构造函数
@@ -181,6 +209,7 @@ public partial class SyntaxGenerator
     public static OperatorDeclarationSyntax NotEqualOperatorDeclaration(ParameterSyntax a, ParameterSyntax b)
         => OperatorDeclaration(SyntaxKind.ExclamationEqualsToken, BoolType, a, b);
     #endregion
+
     #region DeclareAccessor
     /// <summary>
     /// 属性Get处理器
@@ -231,15 +260,15 @@ public partial class SyntaxGenerator
     /// <param name="type"></param>
     public static MethodDeclarationSyntax ObjectEqualsDeclaration(TypeSyntax type)
     {
-        // (object obj)
-        var parameter = ObjectType.Parameter("obj");
+        // (object? obj)
+        var parameter = ObjectType.Nullable().Parameter("obj");
         var methodName = SyntaxFactory.Identifier(nameof(Equals));
         var other = SyntaxFactory.IdentifierName("other");
         // obj is T other
         var checkType = parameter.ToIdentifierName().IsType(type, other.Identifier);
         // Equals(other)
         var checkEquals = methodName.ToIdentifierName().Invocation([other]);
-        // public override bool Equals(object obj) =>
+        // public override bool Equals(object? obj) =>
         //     obj is T other && Equals(other);
         return BoolType.Method(methodName, parameter)
             .Public()
@@ -306,6 +335,5 @@ public partial class SyntaxGenerator
             // return !a.Equals(b);
             return builder.Return(a.Access("Equals").Invocation([b]).LogicalNot());
         }
-
     }
 }

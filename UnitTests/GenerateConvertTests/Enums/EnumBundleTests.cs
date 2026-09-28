@@ -1,6 +1,9 @@
 ﻿using GenerateConvertTests.Supports;
 using Hand;
 using Hand.Enums;
+using Hand.Enums.Builders;
+using Hand.Enums.Bundles;
+using Hand.Types;
 
 namespace GenerateConvertTests.Enums;
 
@@ -18,7 +21,8 @@ public class EnumBundleTests
         var type = compilation.GetTypeByMetadataName("System.ConsoleColor");
         Assert.NotNull(type);
         var builder = new EnumBundleBuilder(compilation);
-        var bundle = builder.Get(type);
+        var typeInfo = new EnumTypeInfo(type, type, true, false);
+        var bundle = builder.Get(typeInfo);
         Assert.NotNull(bundle);
         var red = bundle.GetFieldByName("red");
         Assert.NotNull(red);
@@ -44,7 +48,8 @@ public class EnumBundleTests
         var type = compilation.GetTypeByMetadataName("GenerateConvertTests.Supports.MyColor");
         Assert.NotNull(type);
         var builder = new EnumBundleBuilder(compilation);
-        var bundle = builder.Get(type);
+        var typeInfo = new EnumTypeInfo(type, type, true, false);
+        var bundle = builder.Get(typeInfo);
         Assert.NotNull(bundle);
         var red = bundle.GetFieldByMemberName("r");
         Assert.NotNull(red);

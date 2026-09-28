@@ -1,7 +1,6 @@
 using Hand;
-using Hand.Entities;
 using Hand.GenerateProperty;
-using Hand.Models;
+using Hand.Primitives;
 
 namespace GeneratePropertyTests;
 
@@ -22,7 +21,7 @@ public class ProductPriceTest
     public void Generate()
     {
         var source = @"
-using Hand.Entities;
+using Hand.Primitives;
 using Hand.Models;
 namespace GeneratePropertyTests;
 
@@ -41,5 +40,5 @@ public partial record struct ProductPrice : IEntityProperty<decimal>;
     }
 }
 
-[GenerateProperty("Include: Constructor")]
-public partial record struct ProductPrice : IEntityProperty<decimal>;
+//[GenerateProperty("Include: Constructor")]
+//public partial record struct ProductPrice : IEntityProperty<decimal>;

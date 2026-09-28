@@ -1,12 +1,10 @@
-﻿using Hand.Builders;
-using Hand.Cachers;
+﻿using Hand.Arguments;
+using Hand.Builders;
 using Hand.Converters;
 using Hand.Generators;
 using Hand.Members;
 using Hand.Providers;
-using Hand.Reflection;
 using Hand.Sources;
-using Hand.Symbols;
 using Hand.Transform;
 using Hand.Types;
 using Microsoft.CodeAnalysis;
@@ -37,7 +35,7 @@ public class ConvertTransform : IGeneratorTransform<ConvertToSource>
         if (count == 0)
             return null;
         var compilation = context.SemanticModel.Compilation;
-        var typeCacher = new TypeSymbolCacher(compilation);
+        var typeCacher = new TypeInfoBuilder(compilation);
         if (typeCacher.Get(targetSymbol) is not ComplexTypeInfo targetInfo)
             return null;
         var sourceMembers = SymbolMember.GetSourceMembers(typeCacher, targetSymbol, true);
@@ -89,7 +87,7 @@ public class ConvertTransform : IGeneratorTransform<ConvertToSource>
     /// <param name="typeSymbols"></param>
     /// <param name="type"></param>
     /// <returns></returns>
-    public static Dictionary<string, SymbolMember> GetTargetMembers(TypeSymbolCacher typeSymbols, INamedTypeSymbol type)
+    public static IDictionary<string, IMemberInfo> GetTargetMembers(TypeInfoBuilder typeSymbols, INamedTypeSymbol type)
     {
         if (type.IsPartial())
             return SymbolMember.GetTargetMembers(typeSymbols, type, false);
@@ -128,7 +126,7 @@ public class ConvertTransform : IGeneratorTransform<ConvertToSource>
     /// <param name="sourceMembers"></param>
     /// <param name="referenceArguments"></param>
     /// <returns></returns>
-    public static void CheckConvertFrom(ConvertBuilder builder, ComplexTypeInfo targetInfo, ComplexTypeInfo toInfo, IDictionary<string, SymbolMember> sourceMembers, List<MemberArgument> referenceArguments)
+    public static void CheckConvertFrom(ConvertBuilder builder, ComplexTypeInfo targetInfo, ComplexTypeInfo toInfo, IDictionary<string, IMemberInfo> sourceMembers, List<MemberArgument> referenceArguments)
     {
         var targetSymbol = targetInfo.Symbol;
         var toSymbol = toInfo.Symbol;
@@ -137,7 +135,7 @@ public class ConvertTransform : IGeneratorTransform<ConvertToSource>
         var convertToMethod = sourceProvider.GetConvertMethod(convertToInfo.MethodInfo, targetSymbol);
         if (convertToMethod is not null)
             return;
-        var targetMembers = SymbolMember.GetTargetMembers(builder.TypeCacher, targetSymbol, true);
+        var targetMembers = SymbolMember.GetTargetMembers(builder.TypeBuilder, targetSymbol, true);
         var arguments = ConvertBuilder.Map(targetMembers.Values, sourceMembers, MemberArgument.Reverse(referenceArguments));
         if (arguments.Count == 0)
             return;

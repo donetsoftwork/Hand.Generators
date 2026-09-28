@@ -135,7 +135,112 @@ namespace Services;
 >* [1, 2]
 >* (1, 2)
 
-## 四、模式匹配
+## 四、定义形参
+### 1. 原始方式
+~~~csharp
+var a = SyntaxFactory.Parameter(SyntaxFactory.Identifier("a"))
+    .WithType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)));
+var b = SyntaxFactory.Parameter(SyntaxFactory.Identifier("b"))
+    .WithType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)))
+    .WithDefault(SyntaxFactory.EqualsValueClause(
+        SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(1))));
+~~~
+
+### 2. 简化方式
+~~~csharp
+var a = SyntaxGenerator.IntType.Parameter("a");
+var b = SyntaxGenerator.IntType.Parameter("b", SyntaxGenerator.Literal(1));
+~~~
+
+### 3. 生成的代码
+~~~csharp
+int a
+~~~
+
+~~~csharp
+int b = 1
+~~~
+
+### 4. 形参修饰符
+>* params
+>* in
+>* ref
+>* out
+>* 参看《修饰符》板块
+
+## 五、实参
+### 1. 原始方式
+~~~csharp
+ArgumentSyntax literal = SyntaxFactory.Argument(
+    SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, 
+    SyntaxFactory.Literal(1)));
+        SyntaxFactory.ArgumentList()));
+ArgumentSyntax value = SyntaxFactory.Argument(
+    SyntaxFactory.IdentifierName("value")
+).WithRefKindKeyword(
+    SyntaxFactory.Token(SyntaxKind.RefKeyword));
+ArgumentSyntax outArgument = SyntaxFactory.Argument(
+    default, 
+    SyntaxFactory.Token(SyntaxKind.OutKeyword), 
+    SyntaxFactory.DeclarationExpression(
+        SyntaxFactory.IdentifierName("var"), 
+        SyntaxFactory.SingleVariableDesignation(
+            SyntaxFactory.Identifier("value"))));
+~~~
+
+### 2. 简化方式
+~~~csharp
+ArgumentSyntax literal = SyntaxGenerator.Literal(1)
+    .ToArgument();
+ArgumentSyntax value = SyntaxFactory.IdentifierName("value")
+    .ToArgument()
+    .Ref();
+ArgumentSyntax outArgument = SyntaxGenerator.VarType.OutArgument("value");
+~~~
+
+### 3. 生成的代码
+~~~csharp
+1
+reader.Read()
+ref value
+out var value
+~~~
+
+### 4. 实参引用类型
+>* in(可以通过In扩展方法添加)
+>* ref(可以通过Ref扩展方法添加)
+>* out(可以通过Out扩展方法添加)
+
+## 六、定义变量
+### 1. 原始方式
+~~~csharp
+var x = SyntaxFactory.VariableDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)))
+    .AddVariables(SyntaxFactory.VariableDeclarator("x"));
+var y = SyntaxFactory.VariableDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)))
+    .AddVariables(SyntaxFactory.VariableDeclarator("y")
+        .WithInitializer(SyntaxFactory.EqualsValueClause(
+            SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(1)))));
+var z = SyntaxFactory.VariableDeclaration(SyntaxFactory.IdentifierName(SyntaxFactory.Token(SyntaxKind.VarKeyword)))
+    .AddVariables(SyntaxFactory.VariableDeclarator("z")
+        .WithInitializer(SyntaxFactory.EqualsValueClause(
+            SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(1)))));
+~~~
+
+### 2. 简化方式
+~~~csharp
+var x = SyntaxGenerator.IntType.Variable("x");
+var y = SyntaxGenerator.IntType.Variable("y", SyntaxGenerator.Literal(1));
+var z = SyntaxGenerator.VarType.Variable("z", SyntaxGenerator.Literal(1));
+~~~
+
+### 3. 生成的代码
+~~~csharp
+int x;
+int y = 1;
+var z = 1;
+~~~
+
+## 七、模式匹配
 ### 1. 原始方式
 >* SyntaxFactory.ConstantPattern(SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, 1)))
 >* SyntaxFactory.RelationalPattern(SyntaxFactory.Token(SyntaxKind.GreaterThanToken), SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, 3))
@@ -176,7 +281,7 @@ namespace Services;
 >* int i
 >* Apple _
 
-## 五、 插值表达式
+## 八、 插值表达式
 ### 1. 普通插值
 #### 1.1 原始方式
 ~~~csharp
@@ -242,7 +347,7 @@ var interpolation = SyntaxGenerator.Interpolation()
 $"Today is: {now:yyyy-MM-dd}"
 ~~~
 
-## 六、初始化表达式
+## 九、初始化表达式
 ### 1. 构造函数初始化
 #### 1.1 原始方式
 ~~~csharp
@@ -412,7 +517,7 @@ var creation = SyntaxGenerator.Collection(one, two);
 [1, 2]
 ~~~
 
-## 七、 声明Attribute标记
+## 十、 声明Attribute标记
 ### 1. 简单标记
 #### 1.1 原始方式
 ~~~csharp
@@ -486,7 +591,7 @@ var attribute = attributeName.Attribute([
 AttributeUsage(AttributeTargets.Method, Inherited = false)
 ~~~
 
-## 八、 运算
+## 十一、 运算
 ### 1. 原始方式
 >* SyntaxFactory.BinaryExpression(SyntaxKind.AddExpression, left, right)
 >* SyntaxFactory.BinaryExpression(SyntaxKind.SubtractExpression, left, right)
@@ -588,36 +693,64 @@ AttributeUsage(AttributeTargets.Method, Inherited = false)
 >* left ?? right
 >* variable!
 
-## 九、定义变量
+## 十二、解构
 ### 1. 原始方式
 ~~~csharp
-var x = SyntaxFactory.VariableDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)))
-    .AddVariables(SyntaxFactory.VariableDeclarator("x"));
-var y = SyntaxFactory.VariableDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)))
-    .AddVariables(SyntaxFactory.VariableDeclarator("y")
-        .WithInitializer(SyntaxFactory.EqualsValueClause(
-            SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(1)))));
-var z = SyntaxFactory.VariableDeclaration(SyntaxFactory.IdentifierName(SyntaxFactory.Token(SyntaxKind.VarKeyword)))
-    .AddVariables(SyntaxFactory.VariableDeclarator("z")
-        .WithInitializer(SyntaxFactory.EqualsValueClause(
-            SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(1)))));
+var tuple = SyntaxFactory.TupleExpression([
+    SyntaxFactory.Argument(
+        SyntaxFactory.LiteralExpression(
+            SyntaxKind.NumericLiteralExpression, 
+            SyntaxFactory.Literal(1))),
+    SyntaxFactory.Argument(
+        SyntaxFactory.LiteralExpression(
+            SyntaxKind.NumericLiteralExpression, 
+            SyntaxFactory.Literal(1)))]);
+var expression = SyntaxFactory.AssignmentExpression(
+    SyntaxKind.SimpleAssignmentExpression, 
+    SyntaxFactory.DeclarationExpression(
+        SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)),
+        SyntaxFactory.ParenthesizedVariableDesignation([
+            SyntaxFactory.SingleVariableDesignation(SyntaxFactory.Identifier("x")),
+            SyntaxFactory.SingleVariableDesignation(SyntaxFactory.Identifier("y"))])), 
+    tuple);
+var expression2 = SyntaxFactory.AssignmentExpression(
+    SyntaxKind.SimpleAssignmentExpression,
+    SyntaxFactory.DeclarationExpression(
+        SyntaxFactory.IdentifierName(
+            SyntaxFactory.Identifier(
+                SyntaxFactory.TriviaList(),
+                SyntaxKind.VarKeyword,
+                "var",
+                "var",
+                SyntaxFactory.TriviaList())),
+        SyntaxFactory.ParenthesizedVariableDesignation([
+            SyntaxFactory.SingleVariableDesignation(SyntaxFactory.Identifier("x")),
+            SyntaxFactory.SingleVariableDesignation(SyntaxFactory.Identifier("y"))])),
+    tuple);
+var expression3 = SyntaxFactory.AssignmentExpression(
+    SyntaxKind.SimpleAssignmentExpression,
+    SyntaxGenerator.Tuple([
+        SyntaxFactory.IdentifierName("x"), 
+        SyntaxFactory.IdentifierName("y")]),
+    tuple);
 ~~~
 
 ### 2. 简化方式
 ~~~csharp
-var x = SyntaxGenerator.IntType.Variable("x");
-var y = SyntaxGenerator.IntType.Variable("y", SyntaxGenerator.Literal(1));
-var z = SyntaxGenerator.IntType.Variable("z", SyntaxGenerator.Literal(1));
+var tuple = SyntaxGenerator.Tuple([SyntaxGenerator.Literal(1), SyntaxGenerator.Literal(2)]);
+var expression = tuple.Deconstruct(SyntaxGenerator.IntType, "x", "y");
+var expression2 = tuple.Deconstruct(SyntaxGenerator.VarType, "x", "y");
+var expression3 = tuple.Deconstruct("x", "y");
 ~~~
 
 ### 3. 生成的代码
 ~~~csharp
-int x;
-int y = 1;
-var z = 1;
+int (x, y) = (1, 2)
+var(x, y) = (1, 2)
+(x, y) = (1, 2)
 ~~~
 
-## 十、定义字段
+## 十三、定义字段
 ### 1. 原始方式
 ~~~csharp
 var _x = SyntaxFactory.FieldDeclaration(SyntaxFactory.VariableDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword))))
@@ -645,33 +778,7 @@ int _x;
 int _y = 1;
 ~~~
 
-## 十一、定义参数
-### 1. 原始方式
-~~~csharp
-var a = SyntaxFactory.Parameter(SyntaxFactory.Identifier("a"))
-    .WithType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)));
-var b = SyntaxFactory.Parameter(SyntaxFactory.Identifier("b"))
-    .WithType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)))
-    .WithDefault(SyntaxFactory.EqualsValueClause(
-        SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(1))));
-~~~
-
-### 2. 简化方式
-~~~csharp
-var a = SyntaxGenerator.IntType.Parameter("a");
-var b = SyntaxGenerator.IntType.Parameter("b", SyntaxGenerator.Literal(1));
-~~~
-
-### 3. 生成的代码
-~~~csharp
-int a
-~~~
-
-~~~csharp
-int b = 1
-~~~
-
-## 十二、定义函数
+## 十四、定义函数
 ### 1. 原始方式
 ~~~csharp
 var method = SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)), "Increment")
@@ -711,7 +818,7 @@ int Increment(int num, int value = 1)
 }
 ~~~
 
-## 十三、 定义构造函数
+## 十五、 定义构造函数
 ### 1. 原始方式
 ~~~csharp
 var constructor = SyntaxFactory.ConstructorDeclaration("UserId")
@@ -730,7 +837,7 @@ var constructor = type.Constructor(SyntaxGenerator.IntType.Parameter(original.Id
 UserId(int original)
 ~~~
 
-## 十四、声明类和结构体
+## 十六、声明类和结构体
 ### 1. 原始方式
 ~~~csharp
 var userClass = SyntaxFactory.ClassDeclaration("UserClass");
@@ -749,7 +856,7 @@ struct UserStruct
 }
 ~~~
 
-## 十五、声明记录类
+## 十七、声明记录类
 ### 1. 原始方式
 ~~~csharp
 var record = SyntaxFactory.RecordDeclaration(SyntaxFactory.Token(SyntaxKind.RecordKeyword), "Person")
@@ -774,7 +881,7 @@ var record = SyntaxGenerator.RecordDeclaration("Person")
 record Person(string Name);
 ~~~
 
-## 十六、声明记录结构体
+## 十八、声明记录结构体
 ### 1. 原始方式
 ~~~csharp
 var recordDeclaration = SyntaxFactory.RecordDeclaration(SyntaxKind.RecordStructDeclaration, SyntaxFactory.Token(SyntaxKind.RecordKeyword), SyntaxFactory.Identifier("UserId"))
@@ -800,7 +907,7 @@ var type = SyntaxGenerator.RecordStructDeclaration("UserId")
 record struct UserId(int Id);
 ~~~
 
-## 十七、继承基类
+## 十九、继承基类
 ### 1. 原始方式
 ~~~csharp
 var vipType = SyntaxFactory.ClassDeclaration("Vip")
@@ -820,7 +927,7 @@ class Vip : Customer
 }
 ~~~
 
-## 十八、构造函数调用自身构造函数
+## 二十、构造函数调用自身构造函数
 ### 1. 原始方式
 ~~~csharp
 var constructor = SyntaxFactory.ConstructorDeclaration("Discounter")
@@ -861,7 +968,7 @@ class Discounter
 }
 ~~~
 
-## 十九、构造函数调用父类构造函数
+## 二十一、构造函数调用父类构造函数
 ### 1. 原始方式
 ~~~csharp
 var constructor = SyntaxFactory.ConstructorDeclaration("Vip")
@@ -899,7 +1006,7 @@ class Vip : Customer
 }
 ~~~
 
-## 二十、主构造函数调用父类构造函数
+## 二十二、主构造函数调用父类构造函数
 ### 1. 原始方式
 ~~~csharp
 var baseType = SyntaxFactory.PrimaryConstructorBaseType(
@@ -929,7 +1036,7 @@ var recordDeclaration = SyntaxGenerator.RecordDeclaration("Vip")
 record Vip(string Name, int Level) : Customer(Name);
 ~~~
 
-## 二十一、修饰符
+## 二十三、修饰符
 >* abstract
 >* virtual 
 >* override
@@ -1018,7 +1125,7 @@ var field = SyntaxGenerator.IntType.Field("_id")
 private readonly int _id;
 ~~~
 
-### 3. 参数修饰符
+### 3. 形参修饰符
 >* params
 >* in
 >* ref
@@ -1101,7 +1208,7 @@ var method = SyntaxGenerator.IntType.Method("CreateId")
 partial int CreateId();
 ~~~
 
-## 二十二、方法体定义
+## 二十四、方法体定义
 
 ### 1. 方法体构造器
 >* 调用ToBuilder简化方法体定义

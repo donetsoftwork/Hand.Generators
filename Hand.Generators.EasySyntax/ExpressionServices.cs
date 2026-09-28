@@ -535,6 +535,74 @@ public static partial class GenerateServices
     public static ExpressionSyntax ConditionalInvocation(this ExpressionSyntax owner, SimpleNameSyntax methodName, IEnumerable<string> variables)
         => ConditionalInvocation(owner, methodName, SyntaxGenerator.ArgumentList(variables));
     #endregion
+    #region Declaration
+    /// <summary>
+    /// 括号变量(用于解构)
+    /// </summary>
+    /// <param name="tuple"></param>
+    /// <param name="type"></param>
+    /// <param name="variables"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AssignmentExpressionSyntax Deconstruct(this ExpressionSyntax tuple, TypeSyntax type, params SeparatedSyntaxList<VariableDesignationSyntax> variables)
+        => SyntaxFactory.DeclarationExpression(type, SyntaxFactory.ParenthesizedVariableDesignation(variables)).Assign(tuple);
+    /// <summary>
+    /// 括号变量(用于解构)
+    /// </summary>
+    /// <param name="tuple"></param>
+    /// <param name="type"></param>
+    /// <param name="variables"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AssignmentExpressionSyntax Deconstruct(this ExpressionSyntax tuple, TypeSyntax type, params IEnumerable<SyntaxToken> variables)
+        => SyntaxFactory.DeclarationExpression(type, SyntaxGenerator.ParenthesizedVariable(variables)).Assign(tuple);
+    /// <summary>
+    /// 括号变量(用于解构)
+    /// </summary>
+    /// <param name="tuple"></param>
+    /// <param name="type"></param>
+    /// <param name="variables"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AssignmentExpressionSyntax Deconstruct(this ExpressionSyntax tuple, TypeSyntax type, params IEnumerable<string> variables)
+        => SyntaxFactory.DeclarationExpression(type, SyntaxGenerator.ParenthesizedVariable(variables)).Assign(tuple);
+    /// <summary>
+    /// 括号变量(用于解构)
+    /// </summary>
+    /// <param name="tuple"></param>
+    /// <param name="variables"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AssignmentExpressionSyntax Deconstruct(this ExpressionSyntax tuple, params SeparatedSyntaxList<VariableDesignationSyntax> variables)
+        => SyntaxFactory.DeclarationExpression(SyntaxGenerator.VarType, SyntaxFactory.ParenthesizedVariableDesignation(variables)).Assign(tuple);
+    /// <summary>
+    /// 解构
+    /// </summary>
+    /// <param name="tuple"></param>
+    /// <param name="items"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AssignmentExpressionSyntax Deconstruct(this ExpressionSyntax tuple, params IEnumerable<ExpressionSyntax> items)
+        => SyntaxGenerator.Tuple(items).Assign(tuple);
+    /// <summary>
+    /// 解构
+    /// </summary>
+    /// <param name="tuple"></param>
+    /// <param name="variables"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AssignmentExpressionSyntax Deconstruct(this ExpressionSyntax tuple, params IEnumerable<SyntaxToken> variables)
+        => SyntaxGenerator.Tuple(variables.Select(SyntaxFactory.IdentifierName)).Assign(tuple);
+    /// <summary>
+    /// 解构
+    /// </summary>
+    /// <param name="tuple"></param>
+    /// <param name="variables"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AssignmentExpressionSyntax Deconstruct(this ExpressionSyntax tuple, params IEnumerable<string> variables)
+        => SyntaxGenerator.Tuple(variables.Select(SyntaxFactory.IdentifierName)).Assign(tuple);
+    #endregion
     #region Statement
     /// <summary>
     /// 返回值

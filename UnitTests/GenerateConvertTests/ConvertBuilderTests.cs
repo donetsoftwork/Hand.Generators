@@ -3,6 +3,8 @@ using GenerateConvertTests.Supports;
 using Hand;
 using Hand.Builders;
 using Hand.Converters;
+using Hand.Converters.Constructors;
+using Hand.Converters.Methods;
 using Hand.Enums;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -207,7 +209,7 @@ public class ConvertBuilderTests
         Assert.NotNull(destType);
         var converter = _builder.Get(sourceType, destType);
         Assert.NotNull(converter);
-        if (converter is not ExtensionMethodConverter)
+        if (converter is not MethodConverter)
             Assert.Fail();
         var last = _builder.Sources.LastOrDefault();
         Assert.NotNull(last);
@@ -227,7 +229,7 @@ public class ConvertBuilderTests
         Assert.NotNull(destType);
         var converter = _builder.Get(sourceType, destType);
         Assert.NotNull(converter);
-        if (converter is not ExtensionMethodConverter)
+        if (converter is not MethodConverter)
             Assert.Fail();
         var last = _builder.Sources.LastOrDefault();
         Assert.NotNull(last);
@@ -251,7 +253,7 @@ public class ConvertBuilderTests
         Assert.NotNull(destSymbol);
         var converter = _builder.Get(sourceSymbol, destSymbol);
         Assert.NotNull(converter);
-        if (converter is not ExtensionMethodConverter)
+        if (converter is not MethodConverter)
             Assert.Fail();
         var last = _builder.Sources.LastOrDefault();
         Assert.NotNull(last);
@@ -276,7 +278,7 @@ public class ConvertBuilderTests
         Assert.NotNull(destSymbol);
         var converter = _builder.Get(sourceSymbol, destSymbol);
         Assert.NotNull(converter);
-        if (converter is not ExtensionMethodConverter)
+        if (converter is not MethodConverter)
             Assert.Fail();
         var last = _builder.Sources.LastOrDefault();
         Assert.NotNull(last);
@@ -299,7 +301,7 @@ public class ConvertBuilderTests
         Assert.NotNull(destSymbol);
         var converter = _builder.Get(sourceSymbol, destSymbol);
         Assert.NotNull(converter);
-        if (converter is not ExtensionMethodConverter)
+        if (converter is not MethodConverter)
             Assert.Fail();
         var last = _builder.Sources.LastOrDefault();
         Assert.NotNull(last);
@@ -338,7 +340,7 @@ public class ConvertBuilderTests
         Assert.NotNull(destSymbol);
         var converter = _builder.Get(sourceSymbol, destSymbol);
         Assert.NotNull(converter);
-        if (converter is not CompatibleConverter)
+        if (converter is not CompositeConverter)
             Assert.Fail();
     }
     [Fact]
@@ -354,7 +356,7 @@ public class ConvertBuilderTests
         Assert.NotNull(destSymbol);
         var converter = _builder.Get(sourceSymbol, destSymbol);
         Assert.NotNull(converter);
-        if (converter is not CompatibleConverter)
+        if (converter is not CompositeConverter)
             Assert.Fail();
     }
     [Fact]
@@ -370,7 +372,7 @@ public class ConvertBuilderTests
         Assert.NotNull(destSymbol);
         var converter = _builder.Get(sourceSymbol, destSymbol);
         Assert.NotNull(converter);
-        if (converter is not ExtensionMethodConverter)
+        if (converter is not MethodConverter)
             Assert.Fail();
         //var source = SyntaxFactory.IdentifierName("user");
         //var dest = converter.Convert(source);
@@ -398,7 +400,7 @@ public class ConvertBuilderTests
         Assert.NotNull(destSymbol);
         var converter = _builder.Get(sourceSymbol, destSymbol);
         Assert.NotNull(converter);
-        if (converter is not ExtensionMethodConverter)
+        if (converter is not MethodConverter)
             Assert.Fail();
         var last = _builder.Sources.LastOrDefault();
         Assert.NotNull(last);
@@ -421,7 +423,7 @@ public class ConvertBuilderTests
         Assert.NotNull(destSymbol);
         var converter = _builder.Get(sourceSymbol, destSymbol);
         Assert.NotNull(converter);
-        if (converter is not ExtensionMethodConverter)
+        if (converter is not MethodConverter)
             Assert.Fail();
         var last = _builder.Sources.LastOrDefault();
         Assert.NotNull(last);

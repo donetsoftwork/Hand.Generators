@@ -1,0 +1,1 @@
+# SourceGenerator之命名规则

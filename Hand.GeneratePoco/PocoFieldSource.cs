@@ -1,4 +1,6 @@
-﻿using Hand.Builders;
+﻿using Hand.Arguments;
+using Hand.Builders;
+using Hand.Fields;
 using Hand.Members;
 using Hand.Types;
 using Microsoft.CodeAnalysis;
@@ -21,15 +23,18 @@ public class PocoFieldSource(TypeDeclarationSyntax type, ConvertBuilder convertB
     public override SyntaxGenerator Generate()
     {
         //var generator = SyntaxGenerator.Clone(_type);
-        var sourceMembers = ConvertBuilder.GetSourceMembers(_convertBuilder.TypeCacher, _sourseSymbol, _recognizers);
+        //var sourceMembers = ConvertBuilder.GetSourceMembers(_convertBuilder.TypeBuilder, _fromSymbol, _fromRecognizers);
+        var sourceMembers = ConvertBuilder.Recognize(_fromSourceMembers, _fromRecognizers);
         var arguments = new List<MemberArgument>(sourceMembers.Count);
         foreach (var item in sourceMembers)
         {
             var name = item.Key;
-            if (_memberNames.Contains(name))
-                continue;
-            var argument = CheckMember(_generator, name, item.Value);
-            arguments.Add(argument);
+            // 判断属性是否重名
+            if (_naming.TryDeclareProperty(name))
+            {
+                var argument = CheckMember(_generator, name, item.Value);
+                arguments.Add(argument);
+            }
         }
         CheckConvert(_generator, sourceMembers, arguments);
         return _generator;
@@ -41,18 +46,19 @@ public class PocoFieldSource(TypeDeclarationSyntax type, ConvertBuilder convertB
     /// <param name="name"></param>
     /// <param name="sourseMember"></param>
     /// <returns></returns>
-    public MemberArgument CheckMember(SyntaxGenerator generator, string name, SymbolMember sourseMember)
+    public MemberArgument CheckMember(SyntaxGenerator generator, string name, IMemberInfo sourseMember)
     {
-        var (memberType, memberSymbolInfo) = CheckMemberType(name, sourseMember.SymbolInfo);
-        var field = CreateField(memberType, name, memberSymbolInfo)
+        var (memberType, symbolInfo) = CheckMemberType(name, sourseMember.SymbolInfo);
+        var field = CreateField(memberType, name, symbolInfo)
             .Public();
         if (_generateAttribute)
-            field = generator.GenerateAttribute(field, _attributeCacher.GetAttributes(sourseMember.Original, AttributeTargets.Field));
-        var summary = sourseMember.Element;
+            field = generator.GenerateAttribute(field, _attributeCacher.GetAttributes(sourseMember, AttributeTargets.Field));
+        var summary = sourseMember.XmlElement;
         if (summary is not null)
             field = field.WithSummary(summary);
         generator.AddField(field);
-        var member = new FieldDeclarationMember(name, memberSymbolInfo, field, () => sourseMember.Summary);
+        var member = new FieldDeclarationMember(name, symbolInfo, field, true, sourseMember.Summary);
+        SourceMember(name, member);
         return new(member, sourseMember);
     }
     /// <summary>
