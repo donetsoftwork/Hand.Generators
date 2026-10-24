@@ -12,7 +12,7 @@ namespace Hand;
 /// <summary>
 /// 其他静态方法
 /// </summary>
-public partial class SyntaxGenerator
+partial class SyntaxGenerator
 {
     #region ArgumentList
     /// <summary>

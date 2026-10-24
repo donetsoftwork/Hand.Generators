@@ -6,7 +6,7 @@ namespace GenerateCachedPropertyTests;
 
 public partial class PropertyTests
 {
-    [GenerateLazy("LazyTime", LockType = "object")]
+    //[GenerateLazy("LazyTime", LockType = "object")]
     public static DateTime Now { get; } = DateTime.Now;
 
     [Fact]
@@ -23,9 +23,9 @@ public partial class PropertyTests
     public static DateTime Now { get; } = DateTime.Now;
 }
 ";
-        var service = SyntaxTreeDriver.CreateDefaultDriver()
+        var driver = SyntaxTreeDriver.CreateDefaultDriver()
             .Reference<GenerateLazyAttribute>();
-        var result = service.Generate<GenerateLazyGenerator>(source)
+        var result = driver.Generate<GenerateLazyGenerator>(source)
             .GetRunResult();
         var syntaxTree = result.GeneratedTrees.FirstOrDefault();
         Assert.NotNull(syntaxTree);
@@ -46,9 +46,9 @@ public partial class PropertyTests
     public DateTime Now { get; } = DateTime.Now;
 }
 ";
-        var service = SyntaxTreeDriver.CreateDefaultDriver()
+        var driver = SyntaxTreeDriver.CreateDefaultDriver()
             .Reference<GenerateLazyAttribute>();
-        var result = service.Generate<GenerateLazyGenerator>(source)
+        var result = driver.Generate<GenerateLazyGenerator>(source)
             .GetRunResult();
         var syntaxTree = result.GeneratedTrees.FirstOrDefault();
         Assert.NotNull(syntaxTree);

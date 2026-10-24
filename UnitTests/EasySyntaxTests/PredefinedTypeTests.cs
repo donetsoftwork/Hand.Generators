@@ -155,4 +155,12 @@ public class PredefinedTypeTests
         Assert.True(predefinedType.IsVoid());
         Assert.True(SyntaxGenerator.VoidType.IsVoid());
     }
+    [Fact]
+    public void IsVar()
+    {
+        var varType = SyntaxGenerator.VarType;
+        Assert.True(varType.IsVar);
+        var type = SyntaxFactory.IdentifierName("var");
+        Assert.True(type.IsVar);
+    }
 }

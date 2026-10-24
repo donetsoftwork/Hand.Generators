@@ -7,17 +7,17 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Hello;
 
 public class HelloSource(ClassDeclarationSyntax type, INamedTypeSymbol symbol)
-    : IGeneratorSource
+    : GeneratorSourceBase
 {
     #region 配置
     private readonly ClassDeclarationSyntax _type = type;
     private readonly INamedTypeSymbol _symbol = symbol;
     /// <inheritdoc />
-    public string GenerateFileName
+    public override string GenerateFileName
         => $"{_symbol.ToDisplayString()}.Hello.g.cs";
     #endregion
     /// <inheritdoc />
-    public SyntaxGenerator Generate()
+    public override SyntaxGenerator Generate()
     {
         var builder = SyntaxGenerator.Clone(_type);
         var method = GenerateMethod();

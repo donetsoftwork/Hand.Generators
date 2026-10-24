@@ -40,7 +40,7 @@ public class EntityPropertyTypeInfo(INamedTypeSymbol original, INamedTypeSymbol 
     protected readonly PrimitiveTypeInfo _elementInfo = elementInfo;
 
     /// <inheritdoc />
-    TypeSymbolKind ITypeSymbolInfo.Kind
+    public override TypeSymbolKind Kind
         => TypeSymbolKind.Entity;
     /// <summary>
     /// 子类型
@@ -59,7 +59,7 @@ public class EntityPropertyTypeInfo(INamedTypeSymbol original, INamedTypeSymbol 
     /// <param name="compilation"></param>
     /// <returns></returns>
     public new EntityPropertyTypeInfo GetNullable(Compilation compilation)
-        => _isNullable ? this : new((INamedTypeSymbol)compilation.GetNullable(_original), _symbol, true, _element, _isInterface, _elementInfo, _summary);
+        => _isNullable ? this : new(compilation.GetNullable(_original), _symbol, true, _element, _isInterface, _elementInfo, _summary);
     /// <inheritdoc />
     ITypeSymbolInfo ITypeSymbolInfo.GetNullable(Compilation compilation)
         => GetNullable(compilation);

@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+﻿using Hand.Scopes;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 
@@ -12,7 +13,7 @@ public static class StringCompareMethods
     /// <summary>
     /// System.StringComparison
     /// </summary>
-    public static readonly IdentifierNameSyntax StringComparison = SyntaxFactory.IdentifierName("System.StringComparison");
+    public static readonly QualifiedNameSyntax StringComparison = SyntaxFactory.IdentifierName("StringComparison").Qualify(NamespaceScope.System);
     /// <summary>
     /// System.StringComparison.OrdinalIgnoreCase
     /// </summary>

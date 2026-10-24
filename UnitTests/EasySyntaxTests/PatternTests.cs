@@ -3,7 +3,6 @@ using Hand.Patterns;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Newtonsoft.Json.Linq;
 using System.Collections;
 
 namespace EasySyntaxTests;

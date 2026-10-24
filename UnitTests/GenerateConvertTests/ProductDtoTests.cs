@@ -35,6 +35,34 @@ public partial class ProductDto
         Assert.Contains("ToProduct", code);
     }
     [Fact]
+    public void Enum2String()
+    {
+        var source = @"
+using GenerateConvertTests.Supports;
+using Hand.Mapping;
+
+namespace GenerateConvertTests.DTO;
+
+[GenerateConvert<Product>(ConvertFrom=true)]
+public partial class ProductDto
+{
+    public int ProductId { get; set; }
+    public string? ProductName { get; set; }
+    public string ProductColor { get; set; }
+    public UserDTO[] ProductUser { get; set; }
+}
+";
+        var driver = SyntaxTreeDriver.CreateDefaultDriver()
+            .Reference(typeof(GenerateConvertAttribute<>))
+            .Reference<Product>();
+        var result = driver.Generate<ConvertGenerator>(source)
+            .GetRunResult();
+        var syntaxTree = result.GeneratedTrees.FirstOrDefault();
+        Assert.NotNull(syntaxTree);
+        var code = syntaxTree.GetText().ToString();
+        Assert.Contains("ToProduct", code);
+    }
+    [Fact]
     public void Partial()
     {
         // partial类只有在同个程序集下才能生效

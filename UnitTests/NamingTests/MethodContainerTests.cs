@@ -88,7 +88,7 @@ public partial class Calculator
                 .Static();
             generator.AddMethod(method);
         }
-        var code = generator.Build().NormalizeWhitespace().ToFullString();
+        var code = generator.BuildUnit().NormalizeWhitespace().ToFullString();
         Assert.Contains(methodName, code);
     }
     [Fact]

@@ -9,198 +9,181 @@ namespace Hand.Collections;
 /// <summary>
 /// 类型比较器
 /// </summary>
-public class TypeComparer : IEqualityComparer<TypeSyntax>
+public partial class TypeComparer
+    : IEqualityComparer<NameSyntax>, IEqualityComparer<TypeSyntax>
 {
-    private const int _seed = 23;
-
     #region IEqualityComparer<TypeSyntax>
     /// <inheritdoc />
     bool IEqualityComparer<TypeSyntax>.Equals(TypeSyntax? x, TypeSyntax? y)
     {
         if (x is null || y is null)
             return false;
-        return Equals(x, y);
+        return Equal(x, y);
     }
     /// <inheritdoc />
     int IEqualityComparer<TypeSyntax>.GetHashCode(TypeSyntax obj)
-        => GetHashCode(obj);
+        => GetTypeHashCode(obj);
+
     #endregion
-    #region GetHashCode
+    #region IEqualityComparer<NameSyntax>
     /// <inheritdoc />
-    public static int GetHashCode(TypeSyntax obj)
+    bool IEqualityComparer<NameSyntax>.Equals(NameSyntax? x, NameSyntax? y)
     {
-        var seed = _seed;
-        return GetTypeHashCode(obj, _seed, ref seed);
+        if (x is null || y is null)
+            return false;
+        return Equal(x, y);
     }
-    /// <summary>
-    /// 获取SyntaxToken的HashCode
-    /// </summary>
-    /// <param name="token"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static int GetTokenHashCode(SyntaxToken token)
-        => token.ValueText.GetHashCode();
-    /// <summary>
-    /// 获取简单标识名HashCode
-    /// </summary>
-    /// <param name="name"></param>
-    /// <param name="hashCode"></param>
-    /// <param name="seed"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static int GetIdentifierHashCode(IdentifierNameSyntax name, int hashCode, int seed)
-        => GetTokenHashCode(name.Identifier) ^ unchecked(hashCode + seed);
-    /// <summary>
-    /// 获取预定义类型HashCode
-    /// </summary>
-    /// <param name="name"></param>
-    /// <param name="hashCode"></param>
-    /// <param name="seed"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static int GetPredefinedHashCode(PredefinedTypeSyntax name, int hashCode, int seed)
-        => GetTokenHashCode(name.Keyword) ^ unchecked(hashCode + seed);
-    /// <summary>
-    /// 获取简单标识名HashCode
-    /// </summary>
-    /// <param name="genericName"></param>
-    /// <param name="hashCode"></param>
-    /// <param name="seed"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static int GetGenericHashCode(GenericNameSyntax genericName, int hashCode, ref int seed)
-    {
-        hashCode = GetTokenHashCode(genericName.Identifier) ^ unchecked(hashCode + seed);
-        foreach (var argument in genericName.TypeArgumentList.Arguments)
-            hashCode = GetTypeHashCode(argument, hashCode, ref seed);
-        return hashCode;
-    }
-    /// <summary>
-    /// 获取类型HashCode
-    /// </summary>
-    /// <param name="name"></param>
-    /// <param name="hashCode"></param>
-    /// <param name="seed"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static int GetTypeHashCode(TypeSyntax name, int hashCode, ref int seed)
-    {
-        return name.Kind() switch
-        {
-            SyntaxKind.IdentifierName => GetIdentifierHashCode((IdentifierNameSyntax)name, hashCode, seed),
-            SyntaxKind.QualifiedName => GetQualifiedHashCode((QualifiedNameSyntax)name, hashCode, ref seed),
-            SyntaxKind.GenericName => GetGenericHashCode((GenericNameSyntax)name, hashCode, ref seed),
-            SyntaxKind.PredefinedType => GetPredefinedHashCode((PredefinedTypeSyntax)name, hashCode, seed),
-            _ => hashCode,
-        };
-    }
-    /// <summary>
-    /// 获取限定标识名HashCode
-    /// </summary>
-    /// <param name="qualifiedName"></param>
-    /// <param name="hashCode"></param>
-    /// <param name="seed"></param>
-    /// <returns></returns>
-    internal static int GetQualifiedHashCode(QualifiedNameSyntax qualifiedName, int hashCode, ref int seed)
-    {
-        unchecked
-        {
-            seed = (seed << 1) | _seed;
-        }
-        return GetTypeHashCode(qualifiedName.Left, GetTypeHashCode(qualifiedName.Right, hashCode, ref seed), ref seed);
-    }
+    /// <inheritdoc />
+    int IEqualityComparer<NameSyntax>.GetHashCode(NameSyntax obj)
+        => GetNameHashCode(obj);
     #endregion
-    #region Equals
+    #region Equal
     /// <summary>
     /// 类型判同
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
     /// <returns></returns>
-    public static bool Equals(TypeSyntax x, TypeSyntax y)
+    public static bool Equal(TypeSyntax x, TypeSyntax y)
     {
         var kind = x.Kind();
         if (y.IsKind(kind))
         {
             return kind switch
             {
-                SyntaxKind.IdentifierName => IdentifierEquals((IdentifierNameSyntax)x, (IdentifierNameSyntax)y),
-                SyntaxKind.QualifiedName => QualifiedEquals((QualifiedNameSyntax)x, (QualifiedNameSyntax)y),
-                SyntaxKind.GenericName => GenericEquals((GenericNameSyntax)x, (GenericNameSyntax)y),
-                SyntaxKind.PredefinedType => PredefinedEquals((PredefinedTypeSyntax)x, (PredefinedTypeSyntax)y),
+                SyntaxKind.IdentifierName => IdentifierEqual((IdentifierNameSyntax)x, (IdentifierNameSyntax)y),
+                SyntaxKind.QualifiedName => QualifiedEqual((QualifiedNameSyntax)x, (QualifiedNameSyntax)y),
+                SyntaxKind.GenericName => GenericEqual((GenericNameSyntax)x, (GenericNameSyntax)y),
+                SyntaxKind.PredefinedType => PredefinedEqual((PredefinedTypeSyntax)x, (PredefinedTypeSyntax)y),
+                SyntaxKind.ArrayType => ArrayEqual((ArrayTypeSyntax)x, (ArrayTypeSyntax)y),
+                SyntaxKind.NullableType => NullableEquals((NullableTypeSyntax)x, (NullableTypeSyntax)y),
+                //SyntaxKind.OmittedTypeArgument => true,
+                SyntaxKind.TupleType => TupleEqual((TupleTypeSyntax)x, (TupleTypeSyntax)y),
+                SyntaxKind.PointerType => PointerEqual((PointerTypeSyntax)x, (PointerTypeSyntax)y),
+                SyntaxKind.FunctionPointerType => FunctionPointerEqual((FunctionPointerTypeSyntax)x, (FunctionPointerTypeSyntax)y),
+                SyntaxKind.RefType => RefEqual((RefTypeSyntax)x, (RefTypeSyntax)y),
+                SyntaxKind.ScopedType => ScopedEqual((ScopedTypeSyntax)x, (ScopedTypeSyntax)y),
+                _ => true,
+            };
+        }
+        return false;
+    }
+    /// <summary>
+    /// 类型判同
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <returns></returns>
+    public static bool Equal(NameSyntax x, NameSyntax y)
+    {
+        var kind = x.Kind();
+        if (y.IsKind(kind))
+        {
+            return kind switch
+            {
+                SyntaxKind.IdentifierName => IdentifierEqual((IdentifierNameSyntax)x, (IdentifierNameSyntax)y),
+                SyntaxKind.QualifiedName => QualifiedEqual((QualifiedNameSyntax)x, (QualifiedNameSyntax)y),
+                SyntaxKind.GenericName => GenericEqual((GenericNameSyntax)x, (GenericNameSyntax)y),
                 _ => false,
             };
         }
         return false;
     }
     /// <summary>
-    /// 比较字符片段
+    /// 类型判同
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
     /// <returns></returns>
-    internal static bool TokenEquals(SyntaxToken x, SyntaxToken y)
-        => string.Equals(x.ValueText, y.ValueText, System.StringComparison.Ordinal);
-    /// <summary>
-    /// 比较标识名
-    /// </summary>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool IdentifierEquals(IdentifierNameSyntax x, IdentifierNameSyntax y)
-        => TokenEquals(x.Identifier, y.Identifier);
-    /// <summary>
-    /// 比较标识名
-    /// </summary>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool PredefinedEquals(PredefinedTypeSyntax x, PredefinedTypeSyntax y)
-        => TokenEquals(x.Keyword, y.Keyword);
-    ///// <summary>
-    ///// <summary>
-    ///// 比较简单名
-    ///// </summary>
-    ///// <param name="x"></param>
-    ///// <param name="y"></param>
-    ///// <returns></returns>
-    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-    //internal static bool SimpleEquals(SimpleNameSyntax x, SimpleNameSyntax y)
-    //    => TokenEquals(x.Identifier, y.Identifier);
-    /// <summary>
-    /// 比较限定名
-    /// </summary>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool QualifiedEquals(QualifiedNameSyntax x, QualifiedNameSyntax y)
-        => Equals(x.Left, y.Left) && Equals(x.Right, y.Right);
-    /// <summary>
-    /// 比较限定名
-    /// </summary>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
-    /// <returns></returns>
-    internal static bool GenericEquals(GenericNameSyntax x, GenericNameSyntax y)
+    public static bool Equal(SimpleNameSyntax x, SimpleNameSyntax y)
     {
-        if (!TokenEquals(x.Identifier, y.Identifier))
-            return false;
-        var xArguments = x.TypeArgumentList.Arguments;
-        var yArguments = y.TypeArgumentList.Arguments;
-        var count = xArguments.Count;
-        if (count != yArguments.Count)
-            return false;
-        for (var i = 0; i < count; i++)
+        var kind = x.Kind();
+        if (y.IsKind(kind))
         {
-            if (!Equals(xArguments[i], yArguments[i]))
-                return false;
+            return kind switch
+            {
+                SyntaxKind.IdentifierName => IdentifierEqual((IdentifierNameSyntax)x, (IdentifierNameSyntax)y),
+                SyntaxKind.GenericName => GenericEqual((GenericNameSyntax)x, (GenericNameSyntax)y),
+                _ => false,
+            };
         }
-        return true;
+        return false;
     }
     #endregion
+    #region GetHashCode
+    /// <summary>
+    /// 获取类型HashCode
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetNameHashCode(NameSyntax name)
+    {
+        return name.Kind() switch
+        {
+            SyntaxKind.IdentifierName => GetIdentifierHashCode((IdentifierNameSyntax)name),
+            SyntaxKind.QualifiedName => GetQualifiedHashCode((QualifiedNameSyntax)name),
+            SyntaxKind.GenericName => GetGenericHashCode((GenericNameSyntax)name),
+            _ => 0,
+        };
+    }
+    /// <summary>
+    /// 获取简单类型HashCode
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetTypeHashCode(SimpleNameSyntax name)
+    {
+        return name.Kind() switch
+        {
+            SyntaxKind.IdentifierName => GetIdentifierHashCode((IdentifierNameSyntax)name),
+            SyntaxKind.GenericName => GetGenericHashCode((GenericNameSyntax)name),
+            _ => 0,
+        };
+    }
+    /// <summary>
+    /// 获取类型HashCode
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetTypeHashCode(TypeSyntax type)
+    {
+        return type.Kind() switch
+        {
+            SyntaxKind.IdentifierName => GetIdentifierHashCode((IdentifierNameSyntax)type),
+            SyntaxKind.QualifiedName => GetQualifiedHashCode((QualifiedNameSyntax)type),
+            SyntaxKind.GenericName => GetGenericHashCode((GenericNameSyntax)type),
+            SyntaxKind.PredefinedType => GetPredefinedHashCode((PredefinedTypeSyntax)type),
+            SyntaxKind.ArrayType => GetArrayHashCode((ArrayTypeSyntax)type),
+            SyntaxKind.NullableType => GetNullableHashCode((NullableTypeSyntax)type),
+            SyntaxKind.OmittedTypeArgument => _elementSeed,
+            SyntaxKind.TupleType => GetTupleHashCode((TupleTypeSyntax)type),
+            SyntaxKind.PointerType => GetPointerHashCode((PointerTypeSyntax)type),
+            SyntaxKind.FunctionPointerType => GetFunctionPointerHashCode((FunctionPointerTypeSyntax)type),
+            SyntaxKind.RefType => GetRefHashCode((RefTypeSyntax)type),
+            SyntaxKind.ScopedType => GetScopedHashCode((ScopedTypeSyntax)type),
+            _ => 0,
+        };
+    }
+    #endregion
+    /// <summary>
+    /// 判断是否为空
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsEmpty(NameSyntax name)
+        => name.IsKind(SyntaxKind.IdentifierName) && IsEmpty((IdentifierNameSyntax)name);
+    /// <summary>
+    /// 判断是否为空
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsEmpty(IdentifierNameSyntax name)
+        => string.IsNullOrEmpty(name.Identifier.ValueText);
     /// <summary>
     /// 默认实例
     /// </summary>

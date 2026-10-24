@@ -65,7 +65,7 @@ public record User(int Id, string Name);
             generator.AddProperty(property);
             nameProvider.AddKind(propertyName, MemberKind.PropertyDeclaration);
         }
-        var code = generator.Build().NormalizeWhitespace().ToFullString();
+        var code = generator.BuildUnit().NormalizeWhitespace().ToFullString();
         Assert.Contains("Name", code);
         Assert.DoesNotContain("Id", code);
     }

@@ -10,7 +10,7 @@ namespace Hand;
 /// <summary>
 /// 定义
 /// </summary>
-public partial class SyntaxGenerator
+partial class SyntaxGenerator
 {
     #region Namespace
     /// <summary>

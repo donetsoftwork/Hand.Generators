@@ -63,6 +63,18 @@ public sealed class KindContainer(IDictionary<string, MemberKind> members)
     /// <param name="kind"></param>
     public void AddKind(string name, MemberKind kind)
         => _members[name] = kind;
+    /// <inheritdoc />
+    bool IMethodContainer.MethodContains(string name, params ITypeSymbol[] parameterSymbols)
+        => _members.ContainsKey(name);
+    /// <inheritdoc />
+    int IMethodContainer.MethodCount(string name)
+        => _members.ContainsKey(name) ? 1 : 0;
+    /// <inheritdoc />
+    bool IMethodContainer.ConstructorContains(params ITypeSymbol[] parameterSymbols)
+        => _members.ContainsKey(MethodContainer.ConstructorName);
+    /// <inheritdoc />
+    int IMethodContainer.ConstructorCount()
+        => _members.ContainsKey(MethodContainer.ConstructorName) ? 1 : 0;
     #endregion
     #region AddMethod
     /// <summary>

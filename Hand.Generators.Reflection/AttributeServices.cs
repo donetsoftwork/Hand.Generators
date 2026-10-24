@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Hand.Collections;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
@@ -26,13 +27,13 @@ public static partial class ReflectionServices
     {
         if (attributes.Length == 0)
             return member;
-        List<string> namespaces = [];
+        List<NameSyntax> namespaces = [];
         if (member is MemberDeclarationSyntax memberDeclaration)
             member = (TMember)(CSharpSyntaxNode)memberDeclaration.WithAttributeLists(SyntaxFactory.List(attributes.ToSyntax(namespaces)));
         else if (member is ParameterSyntax parameterSyntax)
             member = (TMember)(CSharpSyntaxNode)parameterSyntax.WithAttributeLists(SyntaxFactory.List(attributes.ToSyntax(namespaces)));
 
-        foreach (var item in namespaces.Distinct())
+        foreach (var item in namespaces.Distinct(TypeComparer.Instance))
             generator.Using(item);
         return member;
     }
@@ -42,11 +43,11 @@ public static partial class ReflectionServices
     /// <param name="data"></param>
     /// <param name="namespaces"></param>
     /// <returns></returns>
-    public static AttributeSyntax ToSyntax(this AttributeData data, List<string> namespaces)
+    public static AttributeSyntax ToSyntax(this AttributeData data, List<NameSyntax> namespaces)
     {
         var type = data.AttributeClass!;
-        var @namespace = type.ContainingNamespace.ToDisplayString();
-        if (!string.IsNullOrWhiteSpace(@namespace))
+        var @namespace = type.ContainingNamespace.ToName();
+        if (!TypeComparer.IsEmpty(@namespace))
             namespaces.Add(@namespace);
         var name = type.Name;
         if (name.EndsWith("Attribute"))
@@ -69,7 +70,7 @@ public static partial class ReflectionServices
     /// <param name="namespaces"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static AttributeListSyntax[] ToSyntax(this AttributeData[] datas, List<string> namespaces)
+    public static AttributeListSyntax[] ToSyntax(this AttributeData[] datas, List<NameSyntax> namespaces)
         => Array.ConvertAll(datas, data => ToSyntax(data, namespaces).ToSingletonList());
     /// <summary>
     /// 转化特性参数列表

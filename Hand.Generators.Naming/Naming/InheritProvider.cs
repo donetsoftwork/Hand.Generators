@@ -45,6 +45,18 @@ public sealed class InheritProvider(INamingProvider original, INamingProvider @b
     /// <inheritdoc />
     public bool TryDeclareMethod(MethodSignature method)
         => !_base.Contains(method.Name) && _original.TryDeclareMethod(method);
+    /// <inheritdoc />
+    public bool MethodContains(string name, params ITypeSymbol[] parameterSymbols)
+        => _original.MethodContains(name, parameterSymbols) || _base.MethodContains(name, parameterSymbols);
+    /// <inheritdoc />
+    public int MethodCount(string name)
+        => _original.MethodCount(name) + _base.MethodCount(name);
+    /// <inheritdoc />
+    public bool ConstructorContains(params ITypeSymbol[] parameterSymbols)
+        => _original.MethodContains(MethodContainer.ConstructorName, parameterSymbols);
+    /// <inheritdoc />
+    public int ConstructorCount()
+        => _original.MethodCount(MethodContainer.ConstructorName);
     #endregion
     /// <summary>
     /// 尝试定义字段

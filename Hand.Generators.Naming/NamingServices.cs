@@ -177,6 +177,27 @@ public static class NamingServices
     public static bool TryDeclareConstructor(this INamingProvider provider, params ITypeSymbol[] parameterSymbols)
         => provider.TryDeclareMethod(MethodContainer.ConstructorName, parameterSymbols);
     /// <summary>
+    /// 验证构造函数是否已经存在
+    /// </summary>
+    /// <returns></returns>
+    public static bool HasConstructor(this INamingProvider provider)
+        => provider.ConstructorCount() > 0;
+    ///// <summary>
+    ///// 获取构造函数数量
+    ///// </summary>
+    ///// <param name="provider"></param>
+    ///// <returns></returns>
+    //public static int ConstructorCount(this INamingProvider provider)
+    //    => provider.MethodCount(MethodContainer.ConstructorName);
+    ///// <summary>
+    ///// 验证构造函数是否已经存在
+    ///// </summary>
+    ///// <param name="provider"></param>
+    ///// <param name="parameterSymbols"></param>
+    ///// <returns></returns>
+    //public static bool ConstructorContains(this INamingProvider provider, params ITypeSymbol[] parameterSymbols)
+    //    => provider.MethodContains(MethodContainer.ConstructorName, parameterSymbols);
+    /// <summary>
     /// 检查重名(如果重名尝试后缀)
     /// </summary>
     /// <param name="provider"></param>

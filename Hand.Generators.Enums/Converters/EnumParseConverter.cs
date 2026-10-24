@@ -1,4 +1,5 @@
 ﻿using Hand.Converters.Methods;
+using Hand.Scopes;
 using Hand.Syntax;
 using Hand.Types;
 using Microsoft.CodeAnalysis;
@@ -17,7 +18,7 @@ public sealed class EnumParseConverter(ISyntaxDisplay<TypeSyntax> type, ISyntaxD
     : StaticMethodConverter(type, method)
 {
     #region 配置
-    private static readonly TypeNameInfo _enum = new("Enum", "System", false, false);
+    private static readonly TypeNameInfo _enum = new("Enum", NamespaceScope.System);
     private static readonly SyntaxToken _parse = SyntaxFactory.Identifier("Parse");
     //private readonly EnumTypeInfo _enumInfo = enumInfo;
     private readonly ArgumentSyntax _ignoreCase = ignoreCase;

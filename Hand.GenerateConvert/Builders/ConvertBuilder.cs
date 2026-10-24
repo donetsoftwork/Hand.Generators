@@ -1,6 +1,8 @@
 ﻿using Hand.Attributes;
 using Hand.Cache;
 using Hand.Converters;
+using Hand.Enumerations;
+using Hand.Enumerations.Builders;
 using Hand.Enums.Builders;
 using Hand.Maping;
 using Hand.Members;
@@ -17,15 +19,26 @@ namespace Hand.Builders;
 /// <summary>
 /// 转化构造器
 /// </summary>
-public partial class ConvertBuilder(Compilation compilation, TypeInfoBuilder typeBuilder, SystemConvertProvider systemProvider, EnumBundleBuilder bundles, List<IGeneratorSource> sources)
+public partial class ConvertBuilder(Compilation compilation, TypeInfoBuilder typeBuilder, SystemConvertProvider systemProvider, EnumBundleBuilder bundles, EnumerationProviderBuilder providerBuilder, EnumProviderBuilder enumProvider, ISourceCollection sources)
     : CacheFactoryBase<PairSymbolInfoKey, ISyntaxConverter?>()
 {
     /// <summary>
     /// 转化构造器
     /// </summary>
     /// <param name="compilation"></param>
-    public ConvertBuilder(Compilation compilation)
-        : this(compilation, new(compilation), SystemConvertProvider.Create(compilation), new(compilation), [])
+    /// <param name="bundleBuilder"></param>
+    /// <param name="sources"></param>
+    private ConvertBuilder(Compilation compilation, EnumBundleBuilder bundleBuilder, ISourceCollection sources)
+        : this(compilation, new(compilation), SystemConvertProvider.Create(compilation), bundleBuilder, new(compilation, sources), new(bundleBuilder, sources), sources)
+    {
+    }
+    /// <summary>
+    /// 转化构造器
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="sources"></param>
+    public ConvertBuilder(Compilation compilation, ISourceCollection sources)
+        : this(compilation, new(compilation), sources)
     {
     }
     #region 配置
@@ -33,7 +46,9 @@ public partial class ConvertBuilder(Compilation compilation, TypeInfoBuilder typ
     private readonly TypeInfoBuilder _typeBuilder = typeBuilder;
     private readonly SystemConvertProvider _systemProvider = systemProvider;
     private readonly EnumBundleBuilder _bundles = bundles;
-    private readonly List<IGeneratorSource> _sources = sources;
+    private readonly EnumerationProviderBuilder _providerBuilder = providerBuilder;
+    private readonly EnumProviderBuilder _enumProvider = enumProvider;
+    private readonly ISourceCollection _sources = sources;
 
     /// <summary>
     /// 编译信息
@@ -48,7 +63,7 @@ public partial class ConvertBuilder(Compilation compilation, TypeInfoBuilder typ
     /// <summary>
     /// 转化源
     /// </summary>
-    public IReadOnlyCollection<IGeneratorSource> Sources 
+    public ISourceCollection Sources 
         => _sources;
     #endregion
     /// <summary>
@@ -69,17 +84,17 @@ public partial class ConvertBuilder(Compilation compilation, TypeInfoBuilder typ
     /// <param name="source"></param>
     public void AddSource(IGeneratorSource source)
         => _sources.Add(source);
-    /// <summary>
-    /// 清空转化源
-    /// </summary>
-    public void ClearSource()
-        => _sources.Clear();
+    ///// <summary>
+    ///// 清空转化源
+    ///// </summary>
+    //public void ClearSource()
+    //    => _sources.Clear();
     /// <summary>
     /// 添加扩展方法转化源
     /// </summary>
     /// <param name="method"></param>
     /// <param name="info"></param>
-    public ExtensionMethodSource AddSource(MethodSource method, TypeNameInfo info)
+    public ExtensionMethodSource AddSource(MethodSource method, TypeVisualization info)
     {
         var source = new ExtensionMethodSource(method, info);
         _sources.Add(source);
@@ -92,7 +107,7 @@ public partial class ConvertBuilder(Compilation compilation, TypeInfoBuilder typ
     /// <param name="info"></param>
     /// <param name="symbol"></param>
     /// <returns></returns>
-    public IGeneratorSource AddSource(ComplexSource method, TypeNameInfo info, INamedTypeSymbol symbol)
+    public IGeneratorSource AddSource(ComplexSource method, TypeVisualization info, INamedTypeSymbol symbol)
     {
         IGeneratorSource source;
         if (info.IsStatic)
@@ -103,12 +118,12 @@ public partial class ConvertBuilder(Compilation compilation, TypeInfoBuilder typ
         {
             var type = SyntaxGenerator.TypeDeclaration(info.TypeName, symbol.IsRecord, symbol.IsValueType)
                 .Partial();
-            var containingNamespace = symbol.ContainingNamespace.ToDisplayString();
+            var containingNamespace = symbol.ContainingNamespace;
             SyntaxGenerator generator;
-            if (string.IsNullOrWhiteSpace(containingNamespace))
+            if (containingNamespace.IsGlobalNamespace)
                 generator = SyntaxGenerator.Create(type);
             else
-                generator = SyntaxGenerator.Create(containingNamespace, type);
+                generator = SyntaxGenerator.Create(containingNamespace.ToName(), type);
             source = new ConvertToSource(this, generator, info.FullName, [method]);
         }
         _sources.Add(source);

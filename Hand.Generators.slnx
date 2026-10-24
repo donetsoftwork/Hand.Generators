@@ -5,6 +5,7 @@
   <Folder Name="/docs/">
     <File Path="docs/attribute.md" />
     <File Path="docs/documentation.md" />
+    <File Path="docs/error.md" />
     <File Path="docs/naming.md" />
     <File Path="docs/notes.md" />
     <File Path="docs/pack.md" />
@@ -31,6 +32,7 @@
     <Project Path="UnitTests/NamingTests/NamingTests.csproj" Id="db699c4a-ef64-41c5-a52a-01b39fa5e706" />
     <Project Path="UnitTests/ReflectionTests/ReflectionTests.csproj" Id="2982342a-b449-4cfc-a5f9-66f29e8dc2fc" />
     <Project Path="UnitTests/SyntaxScriptingTests/SyntaxScriptingTests.csproj" Id="68fc116d-9e18-48f9-902f-c0a9807a920f" />
+    <Project Path="UnitTests/TidyTests/TidyTests.csproj" Id="9e90e585-ecf2-4124-966b-5c6c3d08b83b" />
     <Project Path="UnitTests/TypesTests/TypesTests.csproj" Id="341a5e1b-941a-4422-8b18-ca011715d28f" />
   </Folder>
   <Folder Name="/解决方案项/">
@@ -44,12 +46,14 @@
   <Project Path="Hand.GenerateCachedProperty/Hand.GenerateCachedProperty.csproj" />
   <Project Path="Hand.GenerateConvert/Hand.GenerateConvert.csproj" Id="8671143f-c012-4918-93da-80f6e3a6d65e" />
   <Project Path="Hand.GenerateCore/Hand.GenerateCore.csproj" />
+  <Project Path="Hand.GenerateEnumeration/Hand.GenerateEnumeration.csproj" />
   <Project Path="Hand.GeneratePoco/Hand.GeneratePoco.csproj" Id="53da44b9-eec7-4841-97e8-747c5455b424" />
   <Project Path="Hand.GenerateProperty/Hand.GenerateProperty.csproj" />
   <Project Path="Hand.Generators.Attributes/Hand.Generators.Attributes.csproj" />
   <Project Path="Hand.Generators.Converters/Hand.Generators.Converters.csproj" Id="bfc2211a-afba-4dd3-aa15-5fd4c209c808" />
   <Project Path="Hand.Generators.Documentation/Hand.Generators.Documentation.csproj" Id="202517a7-4073-4c49-b287-7af83f9b20d7" />
   <Project Path="Hand.Generators.EasySyntax/Hand.Generators.EasySyntax.csproj" />
+  <Project Path="Hand.Generators.Enumerations/Hand.Generators.Enumerations.csproj" />
   <Project Path="Hand.Generators.Enums/Hand.Generators.Enums.csproj" Id="c5f8151d-62d1-47fc-a9f3-6aa643a11e8f" />
   <Project Path="Hand.Generators.Generators/Hand.Generators.Generators.csproj" Id="47f55d17-da68-45b3-9ac8-57866c72264d" />
   <Project Path="Hand.Generators.Members/Hand.Generators.Members.csproj" />
@@ -57,6 +61,7 @@
   <Project Path="Hand.Generators.Reflection/Hand.Generators.Reflection.csproj" Id="668085a6-58b9-4362-8a51-9925e1db7e02" />
   <Project Path="Hand.Generators.SyntaxScripting/Hand.Generators.SyntaxScripting.csproj" Id="59a10285-4520-427a-8299-8265784e8d50" />
   <Project Path="Hand.Generators.System/Hand.Generators.System.csproj" Id="1edb8362-7e83-4d26-8f57-bc7ddd1d1f65" />
+  <Project Path="Hand.Generators.Tidy/Hand.Generators.Tidy.csproj" Id="04b20eb2-94cc-45dc-a965-549cd767c369" />
   <Project Path="Hand.Generators.Types/Hand.Generators.Types.csproj" Id="291d40a4-3810-43b4-9a2c-c2a329c63cd0" />
   <Project Path="Hello/Hello.csproj" Id="deb3a5d0-7796-4860-9e79-ba5f6d26a93d" />
 </Solution>

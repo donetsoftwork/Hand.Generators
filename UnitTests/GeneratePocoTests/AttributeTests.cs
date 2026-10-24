@@ -56,7 +56,7 @@ public class AttributeTests
         var attribute = attributeCacher.CheckByTarget(parameterSymbol.GetAttributes(), AttributeTargets.Property)
             .FirstOrDefault();
         Assert.NotNull(attribute);
-        var attributeNamespaces = new List<string>();
+        var attributeNamespaces = new List<NameSyntax>();
         var attributeSyntax = attribute.ToSyntax(attributeNamespaces);
         var attributeNamespace = attributeNamespaces.FirstOrDefault();
         Assert.NotNull(attributeNamespace);
@@ -68,7 +68,7 @@ public class AttributeTests
             .WithModifiers(classDeclaration.Modifiers)
             .AddMembers(property);
         var @namespace = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(symbol.ContainingNamespace.Name))
-            .AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName(attributeNamespace)))
+            .AddUsings(SyntaxFactory.UsingDirective(attributeNamespace))
             .AddMembers(type);
         var code = @namespace.NormalizeWhitespace().ToFullString();
         Assert.Contains("[StringLength(100)]", code);

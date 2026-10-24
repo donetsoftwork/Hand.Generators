@@ -1,6 +1,7 @@
 ﻿using Hand.Arguments;
 using Hand.Builders;
 using Hand.Converters;
+using Hand.Enums.Builders;
 using Hand.Generators;
 using Hand.Members;
 using Hand.Providers;
@@ -19,10 +20,10 @@ namespace Hand;
 /// <summary>
 /// 转化
 /// </summary>
-public class ConvertTransform : IGeneratorTransform<ConvertToSource>
+public class ConvertTransform : IGeneratorTransform<SourceCollection>
 {
     /// <inheritdoc />
-    public ConvertToSource? Transform(AttributeContext context, CancellationToken cancellation = default)
+    public SourceCollection? Transform(AttributeContext context, CancellationToken cancellation = default)
     {
         if (cancellation.IsCancellationRequested)
             return null;
@@ -42,11 +43,13 @@ public class ConvertTransform : IGeneratorTransform<ConvertToSource>
         var targetMembers = GetTargetMembers(typeCacher, targetSymbol);
         var sourceProvider = SourceProvider.Create(compilation, targetSymbol);
         
-        var methods = new List<ComplexSource>(count);
+        //var methods = new List<ComplexSource>(count);
         var toSymbols = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
-        var builder = new ConvertBuilder(compilation, typeCacher, SystemConvertProvider.Create(compilation), new(compilation), []);
-        var thisType = SyntaxFactory.IdentifierName(targetSymbol.Name);
         var list = new List<IGeneratorSource>(count + 1);
+        var sources = new SourceCollection(list);
+        var bundles = new EnumBundleBuilder(compilation);
+        var builder = new ConvertBuilder(compilation, typeCacher, SystemConvertProvider.Create(compilation), bundles, new(compilation, sources), new(bundles, sources), sources);
+        var thisType = SyntaxFactory.IdentifierName(targetSymbol.Name);
         foreach (var attribute in attributes)
         {
             var toSymbol = ConvertBuilder.CheckToSymbol(attribute);
@@ -66,11 +69,7 @@ public class ConvertTransform : IGeneratorTransform<ConvertToSource>
             var arguments = ConvertBuilder.ReversedMap(ConvertBuilder.Recognize(sourceMembers, recognizers), toTargetMembers.Values, toSourceMembers)
                  .ToList();
             if (convertTo)
-            {
-                var method = CheckConvertTo(builder, targetInfo, toInfo, arguments);
-                if (method is not null)
-                    methods.Add(method);
-            }
+                CheckConvertTo(type, builder, targetInfo, toInfo, arguments);
             if (convertFrom)
             {
                 //投影规则翻转
@@ -78,8 +77,10 @@ public class ConvertTransform : IGeneratorTransform<ConvertToSource>
                 CheckConvertFrom(builder, targetInfo, toInfo, ConvertBuilder.Recognize(toSourceMembers, recognizers), arguments);
             }
         }
-        var result = new ConvertToSource(builder, type, targetSymbol.MetadataName, [.. methods]);
-        return result;
+        //var convertToSource = new ConvertToSource(builder, type, targetSymbol.MetadataName, [.. methods]);
+        ////CompositeSource compositeSource = new(convertToSource, sources);
+        //sources.Add(convertToSource);
+        return sources;
     }
     /// <summary>
     /// 获取目标成员
@@ -97,11 +98,12 @@ public class ConvertTransform : IGeneratorTransform<ConvertToSource>
     /// <summary>
     /// 处理ConvertTo
     /// </summary>
+    /// <param name="type"></param>
     /// <param name="builder"></param>
     /// <param name="targetInfo"></param>
     /// <param name="toInfo"></param>
     /// <param name="arguments"></param>
-    public static ComplexSource? CheckConvertTo(ConvertBuilder builder, ComplexTypeInfo targetInfo, ComplexTypeInfo toInfo, List<MemberArgument> arguments)
+    public static void CheckConvertTo(TypeDeclarationSyntax type, ConvertBuilder builder, ComplexTypeInfo targetInfo, ComplexTypeInfo toInfo, List<MemberArgument> arguments)
     {
         var targetSymbol = targetInfo.Symbol;
         var toSymbol = toInfo.Symbol;
@@ -109,13 +111,19 @@ public class ConvertTransform : IGeneratorTransform<ConvertToSource>
         var convertToInfo = sourceProvider.ConvertTo(toSymbol.Name);
         var convertToMethod = sourceProvider.GetConvertMethod(convertToInfo.MethodInfo, toSymbol);
         if (convertToMethod is not null)
-            return null;
+            return;
         builder.Save(targetInfo, toInfo,  convertToInfo);
         var source = new ComplexSource(builder, targetSymbol.Name, toInfo, convertToInfo.MethodInfo.Name, [.. arguments]);
         if (targetSymbol.IsPartial())
-            return source;
-        builder.AddSource(source, convertToInfo.TypeInfo, targetSymbol);
-        return null;
+        {
+
+            var convertToSource = new ConvertToSource(builder, type, targetSymbol.MetadataName, [source]);
+            builder.AddSource(convertToSource);
+        }
+        else
+        {
+            builder.AddSource(source, convertToInfo.TypeInfo, targetSymbol);
+        }
     }
     /// <summary>
     /// 处理ConvertFrom

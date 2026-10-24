@@ -1,6 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Hand.Types;
 
@@ -23,7 +21,7 @@ public class PrimitiveTypeInfo(INamedTypeSymbol original, INamedTypeSymbol symbo
     }
     #region 配置
     /// <inheritdoc />
-    TypeSymbolKind ITypeSymbolInfo.Kind
+    public override TypeSymbolKind Kind
         => TypeSymbolKind.Primitive;
     /// <inheritdoc />
     public override string Summary
@@ -36,7 +34,7 @@ public class PrimitiveTypeInfo(INamedTypeSymbol original, INamedTypeSymbol symbo
     /// <param name="compilation"></param>
     /// <returns></returns>
     public PrimitiveTypeInfo GetNullable(Compilation compilation)
-        => _isNullable ? this : new((INamedTypeSymbol)compilation.GetNullable(_original), _symbol, true);
+        => _isNullable ? this : new(compilation.GetNullable(_original), _symbol, true);
     /// <inheritdoc />
     ITypeSymbolInfo ITypeSymbolInfo.GetNullable(Compilation compilation)
         => GetNullable(compilation);

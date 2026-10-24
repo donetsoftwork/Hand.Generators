@@ -8,7 +8,7 @@ using System.Linq;
 namespace Hand.Providers;
 
 /// <summary>
-/// 实例方法提供者
+/// 实例方法提供器
 /// </summary>
 /// <param name="symbol"></param>
 public class MethodProvider(INamedTypeSymbol symbol)
@@ -23,7 +23,7 @@ public class MethodProvider(INamedTypeSymbol symbol)
         => GetInstanceMethod(_symbol, dest, info.Filter);
 
     /// <summary>
-    /// 构造方法提供者
+    /// 构造方法提供器
     /// </summary>
     /// <param name="source"></param>
     /// <param name="extension"></param>

@@ -14,15 +14,15 @@ namespace Hand;
 public static partial class ReflectionServices
 {
     #region Type
-    /// <summary>
-    /// 获取INamedTypeSymbol
-    /// </summary>
-    /// <param name="compilation"></param>
-    /// <param name="typeFullName"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static INamedTypeSymbol? GetSymbol(this Compilation compilation, string typeFullName)
-        => compilation.GetTypeByMetadataName(typeFullName);
+    ///// <summary>
+    ///// 获取INamedTypeSymbol
+    ///// </summary>
+    ///// <param name="compilation"></param>
+    ///// <param name="typeFullName"></param>
+    ///// <returns></returns>
+    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //public static INamedTypeSymbol? GetSymbol(this Compilation compilation, string typeFullName)
+    //    => compilation.GetTypeByMetadataName(typeFullName);
     ///// <summary>
     ///// 获取INamedTypeSymbol
     ///// </summary>
@@ -32,15 +32,15 @@ public static partial class ReflectionServices
     //[MethodImpl(MethodImplOptions.AggressiveInlining)]
     //public static INamedTypeSymbol? GetSymbol(this Compilation compilation, TypeNameInfo typeInfo)
     //    => compilation.GetTypeByMetadataName(typeInfo.FullName);
-    /// <summary>
-    /// 把Type转INamedTypeSymbol
-    /// </summary>
-    /// <param name="compilation"></param>
-    /// <param name="type"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static INamedTypeSymbol? GetSymbol(this Compilation compilation, Type type)
-        => compilation.GetTypeByMetadataName(type.FullName!);
+    ///// <summary>
+    ///// 把Type转INamedTypeSymbol
+    ///// </summary>
+    ///// <param name="compilation"></param>
+    ///// <param name="type"></param>
+    ///// <returns></returns>
+    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //public static INamedTypeSymbol? GetSymbol(this Compilation compilation, Type type)
+    //    => compilation.GetTypeByMetadataName(type.FullName!);
     /// <summary>
     /// 把PredefinedTypeSyntax转INamedTypeSymbol
     /// </summary>
@@ -290,7 +290,21 @@ public static partial class ReflectionServices
     /// <param name="compilation"></param>
     /// <param name="originalSymbol"></param>
     /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol GetNullable(this Compilation compilation, INamedTypeSymbol originalSymbol)
+    {
+        if (originalSymbol.IsValueType)
+        {
+            originalSymbol = compilation.GetSpecialType(SpecialType.System_Nullable_T)
+                .Construct(originalSymbol);
+        }
+        return (INamedTypeSymbol)originalSymbol.WithNullableAnnotation(NullableAnnotation.Annotated);
+    }
+    /// <summary>
+    /// 可空类型
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="originalSymbol"></param>
+    /// <returns></returns>
     public static ITypeSymbol GetNullable(this Compilation compilation, ITypeSymbol originalSymbol)
     {
         if (originalSymbol.IsValueType)
@@ -304,42 +318,42 @@ public static partial class ReflectionServices
     /// 迭代类型
     /// </summary>
     /// <param name="compilation"></param>
-    /// <param name="originalSymbol"></param>
+    /// <param name="elementSymbol"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static INamedTypeSymbol GetIEnumerable(this Compilation compilation, ITypeSymbol originalSymbol)
+    public static INamedTypeSymbol GetIEnumerable(this Compilation compilation, ITypeSymbol elementSymbol)
         => compilation.GetSpecialType(SpecialType.System_Collections_Generic_IEnumerable_T)
-        .Construct(originalSymbol);
+        .Construct(elementSymbol);
     /// <summary>
     /// 迭代器类型
     /// </summary>
     /// <param name="compilation"></param>
-    /// <param name="originalSymbol"></param>
+    /// <param name="elementSymbol"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static INamedTypeSymbol GetIEnumerator(this Compilation compilation, ITypeSymbol originalSymbol)
+    public static INamedTypeSymbol GetIEnumerator(this Compilation compilation, ITypeSymbol elementSymbol)
         => compilation.GetSpecialType(SpecialType.System_Collections_Generic_IEnumerator_T)
-        .Construct(originalSymbol);
+        .Construct(elementSymbol);
     /// <summary>
     /// 列表类型
     /// </summary>
     /// <param name="compilation"></param>
-    /// <param name="originalSymbol"></param>
+    /// <param name="elementSymbol"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static INamedTypeSymbol GetIList(this Compilation compilation, ITypeSymbol originalSymbol)
+    public static INamedTypeSymbol GetIList(this Compilation compilation, ITypeSymbol elementSymbol)
         => compilation.GetSpecialType(SpecialType.System_Collections_Generic_IList_T)
-        .Construct(originalSymbol);
+        .Construct(elementSymbol);
     /// <summary>
     /// 集合类型
     /// </summary>
     /// <param name="compilation"></param>
-    /// <param name="originalSymbol"></param>
+    /// <param name="elementSymbol"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static INamedTypeSymbol GetICollection(this Compilation compilation, ITypeSymbol originalSymbol)
+    public static INamedTypeSymbol GetICollection(this Compilation compilation, ITypeSymbol elementSymbol)
         => compilation.GetSpecialType(SpecialType.System_Collections_Generic_ICollection_T)
-        .Construct(originalSymbol);
+        .Construct(elementSymbol);
     /// <summary>
     /// 获取列表类型符号
     /// </summary>
@@ -352,11 +366,28 @@ public static partial class ReflectionServices
     /// 列表类型
     /// </summary>
     /// <param name="compilation"></param>
-    /// <param name="originalSymbol"></param>
+    /// <param name="elementSymbol"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static INamedTypeSymbol? GetList(this Compilation compilation, ITypeSymbol originalSymbol)
-        => GetListSymbol(compilation)?.Construct(originalSymbol);
+    public static INamedTypeSymbol? GetList(this Compilation compilation, ITypeSymbol elementSymbol)
+        => GetListSymbol(compilation)?.Construct(elementSymbol);
+    /// <summary>
+    /// 获取HashSet类型符号
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetISetSymbol(this Compilation compilation)
+        => compilation.GetTypeByMetadataName("System.Collections.Generic.ISet`1");
+    /// <summary>
+    /// 获取HashSet类型符号
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <param name="elementSymbol"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static INamedTypeSymbol? GetISetSymbol(this Compilation compilation, ITypeSymbol elementSymbol)
+        => GetISetSymbol(compilation)?.Construct(elementSymbol);
     /// <summary>
     /// 获取HashSet类型符号
     /// </summary>
@@ -369,11 +400,11 @@ public static partial class ReflectionServices
     /// HashSet类型
     /// </summary>
     /// <param name="compilation"></param>
-    /// <param name="originalSymbol"></param>
+    /// <param name="elementSymbol"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static INamedTypeSymbol? GetHashSet(this Compilation compilation, ITypeSymbol originalSymbol)
-        => GetHashSetSymbol(compilation)?.Construct(originalSymbol);
+    public static INamedTypeSymbol? GetHashSet(this Compilation compilation, ITypeSymbol elementSymbol)
+        => GetHashSetSymbol(compilation)?.Construct(elementSymbol);
     /// <summary>
     /// 获取Queue类型符号
     /// </summary>
@@ -386,11 +417,11 @@ public static partial class ReflectionServices
     /// Queue类型
     /// </summary>
     /// <param name="compilation"></param>
-    /// <param name="originalSymbol"></param>
+    /// <param name="elementSymbol"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static INamedTypeSymbol? GetQueue(this Compilation compilation, ITypeSymbol originalSymbol)
-        => GetQueueSymbol(compilation)?.Construct(originalSymbol);
+    public static INamedTypeSymbol? GetQueue(this Compilation compilation, ITypeSymbol elementSymbol)
+        => GetQueueSymbol(compilation)?.Construct(elementSymbol);
     /// <summary>
     /// 获取Stack类型符号
     /// </summary>
@@ -403,11 +434,11 @@ public static partial class ReflectionServices
     /// Stack类型
     /// </summary>
     /// <param name="compilation"></param>
-    /// <param name="originalSymbol"></param>
+    /// <param name="elementSymbol"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static INamedTypeSymbol? GetStack(this Compilation compilation, ITypeSymbol originalSymbol)
-        => GetStackSymbol(compilation)?.Construct(originalSymbol);
+    public static INamedTypeSymbol? GetStack(this Compilation compilation, ITypeSymbol elementSymbol)
+        => GetStackSymbol(compilation)?.Construct(elementSymbol);
     /// <summary>
     /// 获取BlockingCollection类型符号
     /// </summary>
@@ -420,11 +451,11 @@ public static partial class ReflectionServices
     /// BlockingCollection类型
     /// </summary>
     /// <param name="compilation"></param>
-    /// <param name="originalSymbol"></param>
+    /// <param name="elementSymbol"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static INamedTypeSymbol? GetBlockingCollection(this Compilation compilation, ITypeSymbol originalSymbol)
-        => GetBlockingCollectionSymbol(compilation)?.Construct(originalSymbol);
+    public static INamedTypeSymbol? GetBlockingCollection(this Compilation compilation, ITypeSymbol elementSymbol)
+        => GetBlockingCollectionSymbol(compilation)?.Construct(elementSymbol);
     /// <summary>
     /// 获取ConcurrentQueue类型符号
     /// </summary>
@@ -437,11 +468,11 @@ public static partial class ReflectionServices
     /// ConcurrentQueue类型
     /// </summary>
     /// <param name="compilation"></param>
-    /// <param name="originalSymbol"></param>
+    /// <param name="elementSymbol"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static INamedTypeSymbol? GetConcurrentQueue(this Compilation compilation, ITypeSymbol originalSymbol)
-        => GetConcurrentQueueSymbol(compilation)?.Construct(originalSymbol);
+    public static INamedTypeSymbol? GetConcurrentQueue(this Compilation compilation, ITypeSymbol elementSymbol)
+        => GetConcurrentQueueSymbol(compilation)?.Construct(elementSymbol);
     /// <summary>
     /// 获取ConcurrentStack类型符号
     /// </summary>
@@ -454,11 +485,11 @@ public static partial class ReflectionServices
     /// ConcurrentStack类型
     /// </summary>
     /// <param name="compilation"></param>
-    /// <param name="originalSymbol"></param>
+    /// <param name="elementSymbol"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static INamedTypeSymbol? GetConcurrentStack(this Compilation compilation, ITypeSymbol originalSymbol)
-        => GetConcurrentStackSymbol(compilation)?.Construct(originalSymbol);
+    public static INamedTypeSymbol? GetConcurrentStack(this Compilation compilation, ITypeSymbol elementSymbol)
+        => GetConcurrentStackSymbol(compilation)?.Construct(elementSymbol);
     /// <summary>
     /// 获取ConcurrentBag类型符号
     /// </summary>
@@ -471,11 +502,11 @@ public static partial class ReflectionServices
     /// ConcurrentBag类型
     /// </summary>
     /// <param name="compilation"></param>
-    /// <param name="originalSymbol"></param>
+    /// <param name="elementSymbol"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static INamedTypeSymbol? GetConcurrentBag(this Compilation compilation, ITypeSymbol originalSymbol)
-        => GetConcurrentBagSymbol(compilation)?.Construct(originalSymbol);
+    public static INamedTypeSymbol? GetConcurrentBag(this Compilation compilation, ITypeSymbol elementSymbol)
+        => GetConcurrentBagSymbol(compilation)?.Construct(elementSymbol);
     #endregion
     /// <summary>
     /// 检查类型是否partial
@@ -765,7 +796,10 @@ public static partial class ReflectionServices
             if (IsInterface(@interface, interfaceType))
                 return true;
         }
-        return false;
+        var @base = type.BaseType;
+        if (@base is null)
+            return false;
+        return IsInterface(@base, interfaceType);
     }
     #region IsGenericType
     /// <summary>
@@ -820,49 +854,49 @@ public static partial class ReflectionServices
     }
     #endregion
     
-    /// <summary>
-    /// 展示基础类型
-    /// </summary>
-    /// <param name="generator"></param>
-    /// <param name="specialType"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TypeSyntax Display(this SyntaxGenerator generator, SpecialType specialType)
-    {
-        return specialType switch
-        {
-            SpecialType.System_Boolean
-                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.BoolKeyword)),
-            SpecialType.System_Byte
-                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ByteKeyword)),
-            SpecialType.System_SByte
-                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.SByteKeyword)),
-            SpecialType.System_Int32
-                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)),
-            SpecialType.System_UInt32
-                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)),
-            SpecialType.System_Int16
-                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ShortKeyword)),
-            SpecialType.System_UInt16
-                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.UShortKeyword)),
-            SpecialType.System_Int64
-                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.LongKeyword)),
-            SpecialType.System_UInt64
-                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ULongKeyword)),
-            SpecialType.System_Single
-                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.FloatKeyword)),
-            SpecialType.System_Double
-                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.DoubleKeyword)),
-            SpecialType.System_Decimal
-                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.DecimalKeyword)),
-            SpecialType.System_String
-                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)),
-            SpecialType.System_Char
-                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.CharKeyword)),
-            SpecialType.System_DateTime
-                => generator.Display("DateTime", "System"),
-            _
-                => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ObjectKeyword)),
-        };
-    }
+    ///// <summary>
+    ///// 展示基础类型
+    ///// </summary>
+    ///// <param name="generator"></param>
+    ///// <param name="specialType"></param>
+    ///// <returns></returns>
+    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //public static TypeSyntax Display(this SyntaxGenerator generator, SpecialType specialType)
+    //{
+    //    return specialType switch
+    //    {
+    //        SpecialType.System_Boolean
+    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.BoolKeyword)),
+    //        SpecialType.System_Byte
+    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ByteKeyword)),
+    //        SpecialType.System_SByte
+    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.SByteKeyword)),
+    //        SpecialType.System_Int32
+    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)),
+    //        SpecialType.System_UInt32
+    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)),
+    //        SpecialType.System_Int16
+    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ShortKeyword)),
+    //        SpecialType.System_UInt16
+    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.UShortKeyword)),
+    //        SpecialType.System_Int64
+    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.LongKeyword)),
+    //        SpecialType.System_UInt64
+    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ULongKeyword)),
+    //        SpecialType.System_Single
+    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.FloatKeyword)),
+    //        SpecialType.System_Double
+    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.DoubleKeyword)),
+    //        SpecialType.System_Decimal
+    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.DecimalKeyword)),
+    //        SpecialType.System_String
+    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)),
+    //        SpecialType.System_Char
+    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.CharKeyword)),
+    //        SpecialType.System_DateTime
+    //            => generator.Display("DateTime", "System"),
+    //        _
+    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ObjectKeyword)),
+    //    };
+    //}
 }

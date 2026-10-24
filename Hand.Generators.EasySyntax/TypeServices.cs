@@ -1,3 +1,4 @@
+using Hand.Scopes;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -541,13 +542,37 @@ public static partial class GenerateServices
         return SyntaxFactory.SingletonSeparatedList<ExpressionSyntax>(SyntaxFactory.OmittedArraySizeExpression());
     }
     /// <summary>
-    /// 指针
+    /// 指针类型
     /// </summary>
     /// <param name="type"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TypeSyntax Pointer(this TypeSyntax type)
+    public static PointerTypeSyntax Pointer(this TypeSyntax type)
         => SyntaxFactory.PointerType(type);
+    /// <summary>
+    /// 引用类型
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RefTypeSyntax Ref(this TypeSyntax type)
+        => SyntaxFactory.RefType(type);
+    /// <summary>
+    /// 引用类型
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RefTypeSyntax RefReadOnly(this TypeSyntax type)
+        => SyntaxFactory.RefType(SyntaxFactory.Token(SyntaxKind.RefKeyword), SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword), type);
+    /// <summary>
+    /// Scoped类型
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ScopedTypeSyntax Scoped(this TypeSyntax type)
+        => SyntaxFactory.ScopedType(type);
     /// <summary>
     /// 全局命名样式
     /// </summary>
@@ -557,13 +582,39 @@ public static partial class GenerateServices
     /// 最简模式(不包含命名空间)
     /// </summary>
     private static readonly SymbolDisplayFormat _miniStyle = SymbolDisplayFormat.MinimallyQualifiedFormat;
+
     /// <summary>
-    /// 自动包含命名
+    /// 获取命名空间
+    /// </summary>
+    /// <param name="namespace"></param>
+    /// <returns></returns>
+    public static NameSyntax ToName(this INamespaceSymbol @namespace)
+        => @namespace.IsGlobalNamespace ? SyntaxFactory.IdentifierName(string.Empty) : ToName(@namespace.ContainingNamespace, @namespace.Name);
+    /// <summary>
+    /// 获取命名
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static NameSyntax ToName(INamespaceSymbol container, SyntaxToken name)
+        => container.IsGlobalNamespace ? SyntaxFactory.IdentifierName(name) : SyntaxFactory.QualifiedName(ToName(container.ContainingNamespace, container.Name), SyntaxFactory.IdentifierName(name));
+    /// <summary>
+    /// 获取命名
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static NameSyntax ToName(INamespaceSymbol container, string name)
+        => container.IsGlobalNamespace ? SyntaxFactory.IdentifierName(name) : SyntaxFactory.QualifiedName(ToName(container.ContainingNamespace, container.Name), SyntaxFactory.IdentifierName(name));
+    /// <summary>
+    /// 解析命名
     /// </summary>
     /// <param name="symbol"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TypeSyntax ToDisplayName(this ITypeSymbol symbol)
+    public static TypeSyntax ToName(this INamedTypeSymbol symbol)
         => SyntaxFactory.ParseTypeName(symbol.ToDisplayString());
     /// <summary>
     /// 全局命名
@@ -689,7 +740,7 @@ public static partial class GenerateServices
             return ToSyntax(namedType);
         if (symbol is IArrayTypeSymbol arraySymbol)
             return ToSyntax(arraySymbol);
-        return ToDisplayName(symbol);
+        return SyntaxFactory.ParseTypeName(symbol.ToDisplayString());
     }
     /// <summary>
     /// 类型符号转化为类型语法(不处理Nullable)
@@ -717,37 +768,37 @@ public static partial class GenerateServices
             SpecialType.System_Char => SyntaxGenerator.CharType,
             SpecialType.System_DateTime => SyntaxGenerator.DateTimeType,
             SpecialType.System_Object => SyntaxGenerator.ObjectType,
-            SpecialType.System_ValueType => SyntaxFactory.IdentifierName("ValueType").Qualify("System"),
+            SpecialType.System_ValueType => SyntaxFactory.IdentifierName("ValueType").Qualify(NamespaceScope.System),
             SpecialType.System_Void => SyntaxGenerator.VoidType,  
-            SpecialType.System_IntPtr => SyntaxFactory.IdentifierName("IntPtr").Qualify("System"),
-            SpecialType.System_UIntPtr => SyntaxFactory.IdentifierName("UIntPtr").Qualify("System"),
-            SpecialType.System_Array => SyntaxFactory.IdentifierName("Array").Qualify("System"),
-            SpecialType.System_Delegate => SyntaxFactory.IdentifierName("Delegate").Qualify("System"),
-            SpecialType.System_MulticastDelegate => SyntaxFactory.IdentifierName("MulticastDelegate").Qualify("System"),
-            SpecialType.System_Enum => SyntaxFactory.IdentifierName("Enum").Qualify("System"),
-            SpecialType.System_IDisposable => SyntaxFactory.IdentifierName("IDisposable").Qualify("System"),
-            SpecialType.System_IAsyncResult => SyntaxFactory.IdentifierName("IAsyncResult").Qualify("System"),
-            SpecialType.System_Collections_IEnumerable => SyntaxFactory.IdentifierName("IEnumerable").Qualifies("System", "Collections"),
-            SpecialType.System_Collections_IEnumerator => SyntaxFactory.IdentifierName("IEnumerator").Qualifies("System", "Collections"),
-            SpecialType.System_AsyncCallback => SyntaxFactory.IdentifierName("AsyncCallback").Qualify("System"),
-            SpecialType.System_ArgIterator => SyntaxFactory.IdentifierName("ArgIterator").Qualify("System"),
-            SpecialType.System_TypedReference => SyntaxFactory.IdentifierName("TypedReference").Qualify("System"),
-            SpecialType.System_RuntimeArgumentHandle => SyntaxFactory.IdentifierName("RuntimeArgumentHandle").Qualify("System"),
-            SpecialType.System_RuntimeFieldHandle => SyntaxFactory.IdentifierName("RuntimeFieldHandle").Qualify("System"),
-            SpecialType.System_RuntimeMethodHandle => SyntaxFactory.IdentifierName("RuntimeMethodHandle").Qualify("System"),
-            SpecialType.System_RuntimeTypeHandle => SyntaxFactory.IdentifierName("RuntimeTypeHandle").Qualify("System"),
+            SpecialType.System_IntPtr => SyntaxFactory.IdentifierName("IntPtr").Qualify(NamespaceScope.System),
+            SpecialType.System_UIntPtr => SyntaxFactory.IdentifierName("UIntPtr").Qualify(NamespaceScope.System),
+            SpecialType.System_Array => SyntaxFactory.IdentifierName("Array").Qualify(NamespaceScope.System),
+            SpecialType.System_Delegate => SyntaxFactory.IdentifierName("Delegate").Qualify(NamespaceScope.System),
+            SpecialType.System_MulticastDelegate => SyntaxFactory.IdentifierName("MulticastDelegate").Qualify(NamespaceScope.System),
+            SpecialType.System_Enum => SyntaxFactory.IdentifierName("Enum").Qualify(NamespaceScope.System),
+            SpecialType.System_IDisposable => SyntaxFactory.IdentifierName("IDisposable").Qualify(NamespaceScope.System),
+            SpecialType.System_IAsyncResult => SyntaxFactory.IdentifierName("IAsyncResult").Qualify(NamespaceScope.System),
+            SpecialType.System_Collections_IEnumerable => SyntaxFactory.IdentifierName("IEnumerable").Qualify(NamespaceScope.Collections),
+            SpecialType.System_Collections_IEnumerator => SyntaxFactory.IdentifierName("IEnumerator").Qualify(NamespaceScope.Collections),
+            SpecialType.System_AsyncCallback => SyntaxFactory.IdentifierName("AsyncCallback").Qualify(NamespaceScope.System),
+            SpecialType.System_ArgIterator => SyntaxFactory.IdentifierName("ArgIterator").Qualify(NamespaceScope.System),
+            SpecialType.System_TypedReference => SyntaxFactory.IdentifierName("TypedReference").Qualify(NamespaceScope.System),
+            SpecialType.System_RuntimeArgumentHandle => SyntaxFactory.IdentifierName("RuntimeArgumentHandle").Qualify(NamespaceScope.System),
+            SpecialType.System_RuntimeFieldHandle => SyntaxFactory.IdentifierName("RuntimeFieldHandle").Qualify(NamespaceScope.System),
+            SpecialType.System_RuntimeMethodHandle => SyntaxFactory.IdentifierName("RuntimeMethodHandle").Qualify(NamespaceScope.System),
+            SpecialType.System_RuntimeTypeHandle => SyntaxFactory.IdentifierName("RuntimeTypeHandle").Qualify(NamespaceScope.System),
             SpecialType.System_Runtime_CompilerServices_IsVolatile => SyntaxFactory.IdentifierName("IsVolatile").Qualifies("System", "Runtime", "CompilerServices"),
             SpecialType.System_Runtime_CompilerServices_RuntimeFeature => SyntaxFactory.IdentifierName(".RuntimeFeature").Qualifies("System", "Runtime", "CompilerServices"),
             SpecialType.System_Runtime_CompilerServices_PreserveBaseOverridesAttribute => SyntaxFactory.IdentifierName("PreserveBaseOverridesAttribute").Qualifies("System", "Runtime", "CompilerServices"),
             SpecialType.System_Runtime_CompilerServices_InlineArrayAttribute => SyntaxFactory.IdentifierName("InlineArrayAttribute").Qualifies("System", "Runtime", "CompilerServices"),
-            SpecialType.None => ToDisplayName(symbol),
-            SpecialType.System_Nullable_T => SyntaxGenerator.OmitGeneric("Nullable").Qualify("System"),
-            SpecialType.System_Collections_Generic_IEnumerable_T => SyntaxGenerator.OmitGeneric("IEnumerable").Qualifies("System", "Collections", "Generic"),
-            SpecialType.System_Collections_Generic_IEnumerator_T => SyntaxGenerator.OmitGeneric("IEnumerator").Qualifies("System", "Collections", "Generic"),
-            SpecialType.System_Collections_Generic_IList_T => SyntaxGenerator.OmitGeneric("IList").Qualifies("System", "Collections", "Generic"),
-            SpecialType.System_Collections_Generic_ICollection_T => SyntaxGenerator.OmitGeneric("ICollection").Qualifies("System", "Collections", "Generic"),
-            SpecialType.System_Collections_Generic_IReadOnlyList_T => SyntaxGenerator.OmitGeneric("IReadOnlyList").Qualifies("System", "Collections", "Generic"),
-            SpecialType.System_Collections_Generic_IReadOnlyCollection_T => SyntaxGenerator.OmitGeneric("IReadOnlyCollection").Qualifies("System", "Collections", "Generic"),
+            SpecialType.System_Nullable_T => SyntaxGenerator.OmitGeneric("Nullable").Qualify(NamespaceScope.System),
+            SpecialType.System_Collections_Generic_IEnumerable_T => SyntaxGenerator.OmitGeneric("IEnumerable").Qualify(NamespaceScope.GenericCollections),
+            SpecialType.System_Collections_Generic_IEnumerator_T => SyntaxGenerator.OmitGeneric("IEnumerator").Qualify(NamespaceScope.GenericCollections),
+            SpecialType.System_Collections_Generic_IList_T => SyntaxGenerator.OmitGeneric("IList").Qualify(NamespaceScope.GenericCollections),
+            SpecialType.System_Collections_Generic_ICollection_T => SyntaxGenerator.OmitGeneric("ICollection").Qualify(NamespaceScope.GenericCollections),
+            SpecialType.System_Collections_Generic_IReadOnlyList_T => SyntaxGenerator.OmitGeneric("IReadOnlyList").Qualify(NamespaceScope.GenericCollections),
+            SpecialType.System_Collections_Generic_IReadOnlyCollection_T => SyntaxGenerator.OmitGeneric("IReadOnlyCollection").Qualify(NamespaceScope.GenericCollections),
+            SpecialType.None => ToName(symbol),
             _ => throw new NotSupportedException(),
         };
     }

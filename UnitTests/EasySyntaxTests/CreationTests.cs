@@ -1,4 +1,5 @@
 using Hand;
+using Hand.Builders;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -241,5 +242,34 @@ public class CreationTests
         var creation = SyntaxGenerator.Tuple(one, two);
         var code = creation.NormalizeWhitespace().ToFullString();
         Assert.Equal("(1, 2)", code);
+    }
+    [Fact]
+    public void Dictionary()
+    {
+        var builder = new DictionaryBuilder()
+            .Add(SyntaxGenerator.Literal("a"), SyntaxGenerator.Literal(1))
+            .Add(SyntaxGenerator.Literal("b"), SyntaxGenerator.Literal(2))
+            .Add(SyntaxGenerator.Literal("c"), SyntaxGenerator.Literal(3));
+        var creation = builder.Build();
+        var code = creation.NormalizeWhitespace().ToFullString();
+        Assert.Contains("new()", code);
+        Assert.Contains("\"a\"", code);
+        Assert.Contains("\"b\"", code);
+        Assert.Contains("\"c\"", code);
+    }
+    [Fact]
+    public void Dictionary2()
+    {
+        var builder = new DictionaryBuilder()
+            .Add(SyntaxGenerator.Literal("a"), SyntaxGenerator.Literal(1))
+            .Add(SyntaxGenerator.Literal("b"), SyntaxGenerator.Literal(2))
+            .Add(SyntaxGenerator.Literal("c"), SyntaxGenerator.Literal(3));
+        var dictionaryType = SyntaxGenerator.Generic("Dictionary", SyntaxGenerator.StringType, SyntaxGenerator.IntType);
+        var creation = builder.Build(dictionaryType);
+        var code = creation.NormalizeWhitespace().ToFullString();
+        Assert.Contains("new Dictionary<string, int>", code);
+        Assert.Contains("\"a\"", code);
+        Assert.Contains("\"b\"", code);
+        Assert.Contains("\"c\"", code);
     }
 }

@@ -5,6 +5,7 @@ using Hand.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Reflection.Emit;
 
 namespace DocumentationTests;
 
@@ -175,7 +176,7 @@ public class CommentTests
         }
         string sourceSummary = CommentParser.GetSummary(sourceSymbol);
         generator.Apply(type => type.WithSummary(sourceSummary));
-        var code = generator.Build().NormalizeWhitespace().ToFullString();
+        var code = generator.BuildUnit().NormalizeWhitespace().ToFullString();
         Assert.Contains("<summary>", code);
     }
     ///// <summary>
@@ -193,16 +194,34 @@ public class CommentTests
     //    ///</summary>
     //    public string UserName { get; set; }
     //}
-/// <summary>
-/// 实体主键
-/// </summary>
-/// <typeparam name="TKey">主键类型</typeparam>
-/// <param name="key">主键</param>
-public class EntityKey<TKey>(TKey key)
+    /// <summary>
+    /// 实体主键
+    /// </summary>
+    /// <typeparam name="TKey">主键类型</typeparam>
+    /// <param name="key">主键</param>
+    public class EntityKey<TKey>(TKey key)
     {
         /// <summary>
         /// 主键
         /// </summary>
         public TKey Key { get; } = key;
+    }
+    [Fact]
+    public void Inheritdoc()
+    {
+        var property = SyntaxGenerator.IntType.Property("Id", SyntaxGenerator.Literal("1"))
+            .Public()
+            .WithInheritdoc();
+        var code = property.NormalizeWhitespace().ToFullString();
+        Assert.Contains("<inheritdoc", code);
+    }
+    [Fact]
+    public void Inheritdoc2()
+    {
+        var field = SyntaxGenerator.IntType.Field("_id", SyntaxGenerator.Literal("1"))
+            .Protected()
+            .WithInheritdoc("Id");
+        var code = field.NormalizeWhitespace().ToFullString();
+        Assert.Contains("<inheritdoc", code);
     }
 }

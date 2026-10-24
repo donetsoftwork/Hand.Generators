@@ -8,7 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
-    <PackageReference Include="Hand.MemberValidation" Version="0.3.2.2-alpha" />
+    <PackageReference Include="Hand.MemberValidation" Version="0.3.2.3-alpha" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="5.9.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -17,6 +17,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Hand.Generators.EasySyntax\Hand.Generators.EasySyntax.csproj" />
+    <ProjectReference Include="..\..\Hand.Generators.SyntaxScripting\Hand.Generators.SyntaxScripting.csproj" />
   </ItemGroup>
 
 </Project>

@@ -44,7 +44,7 @@ public class ComplexTypeInfo(INamedTypeSymbol original, INamedTypeSymbol symbol,
     public bool IsInterface
         => _isInterface;
     /// <inheritdoc />
-    TypeSymbolKind ITypeSymbolInfo.Kind
+    public override TypeSymbolKind Kind
         => TypeSymbolKind.Complex;
     /// <inheritdoc />
     public override string Summary
@@ -57,7 +57,7 @@ public class ComplexTypeInfo(INamedTypeSymbol original, INamedTypeSymbol symbol,
     /// <param name="compilation"></param>
     /// <returns></returns>
     public ComplexTypeInfo GetNullable(Compilation compilation)
-        => _isNullable ? this : new((INamedTypeSymbol)compilation.GetNullable(_original), _symbol, true, _isInterface, _summary);
+        => _isNullable ? this : new(compilation.GetNullable(_original), _symbol, true, _isInterface, _summary);
     /// <inheritdoc />
     ITypeSymbolInfo ITypeSymbolInfo.GetNullable(Compilation compilation)
         => GetNullable(compilation);

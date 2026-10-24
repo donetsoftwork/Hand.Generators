@@ -35,14 +35,13 @@ public abstract class TypeBaseInfo(INamedTypeSymbol original, INamedTypeSymbol s
     public bool IsNullable 
         => _isNullable;
     /// <inheritdoc />
-    TypeSymbolKind ITypeSymbolInfo.Kind
-        => TypeSymbolKind.Unknow;
+    public abstract TypeSymbolKind Kind { get; }
     /// <inheritdoc />
     public abstract string Summary { get; }
     #endregion
     /// <inheritdoc />
     public override TypeSyntax Display(SyntaxGenerator generator)
-        => generator.Display(_symbol, _isNullable);
+        => generator.Display(_symbol).Nullable(_isNullable);
     /// <inheritdoc />
     public virtual TypeOfExpressionSyntax TypeOf(SyntaxGenerator generator)
         => SyntaxFactory.TypeOfExpression(_symbol.IsValueType ? Display(generator) : generator.Display(_symbol));

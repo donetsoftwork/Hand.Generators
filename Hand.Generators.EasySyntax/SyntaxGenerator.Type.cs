@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Hand.Scopes;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Runtime.CompilerServices;
@@ -8,17 +9,17 @@ namespace Hand;
 /// <summary>
 /// 类型
 /// </summary>
-public partial class SyntaxGenerator
+partial class SyntaxGenerator
 {
     #region UsingDirectiveSyntax
     /// <summary>
     /// System
     /// </summary>
-    public static readonly UsingDirectiveSyntax SystemDirective = SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("System"));
+    public static readonly UsingDirectiveSyntax SystemDirective = SyntaxFactory.UsingDirective(NamespaceScope.System);
     /// <summary>
     /// System.Collections.Generic
     /// </summary>
-    public static readonly UsingDirectiveSyntax CollectionDirective = SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("System.Collections.Generic"));
+    public static readonly UsingDirectiveSyntax CollectionDirective = SyntaxFactory.UsingDirective(NamespaceScope.GenericCollections);
     #endregion
     #region PredefinedType
     /// <summary>
@@ -80,7 +81,7 @@ public partial class SyntaxGenerator
     /// <summary>
     /// DateTime
     /// </summary>
-    public static IdentifierNameSyntax DateTimeType => SyntaxFactory.IdentifierName("DateTime");
+    public static QualifiedNameSyntax DateTimeType => SyntaxFactory.IdentifierName("DateTime").Qualify(NamespaceScope.System);
     /// <summary>
     /// object
     /// </summary>
@@ -112,9 +113,10 @@ public partial class SyntaxGenerator
         get
         {
             //if (_lazyFrameworkMajorVersion.Value >= 9)
-            //    return SyntaxFactory.IdentifierName("System.Threading.Lock");
+            //    SyntaxFactory.IdentifierName("Lock").Qualify(SyntaxFactory.IdentifierName("Threading").Qualify(NamespaceScope.System));
             //return SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ObjectKeyword));
-            return SyntaxFactory.IdentifierName("System.Threading.Lock");
+            // System.Threading.Lock
+            return SyntaxFactory.IdentifierName("Lock").Qualify(SyntaxFactory.IdentifierName("Threading").Qualify(NamespaceScope.System));
         }
     }
     /// <summary>
@@ -123,14 +125,14 @@ public partial class SyntaxGenerator
     /// <param name="elementType"></param>
     /// <returns></returns>
     public static TypeSyntax ListType(TypeSyntax elementType)
-        => SyntaxFactory.GenericName(SyntaxFactory.Identifier("List"), SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(elementType)));
+        => SyntaxFactory.GenericName(SyntaxFactory.Identifier("List"), SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(elementType))).Qualify(NamespaceScope.GenericCollections);
     /// <summary>
     /// IEnumerable~1
     /// </summary>
     /// <param name="elementType"></param>
     /// <returns></returns>
     public static TypeSyntax IEnumerableType(TypeSyntax elementType)
-        => SyntaxFactory.GenericName(SyntaxFactory.Identifier("System.Collections.Generic.IEnumerable"), SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(elementType)));
+        => SyntaxFactory.GenericName(SyntaxFactory.Identifier("IEnumerable"), SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(elementType))).Qualify(NamespaceScope.GenericCollections);
     #endregion
     #region Generic
     /// <summary>

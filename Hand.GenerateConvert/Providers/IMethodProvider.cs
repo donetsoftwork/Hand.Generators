@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis;
 namespace Hand.Providers;
 
 /// <summary>
-/// 方法提供者
+/// 方法提供器
 /// </summary>
 public interface IMethodProvider
 {

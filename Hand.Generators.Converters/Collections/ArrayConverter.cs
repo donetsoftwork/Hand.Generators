@@ -1,4 +1,5 @@
 ﻿using Hand.Converters.Methods;
+using Hand.Scopes;
 using Hand.Syntax;
 using Hand.Types;
 using Microsoft.CodeAnalysis;
@@ -17,7 +18,7 @@ public class ArrayConverter(ISyntaxDisplay<TypeSyntax> type, ISyntaxDisplay<Simp
      : StaticMethodConverter(type, method)
 {
     #region 配置
-    private static readonly TypeNameInfo _array = new("Array", "System", false, false);
+    private static readonly TypeNameInfo _array = new("Array", NamespaceScope.System);
     private static readonly SyntaxWrapper<SimpleNameSyntax> _convertAll = new(SyntaxFactory.IdentifierName("ConvertAll"));
     private readonly ISyntaxConverter _itemConverter = itemConverter;
     /// <summary>

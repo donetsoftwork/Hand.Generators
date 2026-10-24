@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Hand.Enums.Fields;
 
 /// <summary>
-/// 位域枚举字段
+/// 位标记枚举字段
 /// </summary>
 /// <param name="name"></param>
 /// <param name="member"></param>
@@ -17,13 +17,13 @@ public class FlagEnumField(string name, string member, LiteralExpressionSyntax u
     #region 配置
     private readonly ulong _flag = flag;
     /// <summary>
-    /// 位域值
+    /// 位标记值
     /// </summary>
     public ulong Flag
         => _flag;
     #endregion
     /// <summary>
-    /// 按位域获取字段
+    /// 按位标记获取字段
     /// </summary>
     /// <param name="fields"></param>
     /// <param name="flag"></param>

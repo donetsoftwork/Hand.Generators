@@ -24,8 +24,31 @@ public class MyAttribute : Attribute;
         Assert.NotNull(syntaxTree);
         var attribute = syntaxTree.GetRoot().DescendantNodes().OfType<AttributeSyntax>().FirstOrDefault();
         Assert.NotNull(attribute);
-        //var compilation = SyntaxTreeScript
     }
+
+    [Fact]
+    public void Modifiers()
+    {
+        string sourceCode = @"
+    abstract class Test<T>
+    {
+        public abstract void Add(int id, in T value);
+        public abstract bool TryAdd(int id, ref T value);
+        public abstract bool TryGetValue(int id, out T? value);
+
+    }
+";
+
+        var syntaxTree = CSharpSyntaxTree.ParseText(sourceCode);
+        Assert.NotNull(syntaxTree);
+        var modifiers = syntaxTree.GetRoot()
+            .DescendantNodes()
+            .OfType<ParameterSyntax>()
+            .SelectMany(p=>p.Modifiers)
+            .ToArray();
+        Assert.Equal(3, modifiers.Length);
+    }
+
     [Fact]
     public void Switch()
     {

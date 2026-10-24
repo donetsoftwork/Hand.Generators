@@ -11,7 +11,7 @@ namespace Hand;
 /// <summary>
 /// 文档
 /// </summary>
-public partial class SyntaxGenerator
+partial class SyntaxGenerator
 {
     #region Comment
     private static readonly char[] _lineSeparator = ['\r', '\n'];
@@ -122,13 +122,23 @@ public partial class SyntaxGenerator
         return SyntaxFactory.XmlSummaryElement(texts);
     }
     /// <summary>
+    /// 生成文档
+    /// </summary>
+    /// <param name="content"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static DocumentationCommentTriviaSyntax DocumentationComment(params SyntaxList<XmlNodeSyntax> content)
+        => SyntaxFactory.DocumentationCommentTrivia(SyntaxKind.SingleLineDocumentationCommentTrivia, content)
+                .WithLeadingTrivia(SyntaxFactory.DocumentationCommentExterior("/// "))
+                .WithTrailingTrivia(SyntaxFactory.EndOfLine(""));
+    /// <summary>
     /// 构造摘要文档
     /// </summary>
     /// <param name="summary"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static DocumentationCommentTriviaSyntax CreateDocumentation(XmlElementSyntax summary)
-        => SyntaxFactory.DocumentationComment(summary, XmlNewLine(false));
+        => DocumentationComment(summary, XmlNewLine(false));
     /// <summary>
     /// 构造摘要文档
     /// </summary>
@@ -139,7 +149,7 @@ public partial class SyntaxGenerator
         var summary = CreateSummary(summaryLines);
         if (summary is null)
             return null;
-        return SyntaxFactory.DocumentationComment(summary, XmlNewLine(false));
+        return DocumentationComment(summary, XmlNewLine(false));
     }
     /// <summary>
     /// 构造注释文档
@@ -157,7 +167,31 @@ public partial class SyntaxGenerator
         AddTypeParam(elements, typeParams);
         AddParam(elements, @params);
         AddReturns(elements, comment.Returns);
-        return SyntaxFactory.DocumentationComment([.. elements, XmlNewLine(false)]);
+        return DocumentationComment([.. elements, XmlNewLine(false)]);
+    }
+    #endregion
+    #region inheritdoc
+    /// <summary>
+    /// inheritdoc
+    /// </summary>
+    /// <returns></returns>
+    public static DocumentationCommentTriviaSyntax CreateInheritdoc()
+        => DocumentationComment(SyntaxFactory.XmlEmptyElement("inheritdoc"), XmlNewLine(false));
+    /// <summary>
+    /// inheritdoc
+    /// </summary>
+    /// <param name="cref"></param>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    public static DocumentationCommentTriviaSyntax CreateInheritdoc(string cref, string path = "/summary")
+        => DocumentationComment(CreateInheritdocElement(cref, path), XmlNewLine(false));
+    private static XmlEmptyElementSyntax CreateInheritdocElement(string cref, string path)
+    {
+        return SyntaxFactory.XmlEmptyElement("inheritdoc")
+            .WithAttributes([
+                SyntaxFactory.XmlCrefAttribute(SyntaxFactory.NameMemberCref(SyntaxFactory.IdentifierName(cref))),
+                SyntaxFactory.XmlNameAttribute(SyntaxFactory.XmlName("path"), SyntaxFactory.Token(SyntaxKind.DoubleQuoteToken), path, SyntaxFactory.Token(SyntaxKind.DoubleQuoteToken)).WithLeadingTrivia(SyntaxFactory.Whitespace(" "))
+            ]);
     }
     #endregion
 }

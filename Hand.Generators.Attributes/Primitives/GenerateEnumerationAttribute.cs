@@ -5,7 +5,7 @@ namespace Hand.Primitives;
 /// <summary>
 /// 生成属性类
 /// </summary>
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public class GenerateEnumerationAttribute<TFrom>
     : Attribute

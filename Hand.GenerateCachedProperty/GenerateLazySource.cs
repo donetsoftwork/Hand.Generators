@@ -10,7 +10,7 @@ namespace Hand.GenerateCachedProperty;
 /// 构造延迟缓存源对象
 /// </summary>
 public abstract class GenerateLazySource(TypeDeclarationSyntax type, INamedTypeSymbol typeSymbol, string propertyName, INamedTypeSymbol propertySymbol, bool isStatic, string fieldName, string stateName, TypeSyntax lockType, string lockName)
-    : IGeneratorSource
+    : GeneratorSourceBase
 {
     /// <summary>
     /// 构造延迟缓存源对象
@@ -50,7 +50,7 @@ public abstract class GenerateLazySource(TypeDeclarationSyntax type, INamedTypeS
     public INamedTypeSymbol Symbol 
         => _typeSymbol;
     /// <inheritdoc />
-    public string GenerateFileName
+    public override string GenerateFileName
         => $"{_typeSymbol.ToDisplayString()}.Lazy{_propertyName}.g.cs";
     /// <summary>
     /// 属性名
@@ -74,7 +74,7 @@ public abstract class GenerateLazySource(TypeDeclarationSyntax type, INamedTypeS
         => _lockName;
     #endregion
     /// <inheritdoc />
-    public SyntaxGenerator Generate()
+    public override SyntaxGenerator Generate()
     {
         var builder = SyntaxGenerator.Clone(_type);
         var _valueField = _propertyType.Field(_value.Identifier, SyntaxGenerator.DefaultLiteral)

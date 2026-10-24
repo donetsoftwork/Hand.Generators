@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis;
 namespace Hand.Providers;
 
 /// <summary>
-/// 空方法提供者
+/// 空方法提供器
 /// </summary>
 public class MethodEmptyProvider: IMethodProvider
 {

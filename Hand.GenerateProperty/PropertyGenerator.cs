@@ -14,7 +14,7 @@ public class PropertyGenerator()
         Attribute,
         new SyntaxFilter(),
         PropertyTransform.Instance,
-        new GeneratorExecutor<PropertySource>())
+        new GeneratorExecutor())
 {
     /// <summary>
     /// Attribute标记

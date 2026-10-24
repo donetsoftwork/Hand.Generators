@@ -18,26 +18,26 @@ namespace Hand.Members;
 /// <param name="isPartial"></param>
 /// <param name="isStatic"></param>
 /// <param name="isExtension"></param>
-public class ConvertSourceInfo(SourceProvider provider, TypeNameInfo typeInfo, ConvertMethodInfo methodInfo, bool isPartial, bool isStatic, bool isExtension = true)
+public class ConvertSourceInfo(SourceProvider provider, TypeVisualization typeInfo, ConvertMethodInfo methodInfo, bool isPartial, bool isStatic, bool isExtension = true)
     : ICreator<ISyntaxConverter>
 {
     #region 配置
     private readonly SourceProvider _provider = provider;
-    private readonly TypeNameInfo _typeInfo = typeInfo;
+    private readonly TypeVisualization _typeInfo = typeInfo;
     private readonly ConvertMethodInfo _methodInfo = methodInfo;
     private readonly bool _isPartial = isPartial;
     private readonly bool _isStatic = isStatic;
     private readonly bool _isExtension = isExtension;
 
     /// <summary>
-    /// 生成源提供者
+    /// 生成源提供器
     /// </summary>
     public SourceProvider Provider 
         => _provider;
     /// <summary>
     /// 类型信息
     /// </summary>
-    public TypeNameInfo TypeInfo 
+    public TypeVisualization TypeInfo 
         => _typeInfo;
     /// <summary>
     /// 函数信息
@@ -81,7 +81,7 @@ public class ConvertSourceInfo(SourceProvider provider, TypeNameInfo typeInfo, C
     public static ISyntaxConverter GetConverter(IMethodSymbol method)
     {
         if (method.IsExtensionMethod)
-            return MethodConverter.CreateExtensionMethod(method.ContainingType.ContainingNamespace.ToDisplayString(), method.Name);
+            return MethodConverter.CreateExtensionMethod(method.ContainingType.ContainingNamespace.ToName(), method.Name);
         if (method.IsStatic)
             return StaticMethodConverter.Create(method.ContainingType, method.Name);
 

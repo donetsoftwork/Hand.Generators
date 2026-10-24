@@ -1,4 +1,6 @@
 # C#.NET源生成器命名规则
+>*源生成器经常需要处理繁琐的命名及冲突问题
+>*为此开发了独立的命名规则组件
 
 ## 一、 前言
 >* 本文讲解在C#.NET源生成器中生成类的字段、属性、方法及参数和变量标识符的命名处理方式
@@ -133,6 +135,9 @@ class KindContainer
     void AddKind(string name, MemberKind kind);
 }
 ~~~
+
+### 4. KindContainer 调试结果
+> ![kind](naming/kind.png)
 
 ## 四、 成员不能与类同名
 >* 除构造函数外,成员不能与当前类同名
@@ -385,3 +390,17 @@ partial class UserTable
 }
 ~~~
 
+## 八、最佳实践总结
+### 1. 使用 Hand.Naming 规范化标识符命名
+>* CamelWordRule处理参数名或变量名
+>* UnderWordRule处理私有字段名
+>* PascalWordRule处理属性、方法、类及公开字段名
+>* github仓库地址: https://github.com/donetsoftwork/HandCore.net/tree/master/Hand.Naming
+>* gitee同步跟新仓库地址: https://gitee.com/donetsoftwork/HandCore.net/tree/master/Hand.Naming
+
+### 2. 使用 Hand.Generators.Naming 处理命名冲突
+>* 如果需要定义新函数推荐使用 CompositeProvider 组件
+>* 如果只需要字段和属性推荐使用 TypedProvider 组件
+>* 如果涉及对基类成员名的重写,使用 Inherit
+>* github仓库地址: https://github.com/donetsoftwork/Hand.Generators/tree/master/Hand.Generators.Naming
+>* gitee同步跟新仓库地址: https://gitee.com/donetsoftwork/hand.-generators/tree/master/Hand.Generators.Naming

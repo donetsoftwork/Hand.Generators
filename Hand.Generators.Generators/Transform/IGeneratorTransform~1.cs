@@ -7,7 +7,7 @@ namespace Hand.Transform;
 /// 转化
 /// </summary>
 /// <typeparam name="TSource"></typeparam>
-public interface IGeneratorTransform<TSource>
+public interface IGeneratorTransform<out TSource>
 {
     /// <summary>
     /// 转化

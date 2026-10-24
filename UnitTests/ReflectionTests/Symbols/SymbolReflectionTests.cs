@@ -115,7 +115,7 @@ public class UserId(int id) : EntityProperty<int>(id);";
         public void DeclaredAccessibility()
         {
             var compilation = SyntaxTreeDriver.DefaultDriver.Compile(_code);
-            var type = compilation.GetSymbol("Hand.Primitives.EntityProperty`1");
+            var type = compilation.GetTypeByMetadataName("Hand.Primitives.EntityProperty`1");
             Assert.NotNull(type);
             var _original = type.GetMembers("_original")
                 .FirstOrDefault();

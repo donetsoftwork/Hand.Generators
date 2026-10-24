@@ -9,8 +9,8 @@ namespace Hand.Sources;
 /// </summary>
 /// <param name="original"></param>
 /// <param name="info"></param>
-public class ExtensionMethodSource(MethodSource original, TypeNameInfo info)
-    : IGeneratorSource
+public class ExtensionMethodSource(MethodSource original, TypeVisualization info)
+    : GeneratorSourceBase
 {
     #region 配置
     /// <summary>
@@ -20,7 +20,7 @@ public class ExtensionMethodSource(MethodSource original, TypeNameInfo info)
     /// <summary>
     /// 扩展类型信息
     /// </summary>
-    private readonly TypeNameInfo _info = info;
+    private readonly TypeVisualization _info = info;
     /// <summary>
     /// 扩展方法参数
     /// </summary>
@@ -29,10 +29,10 @@ public class ExtensionMethodSource(MethodSource original, TypeNameInfo info)
     /// <summary>
     /// 扩展类信息
     /// </summary>
-    public TypeNameInfo Info
+    public TypeVisualization Info
         => _info;
     /// <inheritdoc />
-    public string GenerateFileName
+    public override string GenerateFileName
         => $"{_info.FullName}.{_original.MethodName}.g.cs";
     #endregion
     /// <summary>
@@ -53,7 +53,7 @@ public class ExtensionMethodSource(MethodSource original, TypeNameInfo info)
     /// 构建生成器
     /// </summary>
     /// <returns></returns>
-    public SyntaxGenerator Generate()
+    public override SyntaxGenerator Generate()
     {
         var generator = CreateGenerator(_info);
         var method = CreateMethod(generator);
@@ -65,7 +65,7 @@ public class ExtensionMethodSource(MethodSource original, TypeNameInfo info)
     /// </summary>
     /// <param name="info"></param>
     /// <returns></returns>
-    public static SyntaxGenerator CreateGenerator(TypeNameInfo info)
+    public static SyntaxGenerator CreateGenerator(TypeVisualization info)
     {
         var type = SyntaxFactory.ClassDeclaration(info.TypeName);
         if (info.IsInternal)

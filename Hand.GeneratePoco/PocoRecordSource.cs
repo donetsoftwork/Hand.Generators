@@ -60,7 +60,7 @@ public class PocoRecordSource(TypeDeclarationSyntax type, ConvertBuilder convert
         if (_generateAttribute)
             parameter = generator.GenerateAttribute(parameter, _attributeCacher.GetAttributes(sourseMember, AttributeTargets.Parameter));
         comment.AddParam(name, sourseMember.Summary);
-        generator.AddParameter(parameter);
+        generator.AddListParameter(parameter);
         var member = new ParameterSyntaxMember(name, parameter, symbolInfo, sourseMember.Summary);
         return new(member, sourseMember);
     }

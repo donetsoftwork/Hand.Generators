@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis;
 namespace Hand.Providers;
 
 /// <summary>
-/// 静态函数提供者
+/// 静态函数提供器
 /// </summary>
 /// <param name="declare"></param>
 /// <param name="symbol"></param>

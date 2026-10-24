@@ -50,7 +50,7 @@ public class EnumTypeInfo(INamedTypeSymbol original, INamedTypeSymbol symbol, bo
     public bool IsFlag
         => _isFlag;
     /// <inheritdoc />
-    TypeSymbolKind ITypeSymbolInfo.Kind
+    public override TypeSymbolKind Kind
         => TypeSymbolKind.Enum;
     #endregion
 
@@ -63,7 +63,7 @@ public class EnumTypeInfo(INamedTypeSymbol original, INamedTypeSymbol symbol, bo
     /// <param name="compilation"></param>
     /// <returns></returns>
     public new EntityPropertyTypeInfo GetNullable(Compilation compilation)
-        => _isNullable ? this : new((INamedTypeSymbol)compilation.GetNullable(_original), _symbol, _isFlag, true, _element, _elementInfo, _summary);
+        => _isNullable ? this : new(compilation.GetNullable(_original), _symbol, _isFlag, true, _element, _elementInfo, _summary);
     /// <inheritdoc />
     ITypeSymbolInfo ITypeSymbolInfo.GetNullable(Compilation compilation)
         => GetNullable(compilation);

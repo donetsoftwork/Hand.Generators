@@ -30,7 +30,7 @@ public class UsingDirectiveComparer
                 + obj.GlobalKeyword.GetHashCode()
                 + (obj.StaticKeyword.GetHashCode() << 1)
                 + (obj.UnsafeKeyword.GetHashCode() << 2)
-                + TypeComparer.GetHashCode(obj.NamespaceOrType);
+                + TypeComparer.GetTypeHashCode(obj.NamespaceOrType);
         }
     }
     /// <summary>
@@ -51,11 +51,11 @@ public class UsingDirectiveComparer
     /// <returns></returns>
     public static bool Equals(UsingDirectiveSyntax x, UsingDirectiveSyntax y)
     {
-        return TypeComparer.TokenEquals(x.GlobalKeyword, y.GlobalKeyword)
-            && TypeComparer.TokenEquals(x.StaticKeyword, y.StaticKeyword)
-            && TypeComparer.TokenEquals(x.UnsafeKeyword, y.UnsafeKeyword)
+        return TypeComparer.TokenEqual(x.GlobalKeyword, y.GlobalKeyword)
+            && TypeComparer.TokenEqual(x.StaticKeyword, y.StaticKeyword)
+            && TypeComparer.TokenEqual(x.UnsafeKeyword, y.UnsafeKeyword)
             && AliasEquals(x.Alias, y.Alias)
-            && TypeComparer.Equals(x.NamespaceOrType, y.NamespaceOrType);
+            && TypeComparer.Equal(x.NamespaceOrType, y.NamespaceOrType);
     }    
     /// <summary>
     /// 比较别名
@@ -69,7 +69,7 @@ public class UsingDirectiveComparer
             return y is null;
         if (y is null)
             return false;
-        return TypeComparer.IdentifierEquals(x.Name, y.Name);
+        return TypeComparer.IdentifierEqual(x.Name, y.Name);
     }    
     #endregion
     /// <summary>

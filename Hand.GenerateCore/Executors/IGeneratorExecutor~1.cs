@@ -5,7 +5,7 @@ namespace Hand.Executors;
 /// <summary>
 /// 执行器
 /// </summary>
-public interface IGeneratorExecutor<TSource>
+public interface IGeneratorExecutor<in TSource>
 {
     /// <summary>
     /// 执行

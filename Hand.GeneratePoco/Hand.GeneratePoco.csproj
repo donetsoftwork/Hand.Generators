@@ -18,7 +18,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Hand.Core" Version="0.3.2.5-alpha">
+		<PackageReference Include="Hand.Core" Version="0.3.2.7-alpha">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
@@ -34,11 +34,11 @@
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Hand.MemberValidation" Version="0.3.2.2-alpha">
+		<PackageReference Include="Hand.Validation" Version="0.3.2.3-alpha">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Hand.Validation" Version="0.3.2.2-alpha">
+		<PackageReference Include="Hand.MemberValidation" Version="0.3.2.3-alpha">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
@@ -46,7 +46,7 @@
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Hand.Collections" Version="0.3.2.2-alpha">
+		<PackageReference Include="Hand.Collections" Version="0.3.2.3-alpha">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
@@ -64,6 +64,10 @@
 			<IncludeAssets>compile;analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</ProjectReference>
+		<ProjectReference Include="..\Hand.Generators.Enumerations\Hand.Generators.Enumerations.csproj">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</ProjectReference>
 		<ProjectReference Include="..\Hand.Generators.Enums\Hand.Generators.Enums.csproj">
 			<IncludeAssets>compile;analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
@@ -72,12 +76,18 @@
 			<IncludeAssets>compile;analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</ProjectReference>
-		<ProjectReference Include="..\Hand.Generators.Members\Hand.Generators.Members.csproj" />
+		<ProjectReference Include="..\Hand.Generators.Members\Hand.Generators.Members.csproj">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</ProjectReference>
 		<ProjectReference Include="..\Hand.Generators.Naming\Hand.Generators.Naming.csproj">
 			<IncludeAssets>compile;analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</ProjectReference>
-		<ProjectReference Include="..\Hand.Generators.System\Hand.Generators.System.csproj" />
+		<ProjectReference Include="..\Hand.Generators.System\Hand.Generators.System.csproj">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</ProjectReference>
 		<ProjectReference Include="..\Hand.Generators.Types\Hand.Generators.Types.csproj">
 			<IncludeAssets>compile;analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>

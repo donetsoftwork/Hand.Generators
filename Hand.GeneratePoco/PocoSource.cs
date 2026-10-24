@@ -19,7 +19,7 @@ namespace Hand.GeneratePoco;
 /// Poco生成源
 /// </summary>
 public abstract class PocoSource(SyntaxGenerator generator, ConvertBuilder convertBuilder, ComplexTypeInfo toInfo, INamedTypeSymbol toSymbol, ComplexTypeInfo fromInfo, INamedTypeSymbol fromSymbol, IRecognizer<string>[] recognizers, AttributeData attribute)
-    : IGeneratorSource
+    : GeneratorSourceBase
 {
     /// <summary>
     /// Poco生成源
@@ -135,7 +135,7 @@ public abstract class PocoSource(SyntaxGenerator generator, ConvertBuilder conve
     public INamedTypeSymbol TypeSymbol
         => _toSymbol;
     /// <inheritdoc />
-    public string GenerateFileName
+    public override string GenerateFileName
         => $"{_toSymbol.ToDisplayString()}.Poco.g.cs";
     /// <summary>
     /// 类型转化构建器
@@ -144,8 +144,6 @@ public abstract class PocoSource(SyntaxGenerator generator, ConvertBuilder conve
         => _convertBuilder;
     #endregion
 
-    /// <inheritdoc />
-    public abstract SyntaxGenerator Generate();
     /// <summary>
     /// 构造参数
     /// </summary>

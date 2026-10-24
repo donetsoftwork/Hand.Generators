@@ -8,7 +8,7 @@ namespace GenerateCachedPropertyTests;
 
 public partial class MethodTests
 {
-    [GenerateLazy("LazyTime", LockType = "object")]
+    //[GenerateLazy("LazyTime", LockType = "object")]
     public DateTime CreateTime()
     {
         return DateTime.Now;
@@ -16,7 +16,7 @@ public partial class MethodTests
     [Fact]
     public void GenerateLazyTime()
     {
-        MethodTests tests = new();
+        //MethodTests tests = new();
         //tests.LazyTime
         var source = @"
 using Hand;
@@ -32,15 +32,42 @@ public partial class MethodTests
     }
 }
 ";
-        var service = SyntaxTreeDriver.CreateDefaultDriver()
+        var driver = SyntaxTreeDriver.CreateDefaultDriver()
             .Reference<GenerateLazyAttribute>();
-        var result = service.Generate<GenerateLazyGenerator>(source)
+        var result = driver.Generate<GenerateLazyGenerator>(source)
             .GetRunResult();
         var syntaxTree = result.GeneratedTrees.FirstOrDefault();
         Assert.NotNull(syntaxTree);
         var code = syntaxTree.GetText().ToString();
         Assert.Contains("LazyTime", code);
+    }
+    [Fact]
+    public void LockType()
+    {
+        //MethodTests tests = new();
+        //tests.LazyTime
+        var source = @"
+using Hand;
+using Hand.Cache;
+namespace GenerateCachedPropertyTests;
 
+public partial class MethodTests
+{
+    [GenerateLazy(""LazyTime"", LockType = ""object"")]
+    public DateTime CreateTime()
+    {
+        return DateTime.Now;
+    }
+}
+";
+        var driver = SyntaxTreeDriver.CreateDefaultDriver()
+            .Reference<GenerateLazyAttribute>();
+        var result = driver.Generate<GenerateLazyGenerator>(source)
+            .GetRunResult();
+        var syntaxTree = result.GeneratedTrees.FirstOrDefault();
+        Assert.NotNull(syntaxTree);
+        var code = syntaxTree.GetText().ToString();
+        Assert.Contains("LazyTime", code);
     }
     [Fact]
     public void Version()

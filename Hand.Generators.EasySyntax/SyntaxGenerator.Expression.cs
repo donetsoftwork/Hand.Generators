@@ -12,7 +12,7 @@ namespace Hand;
 /// <summary>
 /// 表达式
 /// </summary>
-public partial class SyntaxGenerator
+partial class SyntaxGenerator
 {
     #region Literal
     /// <summary>

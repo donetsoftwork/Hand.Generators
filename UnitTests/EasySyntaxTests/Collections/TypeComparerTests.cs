@@ -22,10 +22,10 @@ public class TypeComparerTests
             .Select(item => item.NamespaceOrType)
             .FirstOrDefault();
         Assert.NotNull(usingDirective);
-        var expected = TypeComparer.GetHashCode(usingDirective);
+        var expected = TypeComparer.GetTypeHashCode(usingDirective);
         for (int i = 0; i < 10; i++)
         {
-            var result = TypeComparer.GetHashCode(usingDirective);
+            var result = TypeComparer.GetTypeHashCode(usingDirective);
             Assert.Equal(expected, result);
         }
     }
@@ -100,7 +100,7 @@ using IntList = System.Collections.Generic.List<int>;
         var types = syntaxTree.GetRoot().DescendantNodes().OfType<UsingDirectiveSyntax>()
             .Select(item => item.NamespaceOrType)
             .ToArray();
-        var typeHashCodes = types.Select(item => new NamedCode(item.ToFullString(), TypeComparer.GetHashCode(item)))
+        var typeHashCodes = types.Select(item => new NamedCode(item.ToFullString(), TypeComparer.GetTypeHashCode(item)))
             .GroupBy(item => item.Code)
             .OrderByDescending(item => item.Count())
             .ToArray();

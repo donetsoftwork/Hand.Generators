@@ -15,7 +15,7 @@ public class GenerateLazyGenerator()
         Attribute,
         new SyntaxFilter(false, SyntaxKind.PropertyDeclaration, SyntaxKind.MethodDeclaration),
         GenerateLazyTransform.Instance,
-        new GeneratorExecutor<GenerateLazySource>())
+        new GeneratorExecutor())
 {
     /// <summary>
     /// Attribute标记

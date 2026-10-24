@@ -69,7 +69,7 @@ public static partial class GenerateServices
         var documentation = SyntaxGenerator.CreateDocumentation(lines);
         if (documentation is null)
             return member;
-        return member.WithLeadingTrivia(SyntaxFactory.TriviaList(SyntaxFactory.Trivia(documentation)));
+        return member.WithDocumentation(documentation);
     }
     /// <summary>
     /// 增加摘要注释
@@ -81,7 +81,7 @@ public static partial class GenerateServices
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TMember WithSummary<TMember>(this TMember member, XmlElementSyntax summary)
         where TMember : SyntaxNode
-        => member.WithLeadingTrivia(SyntaxFactory.TriviaList(SyntaxFactory.Trivia(SyntaxGenerator.CreateDocumentation(summary))));
+        => member.WithDocumentation(SyntaxGenerator.CreateDocumentation(summary));
     /// <summary>
     /// 增加摘要注释
     /// </summary>
@@ -108,4 +108,27 @@ public static partial class GenerateServices
             return member;
         return member.WithLeadingTrivia(SyntaxFactory.TriviaList(SyntaxFactory.Trivia(documentation)));
     }
+    /// <summary>
+    /// 增加 inheritdoc 注释
+    /// </summary>
+    /// <typeparam name="TMember"></typeparam>
+    /// <param name="member"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
+    public static TMember WithInheritdoc<TMember>(this TMember member)
+        where TMember : SyntaxNode
+        => member.WithDocumentation(SyntaxGenerator.CreateInheritdoc());
+    /// <summary>
+    /// 增加 inheritdoc 注释
+    /// </summary>
+    /// <typeparam name="TMember"></typeparam>
+    /// <param name="member"></param>
+    /// <param name="cref"></param>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TMember WithInheritdoc<TMember>(this TMember member, string cref, string path = "/summary")
+        where TMember : SyntaxNode
+        => member.WithDocumentation(SyntaxGenerator.CreateInheritdoc(cref, path));
 }

@@ -4,7 +4,7 @@
 		<TargetFrameworks>net4.6.2;net4.7;net4.8;net8.0;net9.0;net10.0;netstandard2.0;netstandard2.1</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<RootNamespace>Hand</RootNamespace>
-		<Version>$(VersionBase).1-alpha</Version>
+		<Version>$(VersionBase).0-alpha</Version>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<LangVersion>Latest</LangVersion>
 		<PackageReadmeFile>readme.md</PackageReadmeFile>
@@ -14,6 +14,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Hand.Core" Version="0.3.2.7-alpha">
+			<IncludeAssets>compile; analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</PackageReference>
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="5.9.0">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

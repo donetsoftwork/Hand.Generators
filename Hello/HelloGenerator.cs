@@ -12,6 +12,6 @@ public class HelloGenerator()
     "Hello.HelloGeneratorAttribute",
     new SyntaxFilter(true, SyntaxKind.ClassDeclaration),
     new HelloTransform(),
-    new GeneratorExecutor<HelloSource>())
+    new GeneratorExecutor())
 {
 }

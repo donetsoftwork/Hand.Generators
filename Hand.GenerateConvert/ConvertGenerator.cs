@@ -1,4 +1,5 @@
-﻿using Hand.Filters;
+﻿using Hand.Executors;
+using Hand.Filters;
 using Hand.Generators;
 using Hand.Sources;
 using Microsoft.CodeAnalysis;
@@ -10,11 +11,11 @@ namespace Hand;
 /// </summary>
 [Generator(LanguageNames.CSharp)]
 public class ConvertGenerator()
-    : ValuesGenerator<ConvertToSource>(
+    : ValuesGenerator<SourceCollection>(
         Attribute
         , new SyntaxFilter(false)
         , new ConvertTransform()
-        , new ConvertExecutor())
+        , new GeneratorExecutor())
 {
     /// <summary>
     /// Attribute标记

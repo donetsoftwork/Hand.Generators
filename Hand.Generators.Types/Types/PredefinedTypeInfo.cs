@@ -15,7 +15,7 @@ public class PredefinedTypeInfo(SyntaxKind kind, INamedTypeSymbol original, INam
     /// <summary>
     /// 符号种类
     /// </summary>
-    public SyntaxKind Kind 
+    public new SyntaxKind Kind 
         => _kind;
     #endregion
 
@@ -32,7 +32,7 @@ public class PredefinedTypeInfo(SyntaxKind kind, INamedTypeSymbol original, INam
     /// <param name="compilation"></param>
     /// <returns></returns>
     public new PredefinedTypeInfo GetNullable(Compilation compilation)
-        => _isNullable ? this : new(_kind, (INamedTypeSymbol)compilation.GetNullable(_original), _symbol, true);
+        => _isNullable ? this : new(_kind, compilation.GetNullable(_original), _symbol, true);
     /// <inheritdoc />
     ITypeSymbolInfo ITypeSymbolInfo.GetNullable(Compilation compilation)
         => GetNullable(compilation);

@@ -122,6 +122,48 @@ public static partial class GenerateServices
     public static NameSyntax Qualifies(this SimpleNameSyntax name, params string[] prefixes)
         => Qualifies(name, System.Array.ConvertAll(prefixes, SyntaxFactory.IdentifierName));
     #endregion
+    #region Concat
+    /// <summary>
+    /// 增加后缀
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="suffix"></param>
+    /// <returns></returns>
+    public static QualifiedNameSyntax Concat(NameSyntax name, SimpleNameSyntax suffix)
+        => SyntaxFactory.QualifiedName(name, suffix);
+    /// <summary>
+    /// 增加后缀
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="suffix"></param>
+    /// <returns></returns>
+    public static QualifiedNameSyntax Concat(NameSyntax name, string suffix)
+        => SyntaxFactory.QualifiedName(name, SyntaxFactory.IdentifierName(suffix));
+    /// <summary>
+    /// 增加后缀
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="suffixes"></param>
+    /// <returns></returns>
+    public static NameSyntax Concats(NameSyntax name, params SimpleNameSyntax[] suffixes)
+    {
+        foreach (var item in suffixes)
+            name = SyntaxFactory.QualifiedName(name, item);
+        return name;
+    }
+    /// <summary>
+    /// 增加后缀
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="suffixes"></param>
+    /// <returns></returns>
+    public static NameSyntax Concats(NameSyntax name, params string[] suffixes)
+    {
+        foreach (var item in suffixes)
+            name = SyntaxFactory.QualifiedName(name, SyntaxFactory.IdentifierName(item));
+        return name;
+    }
+    #endregion
     /// <summary>
     /// 转化为独立的标记列表
     /// </summary>

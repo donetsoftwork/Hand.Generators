@@ -11,8 +11,8 @@ public class TypeSymbolToSyntaxTests
     [Fact]
     public void PredefinedType()
     {
-        var service = SyntaxTreeDriver.CreateDriver();
-        var compilation = service.Compile("");
+        var driver = SyntaxTreeDriver.CreateDriver();
+        var compilation = driver.Compile("");
         var intType = compilation.GetSpecialType(SpecialType.System_Int32);
         if(intType.ToSyntax() is not PredefinedTypeSyntax syntax)
         {
@@ -26,7 +26,7 @@ public class TypeSymbolToSyntaxTests
     [Fact]
     public void Enum()
     {
-        var service = SyntaxTreeDriver.CreateDriver();
+        var driver = SyntaxTreeDriver.CreateDriver();
         var source = @"namespace Tests;
     public enum MyColor : int
     {
@@ -35,7 +35,7 @@ public class TypeSymbolToSyntaxTests
         Blue
     };
     var color = MyColor.Red;";
-        var compilation = service.Compile(source);
+        var compilation = driver.Compile(source);
         var enumType = compilation.GetTypeByMetadataName("Tests.MyColor");
         Assert.NotNull(enumType);
         var underlyingType = enumType.EnumUnderlyingType;
@@ -47,8 +47,8 @@ public class TypeSymbolToSyntaxTests
     [Fact]
     public void Array()
     {
-        var service = SyntaxTreeDriver.CreateDriver();
-        var compilation = service.Compile("");
+        var driver = SyntaxTreeDriver.CreateDriver();
+        var compilation = driver.Compile("");
         var intType = compilation.GetSpecialType(SpecialType.System_Int32);
         var arrayType = compilation.CreateArrayTypeSymbol(intType, 1);
         if (arrayType.ToSyntax() is not ArrayTypeSyntax syntax)
@@ -62,8 +62,8 @@ public class TypeSymbolToSyntaxTests
     [Fact]
     public void Generic()
     {
-        var service = SyntaxTreeDriver.CreateDriver();
-        var compilation = service.Compile("");
+        var driver = SyntaxTreeDriver.CreateDriver();
+        var compilation = driver.Compile("");
         var intType = compilation.GetSpecialType(SpecialType.System_Int32);
         var genericType = compilation.GetSpecialType(SpecialType.System_Collections_Generic_IList_T)
             .Construct(intType);
@@ -79,8 +79,8 @@ public class TypeSymbolToSyntaxTests
     [Fact]
     public void PredefinedTypeNullable()
     {
-        var service = SyntaxTreeDriver.CreateDriver();
-        var compilation = service.Compile("");
+        var driver = SyntaxTreeDriver.CreateDriver();
+        var compilation = driver.Compile("");
         var intType = compilation.GetSpecialType(SpecialType.System_Int32);
         var nullable = compilation.GetSpecialType(SpecialType.System_Nullable_T)
             .Construct(intType);
@@ -95,8 +95,8 @@ public class TypeSymbolToSyntaxTests
     [Fact]
     public void PredefinedTypeNullable2()
     {
-        var service = SyntaxTreeDriver.CreateScriptDriver();
-        var compilation = service.ScriptCompile("int? obj = 1; return obj+1;", returnType: typeof(int?));
+        var driver = SyntaxTreeDriver.CreateScriptDriver();
+        var compilation = driver.ScriptCompile("int? obj = 1; return obj+1;", returnType: typeof(int?));
         var predefinedType = compilation.GetSpecialType(SpecialType.System_Int32);
         var nullableType = compilation.GetSpecialType(SpecialType.System_Nullable_T);
         var predefinedTypeWithNull = nullableType.Construct(predefinedType)
@@ -120,10 +120,10 @@ public class TypeSymbolToSyntaxTests
     [Fact]
     public void CustomTypeNullable()
     {
-        var service = SyntaxTreeDriver.CreateScriptDriver()
+        var driver = SyntaxTreeDriver.CreateScriptDriver()
             .Reference<UserId>();
         var source = @"UserId? userId = new UserId(1); return userId;";
-        var compilation = service.ScriptCompile(source, returnType: typeof(UserId?));
+        var compilation = driver.ScriptCompile(source, returnType: typeof(UserId?));
         var customType = compilation.GetTypeByMetadataName("SyntaxScriptingTests.Supports.UserId");
         Assert.NotNull(customType);
         var nullableType = compilation.GetSpecialType(SpecialType.System_Nullable_T);
@@ -148,8 +148,8 @@ public class TypeSymbolToSyntaxTests
     [Fact]
     public void PredefinedTypeAnnotated()
     {
-        var service = SyntaxTreeDriver.CreateDriver();
-        var compilation = service.Compile("");
+        var driver = SyntaxTreeDriver.CreateDriver();
+        var compilation = driver.Compile("");
         var predefinedType = compilation.GetSpecialType(SpecialType.System_String);
         var annotatedType = predefinedType.WithNullableAnnotation(NullableAnnotation.Annotated) as INamedTypeSymbol;
         Assert.NotNull(annotatedType);
@@ -160,9 +160,9 @@ public class TypeSymbolToSyntaxTests
     [Fact]
     public void CustomTypeAnnotated()
     {
-        var service = SyntaxTreeDriver.CreateDriver()
+        var driver = SyntaxTreeDriver.CreateDriver()
              .Reference<UserName>();
-        var compilation = service.Compile("");
+        var compilation = driver.Compile("");
         var customType = compilation.GetTypeByMetadataName("SyntaxScriptingTests.Supports.UserName");
         Assert.NotNull(customType);
         var annotatedType = customType.WithNullableAnnotation(NullableAnnotation.Annotated) as INamedTypeSymbol;
@@ -183,8 +183,9 @@ public class TypeSymbolToSyntaxTests
     [Fact]
     public void ToGlobalName()
     {
-        var service = SyntaxTreeDriver.CreateDriver();
-        var compilation = service.Compile("");
+        var driver = SyntaxTreeDriver.CreateDriver()
+            .Reference<DateTime>();
+        var compilation = driver.Compile("");
         var dateTimeType = compilation.GetSpecialType(SpecialType.System_DateTime);
         var syntax = dateTimeType.ToGlobalName();
         var code = syntax.NormalizeWhitespace().ToFullString();
@@ -193,8 +194,9 @@ public class TypeSymbolToSyntaxTests
     [Fact]
     public void ToMiniName()
     {
-        var service = SyntaxTreeDriver.CreateDriver();
-        var compilation = service.Compile("");
+        var driver = SyntaxTreeDriver.CreateDriver()
+            .Reference<DateTime>();
+        var compilation = driver.Compile("");
         var dateTimeType = compilation.GetSpecialType(SpecialType.System_DateTime);
         var syntax = dateTimeType.ToMiniName();
         var code = syntax.NormalizeWhitespace().ToFullString();

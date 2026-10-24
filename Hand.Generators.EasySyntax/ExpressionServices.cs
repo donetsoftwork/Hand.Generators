@@ -463,7 +463,7 @@ public static partial class GenerateServices
     /// <param name="arguments"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ExpressionSyntax Invocation(this ExpressionSyntax method, params SeparatedSyntaxList<ArgumentSyntax> arguments)
+    public static InvocationExpressionSyntax Invocation(this ExpressionSyntax method, params SeparatedSyntaxList<ArgumentSyntax> arguments)
         => SyntaxFactory.InvocationExpression(method, SyntaxFactory.ArgumentList(arguments));
     /// <summary>
     /// 调用方法
@@ -472,7 +472,7 @@ public static partial class GenerateServices
     /// <param name="arguments"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ExpressionSyntax Invocation(this ExpressionSyntax method, IEnumerable<ExpressionSyntax> arguments)
+    public static InvocationExpressionSyntax Invocation(this ExpressionSyntax method, IEnumerable<ExpressionSyntax> arguments)
         => SyntaxFactory.InvocationExpression(method, SyntaxGenerator.ArgumentList(arguments));
     /// <summary>
     /// 调用方法
@@ -481,7 +481,7 @@ public static partial class GenerateServices
     /// <param name="variables"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ExpressionSyntax Invocation(this ExpressionSyntax method, IEnumerable<string> variables)
+    public static InvocationExpressionSyntax Invocation(this ExpressionSyntax method, IEnumerable<string> variables)
         => SyntaxFactory.InvocationExpression(method, SyntaxGenerator.ArgumentList(variables));
     #endregion
     #region ConditionalInvocation
@@ -602,6 +602,14 @@ public static partial class GenerateServices
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AssignmentExpressionSyntax Deconstruct(this ExpressionSyntax tuple, params IEnumerable<string> variables)
         => SyntaxGenerator.Tuple(variables.Select(SyntaxFactory.IdentifierName)).Assign(tuple);
+    /// <summary>
+    /// 引用
+    /// </summary>
+    /// <param name="expression"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RefExpressionSyntax Ref(this ExpressionSyntax expression)
+        => SyntaxFactory.RefExpression(expression);
     #endregion
     #region Statement
     /// <summary>

@@ -245,12 +245,12 @@ public class MyAttribute2(int val) : Attribute
         Assert.NotNull(sourceType);
         AttributeData? attribute = sourceType.GetAttributes().FirstOrDefault();
         Assert.NotNull(attribute);
-        List<string> namespaces = [];
+        List<NameSyntax> namespaces = [];
         AttributeSyntax attributeSyntax = attribute.ToSyntax(namespaces);
         var code = attributeSyntax.ToFullString();
         Assert.Equal("My(3)", code);
         Assert.Single(namespaces);
-        Assert.Equal("ReflectionTests", namespaces[0]);
+        Assert.Equal("ReflectionTests", namespaces[0].ToString());
     }
     //[Fact]
     //public void EqualsTest()

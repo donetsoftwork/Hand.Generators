@@ -17,7 +17,7 @@ public class SourceProviderTests
         var symbol = compilation.GetTypeByMetadataName("GenerateConvertTests.DTO.ProductDto");
         Assert.NotNull(symbol);
 
-        var typeInfo = TypeNameInfo.GetInfo(symbol);
+        var typeInfo = TypeVisualization.GetInfo(symbol);
         var original = MethodProvider.Create(symbol, null);
         var provider = new SourceProvider(typeInfo, symbol.Name, original, true, false);
         // compilation与symbol不一致,影响Create方法的测试

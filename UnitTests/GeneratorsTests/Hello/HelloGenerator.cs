@@ -10,6 +10,6 @@ public class HelloGenerator()
     "GeneratorsTests.Hello.HelloGeneratorAttribute",
     new SyntaxFilter(true, SyntaxKind.ClassDeclaration),
     new HelloTransform(),
-    new GeneratorExecutor<HelloSource>())
+    new GeneratorExecutor())
 {
 }

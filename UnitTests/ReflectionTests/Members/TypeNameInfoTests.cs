@@ -12,9 +12,9 @@ public class TypeNameInfoTests
         var driver = SyntaxTreeDriver.CreateDriver();
         var compilation = driver.Compile(code);
         var intType = compilation.GetIntSymbol();
-        var info = TypeNameInfo.GetInfo(intType);
+        var info = TypeVisualization.GetInfo(intType);
         Assert.Equal("Int32", info.TypeName);
-        Assert.Equal("System", info.Namespace);
+        Assert.Equal("System", info.Namespace.ToString());
         Assert.Equal("System.Int32", info.FullName);
     }
     [Fact]
@@ -24,9 +24,9 @@ public class TypeNameInfoTests
         var driver = SyntaxTreeDriver.CreateDriver();
         var compilation = driver.Compile(code);
         var intType = compilation.GetIntSymbol();
-        var info = TypeNameInfo.GetExtensionInfo(intType);
+        var info = TypeVisualization.GetExtensionInfo(intType);
         Assert.Equal("Int32Extensions", info.TypeName);
-        Assert.Equal("System", info.Namespace);
+        Assert.Equal("System", info.Namespace.ToString());
         Assert.Equal("System.Int32Extensions", info.FullName);
     }
 }

@@ -346,7 +346,7 @@ public partial class ConvertBuilder
             if (referenceSource is null)
                 continue;
             var referenceMember = referenced.Member;
-            var argument = arguments.FirstOrDefault(item => item.Member.Equals(referenceMember));
+            var argument = arguments.FirstOrDefault(item => string.Equals(item.Member.Name, referenceMember.Name, System.StringComparison.OrdinalIgnoreCase));
             if (argument is null)
             {
                 arguments.Add(referenced);

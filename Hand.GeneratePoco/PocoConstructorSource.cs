@@ -75,7 +75,7 @@ public class PocoConstructorSource(TypeDeclarationSyntax type, ConvertBuilder co
             parameter = generator.GenerateAttribute(parameter, _attributeCacher.GetAttributes(sourseMember, AttributeTargets.Parameter));
             property = generator.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember, AttributeTargets.Property));
         }
-        generator.AddParameter(parameter);
+        generator.AddListParameter(parameter);
         generator.AddProperty(property);
         var parameterMember = new ParameterSyntaxMember(parameterName, parameter, symbolInfo, sourseMember.Summary);
         var propertyMember = new PropertyDeclarationMember(symbolInfo, property, true, sourseMember.Summary);
@@ -107,7 +107,7 @@ public class PocoConstructorSource(TypeDeclarationSyntax type, ConvertBuilder co
             parameter = generator.GenerateAttribute(parameter, _attributeCacher.GetAttributes(sourseMember, AttributeTargets.Parameter));
             property = generator.GenerateAttribute(property, _attributeCacher.GetAttributes(sourseMember, AttributeTargets.Property));
         }
-        generator.AddParameter(parameter);
+        generator.AddListParameter(parameter);
         generator.AddField(field);
         generator.AddProperty(property);
         var parameterMember = new ParameterSyntaxMember(parameterName, parameter, symbolInfo, sourseMember.Summary);

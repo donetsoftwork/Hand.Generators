@@ -9,7 +9,7 @@ using System;
 namespace Hand.Enums;
 
 /// <summary>
-/// 特殊位域枚举成员转string
+/// 特殊位标记枚举成员转string
 /// </summary>
 /// <param name="compilation">编译信息</param>
 /// <param name="enumInfo">枚举信息</param>

@@ -186,7 +186,7 @@ public class SourceTextExecutor : IGeneratorExecutor<AttributeContext>
     {
         //var symbol = descriptor.Symbol;
         // 获取GenerateProperty的Rules属性
-        var attribute = compilation.GetSymbol("Hand.Primitives.GeneratePropertyAttribute");
+        var attribute = compilation.GetTypeByMetadataName("Hand.Primitives.GeneratePropertyAttribute");
         var ruleText = SymbolAttributeHelper.GetArgumentValue<string>(symbol, attribute, 0);
         var rule = new PropertyRule(ruleText);
         var builder = new SourceTextBuilder();

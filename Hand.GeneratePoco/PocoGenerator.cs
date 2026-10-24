@@ -1,5 +1,7 @@
-﻿using Hand.Filters;
+﻿using Hand.Executors;
+using Hand.Filters;
 using Hand.Generators;
+using Hand.Sources;
 using Microsoft.CodeAnalysis;
 //using System.Text.Json.SourceGeneration;
 
@@ -11,11 +13,11 @@ namespace Hand.GeneratePoco;
 [Generator(LanguageNames.CSharp)]
 //[GeneratorDependency(typeof(JsonSourceGenerator))]
 public class PocoGenerator()
-    : ValuesGenerator<PocoSource>(
+    : ValuesGenerator<SourceCollection>(
         Attribute,
         new SyntaxFilter(),
         new PocoTransform(),
-        new PocoExecutor())
+        new GeneratorExecutor())
 {
     /// <summary>
     /// Attribute标记

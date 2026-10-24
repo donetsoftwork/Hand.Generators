@@ -43,7 +43,7 @@ public class GenericTypeInfo(INamedTypeSymbol original, INamedTypeSymbol symbol,
     public INamedTypeSymbol Definition
         => _definition;
     /// <inheritdoc />
-    TypeSymbolKind ITypeSymbolInfo.Kind
+    public override TypeSymbolKind Kind
         => TypeSymbolKind.Generic;
     /// <inheritdoc />
     public ITypeSymbolInfo[] Elements
@@ -63,7 +63,7 @@ public class GenericTypeInfo(INamedTypeSymbol original, INamedTypeSymbol symbol,
     /// <param name="compilation"></param>
     /// <returns></returns>
     public new GenericTypeInfo GetNullable(Compilation compilation)
-        => _isNullable ? this : new((INamedTypeSymbol)compilation.GetNullable(_original), _symbol, _definition, true, _isInterface, _elements, _summary);
+        => _isNullable ? this : new(compilation.GetNullable(_original), _symbol, _definition, true, _isInterface, _elements, _summary);
     /// <inheritdoc />
     ITypeSymbolInfo ITypeSymbolInfo.GetNullable(Compilation compilation)
         => GetNullable(compilation);

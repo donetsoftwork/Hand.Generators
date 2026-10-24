@@ -220,4 +220,45 @@ public class A
         var argument = arguments[0];
         Assert.True(argument.Expression is IdentifierNameSyntax);
     }
+    [Fact]
+    public void Dictionary()
+    {
+
+        var sourceText = @"
+            var dictionary = new Dictionary<string, int>()
+            {
+                { ""a"", 1},
+                { ""b"", 2},
+                { ""c"", 3},
+            };";
+        SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var initializers = syntaxTree.GetRoot()
+            .DescendantNodes()
+            .OfType<InitializerExpressionSyntax>()
+            .ToArray();
+        Assert.Equal(4, initializers.Length);
+    }
+    [Fact]
+    public void Dictionary2()
+    {
+        Dictionary<string, int> dictionary = new()
+            {
+                { "a", 1},
+                { "b", 2},
+                { "c", 3},
+            };
+        var sourceText = @"
+            Dictionary<string, int> dictionary = new()
+            {
+                { ""a"", 1},
+                { ""b"", 2},
+                { ""c"", 3},
+            };";
+        SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var initializers = syntaxTree.GetRoot()
+            .DescendantNodes()
+            .OfType<InitializerExpressionSyntax>()
+            .ToArray();
+        Assert.Equal(4, initializers.Length);
+    }
 }

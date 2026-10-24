@@ -139,7 +139,7 @@ public record A(int? Id, string Name, string B);
         }
         if (nameProvider.TryDeclareMethod("Deconstruct", [.. parameterSymbols]))
             generator.AddMethod(method.End().Public());
-        var code = generator.Build().NormalizeWhitespace().ToFullString();
+        var code = generator.BuildUnit().NormalizeWhitespace().ToFullString();
         Assert.Contains("Name", code);
         Assert.Contains("Deconstruct", code);
     }

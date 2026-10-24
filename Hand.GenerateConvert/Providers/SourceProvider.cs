@@ -9,14 +9,14 @@ using System.Runtime.CompilerServices;
 namespace Hand.Providers;
 
 /// <summary>
-/// 生成源提供者
+/// 生成源提供器
 /// </summary>
 /// <param name="typeInfo"></param>
 /// <param name="symbolName"></param>
 /// <param name="original"></param>
 /// <param name="isPartial"></param>
 /// <param name="isExtension"></param>
-public class SourceProvider(TypeNameInfo typeInfo, string symbolName, IMethodProvider original, bool isPartial, bool isExtension = false)
+public class SourceProvider(TypeVisualization typeInfo, string symbolName, IMethodProvider original, bool isPartial, bool isExtension = false)
     : IMethodProvider
 {
     #region 配置
@@ -24,13 +24,13 @@ public class SourceProvider(TypeNameInfo typeInfo, string symbolName, IMethodPro
     /// <summary>
     /// 类型信息
     /// </summary>
-    private readonly TypeNameInfo _typeInfo = typeInfo;
+    private readonly TypeVisualization _typeInfo = typeInfo;
     /// <summary>
     /// 当前类名
     /// </summary>
     private readonly string _symbolName = symbolName;
     /// <summary>
-    /// 原始提供者
+    /// 原始提供器
     /// </summary>
     private readonly IMethodProvider _original = original;
     /// <summary>
@@ -44,7 +44,7 @@ public class SourceProvider(TypeNameInfo typeInfo, string symbolName, IMethodPro
     /// <summary>
     /// 类型信息
     /// </summary>
-    public TypeNameInfo TypeInfo
+    public TypeVisualization TypeInfo
      => _typeInfo;
     /// <summary>
     /// 当前类名
@@ -109,7 +109,7 @@ public class SourceProvider(TypeNameInfo typeInfo, string symbolName, IMethodPro
     #endregion
     #region Create
     /// <summary>
-    /// 构造生成源提供者
+    /// 构造生成源提供器
     /// </summary>
     /// <param name="compilation"></param>
     /// <param name="symbol"></param>
@@ -118,7 +118,7 @@ public class SourceProvider(TypeNameInfo typeInfo, string symbolName, IMethodPro
     public static SourceProvider Create(Compilation compilation, INamedTypeSymbol symbol)
         => Create(compilation, symbol, SymbolEqualityComparer.Default.Equals(compilation.Assembly, symbol.ContainingAssembly) && symbol.IsPartial());
     /// <summary>
-    /// 按扩展类构造生成源提供者
+    /// 按扩展类构造生成源提供器
     /// </summary>
     /// <param name="compilation"></param>
     /// <param name="symbol"></param>
@@ -126,13 +126,13 @@ public class SourceProvider(TypeNameInfo typeInfo, string symbolName, IMethodPro
     /// <returns></returns>
     public static SourceProvider CreateByExtension(Compilation compilation, INamedTypeSymbol symbol, bool isInternal)
     {
-        var typeInfo = TypeNameInfo.GetExtensionInfo(symbol, isInternal);
+        var typeInfo = TypeVisualization.GetExtensionInfo(symbol, isInternal);
         var extension = compilation.GetTypeByMetadataName(typeInfo.FullName);
         var original = MethodProvider.Create(symbol, extension);
         return new(typeInfo, symbol.Name, original, compilation.CheckIsPartial(extension), true);
     }
     /// <summary>
-    /// 构造生成源提供者
+    /// 构造生成源提供器
     /// </summary>
     /// <param name="compilation"></param>
     /// <param name="symbol"></param>
@@ -145,7 +145,7 @@ public class SourceProvider(TypeNameInfo typeInfo, string symbolName, IMethodPro
         if (isPartial)
         {
             // partial无需扩展类
-            var typeInfo = TypeNameInfo.GetInfo(symbol, isInternal);
+            var typeInfo = TypeVisualization.GetInfo(symbol, isInternal);
             var original = MethodProvider.Create(symbol, null);
             return new(typeInfo, symbol.Name, original, true, false);
         }

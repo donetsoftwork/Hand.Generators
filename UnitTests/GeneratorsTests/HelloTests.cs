@@ -54,7 +54,7 @@ public partial class HelloTests;
         Assert.NotNull(symbol);
         HelloSource source = new(type, symbol);
         var builder = source.Generate();
-        var code = builder.Build()
+        var code = builder.BuildUnit()
             .WithGenerated()
             .NormalizeWhitespace()
             .ToFullString();

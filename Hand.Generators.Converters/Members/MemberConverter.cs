@@ -25,15 +25,30 @@ public class MemberConverter(SimpleNameSyntax memberName)
         => source.Access(_memberName);
 
     /// <summary>
+    /// 转化为Name属性
+    /// </summary>
+    public static MemberConverter Name
+        => NameInner.Name;
+    /// <summary>
     /// 转化为Original属性
     /// </summary>
     public static MemberConverter Original
-        => Inner.Original;
+        => OriginalInner.Original;
 
     /// <summary>
     /// 内部延迟加载
     /// </summary>
-    class Inner
+    class NameInner
+    {
+        /// <summary>
+        /// 转化为Original属性
+        /// </summary>
+        public static readonly MemberConverter Name = new(SyntaxFactory.IdentifierName("Name"));
+    }
+    /// <summary>
+    /// 内部延迟加载
+    /// </summary>
+    class OriginalInner
     {
         /// <summary>
         /// 转化为Original属性

@@ -30,8 +30,8 @@ public class BuilderTests
             .End()
             .WithSummary("UserId");
 
-        var builder = SyntaxGenerator.Create("Models", type, [constructor], [field], [property], []);
-        var result = builder.Build();
+        var builder = SyntaxGenerator.Create(SyntaxFactory.IdentifierName("Models"), type, [constructor], [field], [property], []);
+        var result = builder.BuildUnit();
         Assert.NotEmpty(result.ToFullString());
     }
     [Fact]
@@ -50,8 +50,8 @@ public class BuilderTests
             .Partial()
             .AddParameterListParameters(SyntaxGenerator.IntType.Parameter(original.Identifier))
             .WithSummary("UserId");
-        var builder = SyntaxGenerator.Create("Models", type, [], [field], [property], []);
-        var result = builder.Build();
+        var builder = SyntaxGenerator.Create(SyntaxFactory.IdentifierName("Models"), type, [], [field], [property], []);
+        var result = builder.BuildUnit();
         Assert.NotEmpty(result.ToFullString());
     }
     [Fact]
@@ -60,9 +60,9 @@ public class BuilderTests
         var property = SyntaxGenerator.LongType.GetOnlyProperty("Original");
         var type = SyntaxFactory.InterfaceDeclaration("IEntityId")
             .Public();
-        var builder = SyntaxGenerator.Create("Models", type);
+        var builder = SyntaxGenerator.Create(SyntaxFactory.IdentifierName("Models"), type);
         builder.AddProperty(property);
-        var result = builder.Build();
+        var result = builder.BuildUnit();
         Assert.NotEmpty(result.ToFullString());
     }
     [Fact]
@@ -115,9 +115,9 @@ public class BuilderTests
             .Partial()
             .AddParameterListParameters(SyntaxGenerator.IntType.Parameter(original.Identifier))
             .WithSummary("UserId");
-        var builder = SyntaxGenerator.Create("Models", type);
+        var builder = SyntaxGenerator.Create(SyntaxFactory.IdentifierName("Models"), type);
         builder.AddProperty(property);
-        var result = builder.Build();
+        var result = builder.BuildUnit();
         Assert.NotEmpty(result.ToFullString());
     }
     [Fact]
@@ -134,8 +134,8 @@ public class BuilderTests
             .AddParameterListParameters(SyntaxGenerator.IntType.Parameter("Original"))
             .WithSemicolonToken()
             .WithComment(comment);
-        var builder = SyntaxGenerator.Create("Models", type);
-        var result = builder.Build();
+        var builder = SyntaxGenerator.Create(SyntaxFactory.IdentifierName("Models"), type);
+        var result = builder.BuildUnit();
         Assert.NotEmpty(result.ToFullString());
     }
     [Fact]

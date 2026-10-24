@@ -12,7 +12,7 @@ public interface IEnumBundle
     /// </summary>
     IEnumerable<IEnumField> Fields { get; }
     /// <summary>
-    /// 位域标记
+    /// 位标记标记
     /// </summary>
     bool HasFlag { get; }
     /// <summary>

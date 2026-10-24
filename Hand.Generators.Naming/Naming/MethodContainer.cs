@@ -76,6 +76,22 @@ public sealed class MethodContainer(GroupList<MethodSignature> methods)
         return true;
     }
     /// <inheritdoc />
+    public int MethodCount(string name)
+        => _methods.GetValues(name).Count();
+    /// <inheritdoc />
+    public bool MethodContains(string methodName, params ITypeSymbol[] parameterSymbols)
+    {
+        var list = _methods.GetValues(methodName);
+        var parameterCount = parameterSymbols.Length;
+        return list.Any(method => method.VerifyParameter(parameterCount, parameterSymbols));
+    }
+    /// <inheritdoc />
+    public bool ConstructorContains(params ITypeSymbol[] parameterSymbols)
+        => MethodContains(ConstructorName, parameterSymbols);
+    /// <inheritdoc />
+    public int ConstructorCount()
+        => MethodCount(ConstructorName);
+    /// <inheritdoc />
     void INamingProvider.AddKind(string name, MemberKind kind) { }
     #endregion
     /// <summary>
@@ -84,31 +100,6 @@ public sealed class MethodContainer(GroupList<MethodSignature> methods)
     /// <param name="method"></param>
     public void Add(MethodSignature method)
         => _methods.Add(method.Name, method);
-    /// <summary>
-    /// 验证方法是否已经存在
-    /// </summary>
-    /// <param name="methodName"></param>
-    /// <param name="parameterSymbols"></param>
-    /// <returns></returns>
-    public bool MethodContains(string methodName, params ITypeSymbol[] parameterSymbols)
-    {
-        var list = _methods.GetValues(methodName);
-        var parameterCount = parameterSymbols.Length;
-        return list.Any(method => method.VerifyParameter(parameterCount, parameterSymbols));
-    }
-    /// <summary>
-    /// 验证构造函数是否已经存在
-    /// </summary>
-    /// <returns></returns>
-    public bool HasConstructor()
-        => _methods.ContainsKey(ConstructorName);
-    /// <summary>
-    /// 验证构造函数是否已经存在
-    /// </summary>
-    /// <param name="parameterSymbols"></param>
-    /// <returns></returns>
-    public bool ConstructorContains(params ITypeSymbol[] parameterSymbols)
-        => MethodContains(ConstructorName, parameterSymbols);
     /// <summary>
     /// 转化为分组列表
     /// </summary>

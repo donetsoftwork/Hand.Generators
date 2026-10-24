@@ -25,7 +25,7 @@
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Hand.Core" Version="0.3.2.5-alpha">
+		<PackageReference Include="Hand.Core" Version="0.3.2.7-alpha">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
@@ -33,11 +33,11 @@
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Hand.MemberValidation" Version="0.3.2.2-alpha">
+		<PackageReference Include="Hand.MemberValidation" Version="0.3.2.3-alpha">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Hand.Validation" Version="0.3.2.2-alpha">
+		<PackageReference Include="Hand.Validation" Version="0.3.2.3-alpha">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>

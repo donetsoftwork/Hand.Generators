@@ -74,7 +74,11 @@ public class MethodConverter(ISyntaxDisplay<SimpleNameSyntax> method)
     /// <param name="namespace"></param>
     /// <param name="methodName"></param>
     /// <returns></returns>
-    public static MethodConverter CreateExtensionMethod(string @namespace, string methodName)
-        => new(new ExtensionMethodDisplay(SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName(@namespace)), new SyntaxWrapper<SimpleNameSyntax>(SyntaxFactory.IdentifierName(methodName))));
+    public static MethodConverter CreateExtensionMethod(NameSyntax @namespace, string methodName)
+        => new(new ExtensionMethodDisplay(SyntaxFactory.UsingDirective(@namespace), new SyntaxWrapper<SimpleNameSyntax>(SyntaxFactory.IdentifierName(methodName))));
     #endregion
+    //public static SyntaxWrapper<SimpleNameSyntax> Wrap(SimpleNameSyntax methodName)
+    //    => new(methodName);
+    //public static SyntaxWrapper<SimpleNameSyntax> Wrap(string methodName)
+    //    => new(SyntaxFactory.IdentifierName(methodName));
 }

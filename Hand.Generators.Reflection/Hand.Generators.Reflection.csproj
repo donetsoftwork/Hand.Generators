@@ -15,7 +15,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Hand.AutoCache" Version="0.3.2.1-alpha" />
-		<PackageReference Include="Hand.Core" Version="0.3.2.5-alpha" />
+		<PackageReference Include="Hand.Core" Version="0.3.2.7-alpha" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Hand.GenerateCore\Hand.GenerateCore.csproj" />

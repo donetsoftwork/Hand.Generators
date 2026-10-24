@@ -1,17 +1,24 @@
-﻿namespace Hand.Sources;
+﻿using Microsoft.CodeAnalysis;
+
+namespace Hand.Sources;
 
 /// <summary>
 /// 生成器数据源
 /// </summary>
 public interface IGeneratorSource
 {
+    ///// <summary>
+    ///// 生成文件名
+    ///// </summary>
+    //string GenerateFileName { get; }
+    ///// <summary>
+    ///// 生成
+    ///// </summary>
+    ///// <returns></returns>
+    //SyntaxGenerator Generate();
     /// <summary>
-    /// 生成文件名
+    /// 执行生成
     /// </summary>
-    string GenerateFileName { get; }
-    /// <summary>
-    /// 生成
-    /// </summary>
-    /// <returns></returns>
-    SyntaxGenerator Generate();
+    /// <param name="context"></param>
+    void Generate(SourceProductionContext context);
 }

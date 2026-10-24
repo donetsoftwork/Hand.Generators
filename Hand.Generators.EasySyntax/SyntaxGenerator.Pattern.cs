@@ -11,7 +11,7 @@ namespace Hand;
 /// <summary>
 /// 模式匹配
 /// </summary>
-public partial class SyntaxGenerator
+partial class SyntaxGenerator
 {
     /// <summary>
     /// Null模式

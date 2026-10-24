@@ -179,6 +179,17 @@ public static partial class GenerateServices
         where TDeclarationSyntax : MemberDeclarationSyntax
         => declaration.Modify(_new‌);
     /// <summary>
+    /// 隐藏(字段、属性和方法)
+    /// </summary>
+    /// <typeparam name="TDeclarationSyntax"></typeparam>
+    /// <param name="declaration"></param>
+    /// <param name="isNew"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TDeclarationSyntax New<TDeclarationSyntax>(this TDeclarationSyntax declaration, bool isNew)
+        where TDeclarationSyntax : MemberDeclarationSyntax
+        => isNew ? declaration.Modify(_new‌) : declaration;
+    /// <summary>
     /// 密封(属性、方法及类)
     /// </summary>
     /// <typeparam name="TDeclarationSyntax"></typeparam>

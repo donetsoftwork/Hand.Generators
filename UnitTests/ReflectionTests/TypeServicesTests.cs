@@ -2,7 +2,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Reflection.Metadata;
 
 namespace ReflectionTests;
 
@@ -102,6 +101,33 @@ public class TypeServicesTests
         Assert.EndsWith("?", nullableSyntax2);
         Assert.StartsWith(syntax2, nullableSyntax2);
     }
+    [Fact]
+    public void Custom()
+    {
+        var driver = SyntaxTreeDriver.CreateDriver();
+        var sourceText = @"record User(int Id,string Name);";
+        var compilation = driver.Compile(sourceText);
+        var typeName = "User";
+        var symbol = compilation.GetTypeByMetadataName(typeName);
+        Assert.NotNull(symbol);
+        var syntax = symbol.ToSyntax();
+        Assert.Equal(typeName, syntax.ToFullString());
+    }
+    [Fact]
+    public void Namespac()
+    {
+        var driver = SyntaxTreeDriver.CreateDriver();
+        var sourceText = @"
+            namespace Tests;
+            record User(int Id,string Name);";
+        var compilation = driver.Compile(sourceText);
+        var typeName = "Tests.User";
+        var symbol = compilation.GetTypeByMetadataName(typeName);
+        Assert.NotNull(symbol);
+        var syntax = symbol.ToSyntax();
+        Assert.Equal(typeName, syntax.ToFullString());
+    }
+
 
     public static ITypeSymbol? GetTypeSymbol(Compilation compilation, SyntaxTree syntaxTree)
     {

@@ -11,7 +11,7 @@ namespace Hand.Sources;
 /// <param name="metadataName"></param>
 /// <param name="methods"></param>
 public class ConvertToSource(ConvertBuilder builder, SyntaxGenerator generator, string metadataName, ComplexSource[] methods)
-    : IGeneratorSource
+    : GeneratorSourceBase
 {
     /// <summary>
     /// 类型转化生成源
@@ -38,7 +38,7 @@ public class ConvertToSource(ConvertBuilder builder, SyntaxGenerator generator, 
     private readonly string _metadataName = metadataName;
     private readonly ComplexSource[] _methods = methods;
     /// <inheritdoc />
-    public string GenerateFileName
+    public override string GenerateFileName
         => $"{_metadataName}.ConvertTo.g.cs";
     /// <summary>
     /// 转化构造器
@@ -52,7 +52,7 @@ public class ConvertToSource(ConvertBuilder builder, SyntaxGenerator generator, 
         => _methods;
     #endregion
     /// <inheritdoc />
-    public SyntaxGenerator Generate()
+    public override SyntaxGenerator Generate()
     {
         foreach (var method in _methods)
             _generator.AddMethod(method.CreateMethod(_generator));

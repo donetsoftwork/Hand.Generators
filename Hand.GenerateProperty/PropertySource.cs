@@ -1,6 +1,5 @@
 using Hand.Builders;
 using Hand.Naming;
-using Hand.Reflection;
 using Hand.Sources;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -18,7 +17,7 @@ namespace Hand.GenerateProperty;
 /// <param name="originalSymbol"></param>
 /// <param name="rule"></param>
 public class PropertySource(TypeDeclarationSyntax type, Compilation compilation, INamedTypeSymbol symbol, INamedTypeSymbol originalSymbol, PropertyRule rule)
-    : IGeneratorSource
+    : GeneratorSourceBase
 {
     #region 配置
     private readonly CompositeProvider _descriptor = CompositeProvider.DeclaredOnly(symbol);
@@ -46,11 +45,11 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
     public PropertyRule Rule 
         => _rule;
     /// <inheritdoc />
-    public string GenerateFileName
+    public override string GenerateFileName
         => $"{_symbol.ToDisplayString()}.Property.g.cs";
     #endregion
     /// <inheritdoc />
-    public SyntaxGenerator Generate()
+    public override SyntaxGenerator Generate()
     {
         var builder = SyntaxGenerator.Clone(_type);
         IdentifierNameSyntax member = BuildOriginal(builder);
@@ -71,7 +70,7 @@ public class PropertySource(TypeDeclarationSyntax type, Compilation compilation,
         if (_symbol.IsRecord && !_descriptor.HasConstructor())
         {
             member = SyntaxFactory.IdentifierName("Original");
-            builder.AddParameter(_originalType.Parameter(member.Identifier));
+            builder.AddListParameter(_originalType.Parameter(member.Identifier));
             return member;
         }
         member = BuildProperty(builder);

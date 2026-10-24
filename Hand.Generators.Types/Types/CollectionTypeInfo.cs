@@ -1,4 +1,5 @@
-﻿using Hand.Syntax;
+﻿using Hand.Scopes;
+using Hand.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -64,7 +65,7 @@ public sealed class CollectionTypeInfo(INamedTypeSymbol original, INamedTypeSymb
     /// <param name="compilation"></param>
     /// <returns></returns>
     public CollectionTypeInfo GetNullable(Compilation compilation)
-        => _isNullable ? this : new((INamedTypeSymbol)compilation.GetNullable(_original), _symbol, true, _elementInfo, _isInterface);
+        => _isNullable ? this : new(compilation.GetNullable(_original), _symbol, true, _elementInfo, _isInterface);
     /// <inheritdoc />
     public TypeSyntax Display(SyntaxGenerator generator)
         => CollectionDisplay(generator, _symbol.Name, _elementInfo).Nullable(_isNullable);
@@ -85,7 +86,7 @@ public sealed class CollectionTypeInfo(INamedTypeSymbol original, INamedTypeSymb
     /// <returns></returns>
     public static TypeSyntax CollectionDisplay(SyntaxGenerator generator, string collectionName, ITypeSymbolInfo element)
     {
-        generator.Using("System.Collections.Generic");
+        generator.Using(NamespaceScope.GenericCollections);
         return SyntaxGenerator.Generic(collectionName, element.Display(generator));
     }
 }

@@ -64,6 +64,18 @@ public sealed class TypedProvider(string typeName, INamingProvider original)
         }
         return _original.TryGetMemberKind(name, out kind);
     }
+    /// <inheritdoc />
+    bool IMethodContainer.MethodContains(string name, params ITypeSymbol[] parameterSymbols)
+        => Contains(name);
+    /// <inheritdoc />
+    int IMethodContainer.MethodCount(string name)
+         => Contains(name) ? 1 : 0;
+    /// <inheritdoc />
+    bool IMethodContainer.ConstructorContains(params ITypeSymbol[] parameterSymbols)
+        => _original.ConstructorContains(parameterSymbols);
+    /// <inheritdoc />
+    int IMethodContainer.ConstructorCount()
+        => _original.ConstructorCount();
     #endregion
     #region Create
     /// <summary>

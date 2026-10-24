@@ -1,6 +1,7 @@
 ﻿using Hand;
 using Hand.Builders;
 using Hand.Converters;
+using Hand.Sources;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -33,7 +34,7 @@ public class PassConverterTests
         var driver = SyntaxTreeDriver.CreateDefaultDriver()
             .Using("System");
         var compilation = driver.Compile("");
-        var builder = new ConvertBuilder(compilation);
+        var builder = new ConvertBuilder(compilation, new SourceCollection([]));
         var type = compilation.GetSpecialType(SpecialType.System_String);
         var baseType = compilation.GetSpecialType(SpecialType.System_Object);
         var converter = builder.Get(type, baseType) as PassConverter;
@@ -51,7 +52,7 @@ public class PassConverterTests
         var ilistType = compilation.GetIEnumerable(type);
         Assert.NotNull(ilistType);
 
-        var builder = new ConvertBuilder(compilation);
+        var builder = new ConvertBuilder(compilation, new SourceCollection([]));
         var converter = builder.Get(listType, ilistType) as PassConverter;
         Assert.NotNull(converter);
     }

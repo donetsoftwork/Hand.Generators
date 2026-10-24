@@ -81,7 +81,7 @@ public record A(string Name, string B);
                 generator.AddField(field);
             }
         }
-        var code = generator.Build().NormalizeWhitespace().ToFullString();
+        var code = generator.BuildUnit().NormalizeWhitespace().ToFullString();
         Assert.Contains("Name", code);
     }
     //partial class B
@@ -162,9 +162,8 @@ public record A(string Name, string B);
                 var column = SyntaxFactory.IdentifierName(columnName);
                 var field = columnType
                     .Field(column.Identifier, SyntaxGenerator.New([SyntaxGenerator.Literal(columnName)]))
-                    .Public();
-                if (isNew)
-                    field = field.New();
+                    .Public()
+                    .New(isNew);
                 generator.AddField(field);
                 columnList.Add(column);
             }
@@ -175,7 +174,7 @@ public record A(string Name, string B);
             .Override();
         generator.AddProperty(columns);
 
-        var code = generator.Build().NormalizeWhitespace().ToFullString();
+        var code = generator.BuildUnit().NormalizeWhitespace().ToFullString();
         Assert.Contains("new Column Name", code);
 
     }

@@ -53,6 +53,15 @@ public sealed class CompositeProvider(MethodContainer methods, INamingProvider o
     /// <inheritdoc />
     public bool Contains(MethodSignature method)
         => _methods.Contains(method);
+    /// <inheritdoc />
+    public int MethodCount(string name)
+        => _methods.MethodCount(name);
+    /// <inheritdoc />
+    public bool ConstructorContains(params ITypeSymbol[] parameterSymbols)
+        => _methods.MethodContains(MethodContainer.ConstructorName, parameterSymbols);
+    /// <inheritdoc />
+    public int ConstructorCount()
+        => _methods.MethodCount(MethodContainer.ConstructorName);
     #endregion
     /// <summary>
     /// 添加方法
@@ -60,19 +69,12 @@ public sealed class CompositeProvider(MethodContainer methods, INamingProvider o
     /// <param name="method"></param>
     public void Add(MethodSignature method)
         => _methods.Add(method);
-    /// <summary>
-    /// 验证构造函数是否已经存在
-    /// </summary>
-    /// <returns></returns>
-    public bool HasConstructor()
-        => _methods.HasConstructor();
-    /// <summary>
-    /// 验证构造函数是否已经存在
-    /// </summary>
-    /// <param name="parameterSymbols"></param>
-    /// <returns></returns>
-    public bool ConstructorContains(params ITypeSymbol[] parameterSymbols)
-        => _methods.ConstructorContains(parameterSymbols);
+    ///// <summary>
+    ///// 验证构造函数是否已经存在
+    ///// </summary>
+    ///// <returns></returns>
+    //public bool HasConstructor()
+    //    => _methods.HasConstructor();
     ///// <summary>
     ///// 验证方法是否已经存在
     ///// </summary>

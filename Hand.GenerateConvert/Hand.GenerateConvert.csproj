@@ -19,7 +19,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Hand.Core" Version="0.3.2.5-alpha">
+		<PackageReference Include="Hand.Core" Version="0.3.2.7-alpha">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
@@ -35,11 +35,11 @@
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Hand.MemberValidation" Version="0.3.2.2-alpha">
+		<PackageReference Include="Hand.MemberValidation" Version="0.3.2.3-alpha">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Hand.Validation" Version="0.3.2.2-alpha">
+		<PackageReference Include="Hand.Validation" Version="0.3.2.3-alpha">
 			<IncludeAssets>compile; analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</PackageReference>
@@ -66,6 +66,10 @@
 			<PrivateAssets>compile</PrivateAssets>
 		</ProjectReference>
 		<ProjectReference Include="..\Hand.Generators.Documentation\Hand.Generators.Documentation.csproj">
+			<IncludeAssets>compile;analyzers</IncludeAssets>
+			<PrivateAssets>compile</PrivateAssets>
+		</ProjectReference>
+		<ProjectReference Include="..\Hand.Generators.Enumerations\Hand.Generators.Enumerations.csproj">
 			<IncludeAssets>compile;analyzers</IncludeAssets>
 			<PrivateAssets>compile</PrivateAssets>
 		</ProjectReference>

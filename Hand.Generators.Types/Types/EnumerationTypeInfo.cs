@@ -43,7 +43,7 @@ public class EnumerationTypeInfo(INamedTypeSymbol original, INamedTypeSymbol sym
     public bool IsFlag
         => _isFlag;
     /// <inheritdoc />
-    TypeSymbolKind ITypeSymbolInfo.Kind
+    public override TypeSymbolKind Kind
         => TypeSymbolKind.Enumeration;
     /// <summary>
     /// 枚举名类型(string)
@@ -61,7 +61,7 @@ public class EnumerationTypeInfo(INamedTypeSymbol original, INamedTypeSymbol sym
     /// <param name="compilation"></param>
     /// <returns></returns>
     public new EnumerationTypeInfo GetNullable(Compilation compilation)
-        => _isNullable ? this : new((INamedTypeSymbol)compilation.GetNullable(_original), _symbol, _isFlag, true, _isInterface, _nameInfo, _originalInfo, _summary);
+        => _isNullable ? this : new(compilation.GetNullable(_original), _symbol, _isFlag, true, _isInterface, _nameInfo, _originalInfo, _summary);
     /// <inheritdoc />
     ITypeSymbolInfo ITypeSymbolInfo.GetNullable(Compilation compilation)
         => GetNullable(compilation);
@@ -80,4 +80,18 @@ public class EnumerationTypeInfo(INamedTypeSymbol original, INamedTypeSymbol sym
     /// <returns></returns>
     public static INamedTypeSymbol? GetFlagEnumerationInterface(Compilation compilation)
         => compilation.GetTypeByMetadataName("Hand.Primitives.IFlagEnumeration");
+    /// <summary>
+    /// 获取枚举类型
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <returns></returns>
+    public static INamedTypeSymbol? GetEnumerationBase(Compilation compilation)
+        => compilation.GetTypeByMetadataName("Hand.Enumerations.Enumeration");
+    /// <summary>
+    /// 获取位标记枚举类型
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <returns></returns>
+    public static INamedTypeSymbol? GetFlagEnumerationBase(Compilation compilation)
+        => compilation.GetTypeByMetadataName("Hand.Enumerations.FlagEnumeration");
 }

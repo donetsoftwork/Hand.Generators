@@ -52,7 +52,7 @@ public class EnumToEnumSource(Compilation compilation, TypeSyntax sourceType, En
     public static ExpressionSyntax HasFlag(ExpressionSyntax @this, ExpressionSyntax flag)
         => @this.Access(_hasFlagMethod).Invocation([flag]);
     /// <summary>
-    /// 位域转位域
+    /// 位标记转位标记
     /// </summary>
     /// <param name="generator"></param>
     /// <param name="method"></param>
@@ -90,7 +90,7 @@ public class EnumToEnumSource(Compilation compilation, TypeSyntax sourceType, En
             .WithSummary(ConvertBuilder.GetMethodSummary(_destInfo));
     }
     /// <summary>
-    /// 位域转枚举
+    /// 位标记转枚举
     /// </summary>
     /// <param name="generator"></param>
     /// <param name="method"></param>
@@ -204,7 +204,7 @@ public class EnumToEnumSource(Compilation compilation, TypeSyntax sourceType, En
     //private static IEnumField? Map(IEnumField sourceField, IEnumBundle destBundle)
     //    => destBundle.GetFieldByName(sourceField.Name) ?? destBundle.GetFieldByMemberName(sourceField.Member);
     /// <summary>
-    /// 按源字段映射到位域字段
+    /// 按源字段映射到位标记字段
     /// </summary>
     /// <param name="sourceField"></param>
     /// <param name="destBundle"></param>

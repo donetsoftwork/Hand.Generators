@@ -8,7 +8,7 @@ namespace Hand;
 /// <summary>
 /// 语句
 /// </summary>
-public partial class SyntaxGenerator
+partial class SyntaxGenerator
 {
     /// <summary>
     /// try

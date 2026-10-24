@@ -198,13 +198,34 @@ public static class SymbolReflection
     /// <param name="value"></param>
     /// <returns></returns>
     public static IFieldSymbol? GetEnumField(ITypeSymbol enumType, IComparable value)
+        => GetEnumField(GetEnumFields(enumType), value);
+    /// <summary>
+    /// 获取枚举字段
+    /// </summary>
+    /// <param name="fields"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static IFieldSymbol? GetEnumField(IEnumerable<IFieldSymbol> fields, IComparable value)
     {
-        foreach (var field in GetFields(enumType))
+        foreach (var field in fields)
         {
-            if (field.IsStatic && field.HasConstantValue && value.CompareTo(field.ConstantValue) == 0)
+            if (value.CompareTo(field.ConstantValue) == 0)
                 return field;
         }
         return null;
+    }
+    /// <summary>
+    /// 获取枚举字段
+    /// </summary>
+    /// <param name="enumType"></param>
+    /// <returns></returns>
+    public static IEnumerable<IFieldSymbol> GetEnumFields(ITypeSymbol enumType)
+    {
+        foreach (var field in GetFields(enumType))
+        {
+            if (field.IsStatic && field.HasConstantValue)
+                yield return field;
+        }
     }
     #endregion
     /// <summary>
@@ -255,7 +276,7 @@ public static class SymbolReflection
     /// <param name="parameters"></param>
     /// <param name="parameterTypes"></param>
     /// <returns></returns>
-    public static bool MatchParameterType(ImmutableArray<IParameterSymbol> parameters, ITypeSymbol[] parameterTypes)
+    public static bool MatchParameterType(ImmutableArray<IParameterSymbol> parameters, params ITypeSymbol[] parameterTypes)
     {
         var typeCount = parameterTypes.Length;
         if (parameters.Length != typeCount)

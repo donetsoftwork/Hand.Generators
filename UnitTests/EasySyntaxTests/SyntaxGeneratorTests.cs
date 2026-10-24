@@ -15,7 +15,7 @@ public class SyntaxGeneratorTests
             .WithSemicolonToken();
         var code0 = @class.NormalizeWhitespace().ToFullString();
         var generator = SyntaxGenerator.Clone(@class);
-        var code = generator.Build().NormalizeWhitespace().ToFullString();
+        var code = generator.BuildUnit().NormalizeWhitespace().ToFullString();
         Assert.Equal(code0, code);
     }
     [Fact]
@@ -26,7 +26,7 @@ public class SyntaxGeneratorTests
             .WithSemicolonToken();
         var code0 = record.NormalizeWhitespace().ToFullString();
         var generator = SyntaxGenerator.Clone(record);
-        var code = generator.Build().NormalizeWhitespace().ToFullString();
+        var code = generator.BuildUnit().NormalizeWhitespace().ToFullString();
         Assert.Equal(code0, code);
     }
     [Fact]
@@ -37,7 +37,7 @@ public class SyntaxGeneratorTests
             .WithSemicolonToken();
         var code0 = record.NormalizeWhitespace().ToFullString();
         var generator = SyntaxGenerator.Clone(record);
-        var code = generator.Build().NormalizeWhitespace().ToFullString();
+        var code = generator.BuildUnit().NormalizeWhitespace().ToFullString();
         Assert.Equal(code0, code);
     }
     [Fact]
@@ -49,11 +49,11 @@ public class SyntaxGeneratorTests
 
         var generator = SyntaxGenerator.Clone(type);
         var original = SyntaxFactory.IdentifierName("original");
-        generator.Parameter(SyntaxGenerator.IntType, original.Identifier);
+        generator.ListParameter(SyntaxGenerator.IntType, original.Identifier);
         var property = SyntaxGenerator.IntType.GetOnlyProperty("Original")
             .WithInitializer(original);
         generator.AddProperty(property);
-        var code = generator.Build().NormalizeWhitespace().ToFullString();
+        var code = generator.BuildUnit().NormalizeWhitespace().ToFullString();
         Assert.NotEmpty(code);
     }
     [Fact]
@@ -66,11 +66,11 @@ public class SyntaxGeneratorTests
         var generator = SyntaxGenerator.Clone(type);
         var name = SyntaxFactory.IdentifierName("Name");
         var level = SyntaxFactory.IdentifierName("Level");
-        generator.Parameter(SyntaxGenerator.StringType, name.Identifier);
-        generator.Parameter(SyntaxGenerator.IntType, level.Identifier);
+        generator.ListParameter(SyntaxGenerator.StringType, name.Identifier);
+        generator.ListParameter(SyntaxGenerator.IntType, level.Identifier);
         var baseType = SyntaxGenerator.PrimaryConstructorBaseType("Customer", name);
         generator.AddBaseType(baseType);
-        var code = generator.Build().NormalizeWhitespace().ToFullString();
+        var code = generator.BuildUnit().NormalizeWhitespace().ToFullString();
         Assert.NotEmpty(code);
     }
     [Fact]
@@ -123,13 +123,14 @@ public class SyntaxGeneratorTests
             .Partial()
             .WithSemicolonToken();
         var generator = SyntaxGenerator.Create(ns, @class);
-        var self = generator.Display(typeName, "A").NormalizeWhitespace().ToFullString();
+        var self = generator.Display(typeName, ns.Name).NormalizeWhitespace().ToFullString();
         Assert.Equal(typeName, self);
-        var a = generator.Display("UserId", "A").NormalizeWhitespace().ToFullString();
+        var a = generator.Display("UserId", ns.Name).NormalizeWhitespace().ToFullString();
         Assert.Equal("UserId", a);
-        var b = generator.Display("UserId", "B").NormalizeWhitespace().ToFullString();
+        var bName = SyntaxFactory.IdentifierName("B");
+        var b = generator.Display("UserId", bName).NormalizeWhitespace().ToFullString();
         Assert.Equal("B.UserId", b);
-        var b0 = generator.Display(typeName, "B").NormalizeWhitespace().ToFullString();
+        var b0 = generator.Display(typeName, bName).NormalizeWhitespace().ToFullString();
         Assert.Equal("B.User", b0);
     }
 
