@@ -23,9 +23,9 @@ public class GenericSimplifier(GenericNameSyntax container)
     /// <inheritdoc />
     protected override bool CheckGenericCore(ref NameSyntax name)
         => TypeComparer.GenericEqual(_container, (GenericNameSyntax)name);
-    /// <inheritdoc />
-    protected override bool CheckIdentifier(NameSyntax name)
-        => false;
+    ///// <inheritdoc />
+    //protected override bool CheckIdentifier(NameSyntax name)
+    //    => false;
     /// <inheritdoc />
     protected override bool CheckQualified(ref NameSyntax name)
          => CheckGeneric(_container, ref name);

@@ -76,5 +76,5 @@ public class NamespaceScope(BaseNamespaceDeclarationSyntax ns, HashSet<UsingDire
     /// </summary>
     /// <returns></returns>
     public static NamespaceScope Create(BaseNamespaceDeclarationSyntax ns)
-        => new(ns, new HashSet<UsingDirectiveSyntax>(UsingDirectiveComparer.Instance), []);
+        => new(ns, new(UsingDirectiveComparer.Instance), []);
 }

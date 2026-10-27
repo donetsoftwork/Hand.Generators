@@ -1,3 +1,4 @@
+using Hand.Collections;
 using Hand.Scopes;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -322,6 +323,14 @@ public static partial class GenerateServices
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ArrayTypeSyntax Array(this TypeSyntax type, params SeparatedSyntaxList<ExpressionSyntax> sizes)
         => SyntaxFactory.ArrayType(type, SyntaxFactory.SingletonList(SyntaxFactory.ArrayRankSpecifier(sizes)));
+    /// <summary>
+    /// 全局名
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AliasQualifiedNameSyntax Global(this SimpleNameSyntax name)
+        => SyntaxFactory.AliasQualifiedName(TypeComparer.GlobalName, name);
     #region New
     /// <summary>
     /// 初始化数组
@@ -632,7 +641,6 @@ public static partial class GenerateServices
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IdentifierNameSyntax ToMiniName(this ITypeSymbol symbol)
         => SyntaxFactory.IdentifierName(symbol.ToDisplayString(_miniStyle));
-    #region IsNullable
     /// <summary>
     /// 是否可空类型
     /// </summary>
@@ -641,7 +649,6 @@ public static partial class GenerateServices
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNullable(this INamedTypeSymbol type)
         => type.NullableAnnotation == NullableAnnotation.Annotated || IsGenericType(type, SpecialType.System_Nullable_T);
-    #endregion
     /// <summary>
     /// 是否泛型定义
     /// </summary>
@@ -776,7 +783,7 @@ public static partial class GenerateServices
             SpecialType.System_Delegate => SyntaxFactory.IdentifierName("Delegate").Qualify(NamespaceScope.System),
             SpecialType.System_MulticastDelegate => SyntaxFactory.IdentifierName("MulticastDelegate").Qualify(NamespaceScope.System),
             SpecialType.System_Enum => SyntaxFactory.IdentifierName("Enum").Qualify(NamespaceScope.System),
-            SpecialType.System_IDisposable => SyntaxFactory.IdentifierName("IDisposable").Qualify(NamespaceScope.System),
+            SpecialType.System_IDisposable => SyntaxGenerator.IDisposableType,
             SpecialType.System_IAsyncResult => SyntaxFactory.IdentifierName("IAsyncResult").Qualify(NamespaceScope.System),
             SpecialType.System_Collections_IEnumerable => SyntaxFactory.IdentifierName("IEnumerable").Qualify(NamespaceScope.Collections),
             SpecialType.System_Collections_IEnumerator => SyntaxFactory.IdentifierName("IEnumerator").Qualify(NamespaceScope.Collections),
@@ -802,19 +809,19 @@ public static partial class GenerateServices
             _ => throw new NotSupportedException(),
         };
     }
-    /// <summary>
-    /// 生成器特性
-    /// </summary>
-    /// <param name="generatorType"></param>
-    /// <param name="namespaces"></param>
-    /// <returns></returns>
-    public static AttributeSyntax ToGeneratedCodeAttribute(this Type generatorType, List<string> namespaces)
-    {
-        namespaces.Add("System.CodeDom.Compiler");
-        return SyntaxFactory.IdentifierName("GeneratedCode")
-            .Attribute([
-                SyntaxGenerator.Literal(generatorType.FullName!),
-                SyntaxGenerator.Literal(generatorType.Assembly.GetName().Version!.ToString())]
-        );
-    }
+    ///// <summary>
+    ///// 生成器特性
+    ///// </summary>
+    ///// <param name="generatorType"></param>
+    ///// <param name="namespaces"></param>
+    ///// <returns></returns>
+    //public static AttributeSyntax ToGeneratedCodeAttribute(this Type generatorType, List<string> namespaces)
+    //{
+    //    namespaces.Add("System.CodeDom.Compiler");
+    //    return SyntaxFactory.IdentifierName("GeneratedCode")
+    //        .Attribute([
+    //            SyntaxGenerator.Literal(generatorType.FullName!),
+    //            SyntaxGenerator.Literal(generatorType.Assembly.GetName().Version!.ToString())]
+    //    );
+    //}
 }

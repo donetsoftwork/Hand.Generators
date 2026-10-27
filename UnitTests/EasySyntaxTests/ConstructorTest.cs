@@ -46,7 +46,7 @@ public class ConstructorTest
     public void WithInitializer2()
     {
         var discounterType = SyntaxFactory.ClassDeclaration("Discounter");
-        var constructor = discounterType.Constructor(SyntaxGenerator.DoubleType.Parameter("percent"))            
+        var constructor = discounterType.Constructor(SyntaxGenerator.DoubleType.Parameter("percent"))
             .WithBody(SyntaxFactory.Block());
         var constructor2 = discounterType.Constructor()
             .WithInitializer(SyntaxGenerator.Literal(0.9))

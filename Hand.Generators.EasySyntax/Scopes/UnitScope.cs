@@ -56,5 +56,5 @@ public class UnitScope(HashSet<UsingDirectiveSyntax> usings, List<ITypeGenerator
     /// </summary>
     /// <returns></returns>
     public static UnitScope Create()
-        => new(new HashSet<UsingDirectiveSyntax>(UsingDirectiveComparer.Instance), []);
+        => new(new(UsingDirectiveComparer.Instance), []);
 }

@@ -9,11 +9,12 @@ partial class TypeComparer
     private const int _identifierSeed = 386910137;
     private const int _genericSeed = 290182597;
     private const int _qualifiedSeed = 515880193;
+    private const int _aliasQualifiedSeed = 51646229;
     private const int _nullableSeed = 687840301;
     private const int _pointerSeed = 917120411;
     private const int _scopedSeed = 68861641;
     private const int _arraySeed = 91815541;
-    private const int _tupleSeed = 122420729;
+    private const int _tupleSeed = 38734667;
     private const int _functionPointerSeed = 163227661;
     private const int _refSeed = 217636919;
     private const int _elementSeed = 122420729;
@@ -64,6 +65,13 @@ partial class TypeComparer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetQualifiedHashCode(QualifiedNameSyntax qualified)
         => GetNameHashCode(qualified.Left) ^ GetTypeHashCode(qualified.Right) ^ _qualifiedSeed;
+    /// <summary>
+    /// 获取别名HashCode
+    /// </summary>
+    /// <param name="alias"></param>
+    /// <returns></returns>
+    public static int GetAliasQualifiedHashCode(AliasQualifiedNameSyntax alias)
+        => GetNameHashCode(alias.Alias) ^ GetTypeHashCode(alias.Name) ^ _aliasQualifiedSeed;
     /// <summary>
     /// 获取可空类型HashCode
     /// </summary>

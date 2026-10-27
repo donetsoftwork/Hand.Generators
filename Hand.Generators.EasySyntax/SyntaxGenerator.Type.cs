@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Runtime.CompilerServices;
 
 namespace Hand;
@@ -101,10 +102,14 @@ partial class SyntaxGenerator
                 "var",
                 "var",
                 SyntaxFactory.TriviaList()));
-    ///// <summary>
-    ///// IDisposable
-    ///// </summary>
-    //public static IdentifierNameSyntax IDisposableType => SyntaxFactory.IdentifierName("IDisposable");
+    /// <summary>
+    /// Guid
+    /// </summary>
+    public static QualifiedNameSyntax GuidType => SyntaxFactory.IdentifierName("Guid").Qualify(NamespaceScope.System);
+    /// <summary>
+    /// IDisposable
+    /// </summary>
+    public static QualifiedNameSyntax IDisposableType => SyntaxFactory.IdentifierName("IDisposable").Qualify(NamespaceScope.System);
     /// <summary>
     /// Lock
     /// </summary>

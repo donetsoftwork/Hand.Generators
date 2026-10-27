@@ -14,33 +14,6 @@ namespace Hand;
 public static partial class ReflectionServices
 {
     #region Type
-    ///// <summary>
-    ///// 获取INamedTypeSymbol
-    ///// </summary>
-    ///// <param name="compilation"></param>
-    ///// <param name="typeFullName"></param>
-    ///// <returns></returns>
-    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-    //public static INamedTypeSymbol? GetSymbol(this Compilation compilation, string typeFullName)
-    //    => compilation.GetTypeByMetadataName(typeFullName);
-    ///// <summary>
-    ///// 获取INamedTypeSymbol
-    ///// </summary>
-    ///// <param name="compilation"></param>
-    ///// <param name="typeInfo"></param>
-    ///// <returns></returns>
-    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-    //public static INamedTypeSymbol? GetSymbol(this Compilation compilation, TypeNameInfo typeInfo)
-    //    => compilation.GetTypeByMetadataName(typeInfo.FullName);
-    ///// <summary>
-    ///// 把Type转INamedTypeSymbol
-    ///// </summary>
-    ///// <param name="compilation"></param>
-    ///// <param name="type"></param>
-    ///// <returns></returns>
-    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-    //public static INamedTypeSymbol? GetSymbol(this Compilation compilation, Type type)
-    //    => compilation.GetTypeByMetadataName(type.FullName!);
     /// <summary>
     /// 把PredefinedTypeSyntax转INamedTypeSymbol
     /// </summary>
@@ -853,50 +826,4 @@ public static partial class ReflectionServices
         }
     }
     #endregion
-    
-    ///// <summary>
-    ///// 展示基础类型
-    ///// </summary>
-    ///// <param name="generator"></param>
-    ///// <param name="specialType"></param>
-    ///// <returns></returns>
-    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-    //public static TypeSyntax Display(this SyntaxGenerator generator, SpecialType specialType)
-    //{
-    //    return specialType switch
-    //    {
-    //        SpecialType.System_Boolean
-    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.BoolKeyword)),
-    //        SpecialType.System_Byte
-    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ByteKeyword)),
-    //        SpecialType.System_SByte
-    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.SByteKeyword)),
-    //        SpecialType.System_Int32
-    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)),
-    //        SpecialType.System_UInt32
-    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)),
-    //        SpecialType.System_Int16
-    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ShortKeyword)),
-    //        SpecialType.System_UInt16
-    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.UShortKeyword)),
-    //        SpecialType.System_Int64
-    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.LongKeyword)),
-    //        SpecialType.System_UInt64
-    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ULongKeyword)),
-    //        SpecialType.System_Single
-    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.FloatKeyword)),
-    //        SpecialType.System_Double
-    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.DoubleKeyword)),
-    //        SpecialType.System_Decimal
-    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.DecimalKeyword)),
-    //        SpecialType.System_String
-    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)),
-    //        SpecialType.System_Char
-    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.CharKeyword)),
-    //        SpecialType.System_DateTime
-    //            => generator.Display("DateTime", "System"),
-    //        _
-    //            => SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ObjectKeyword)),
-    //    };
-    //}
 }

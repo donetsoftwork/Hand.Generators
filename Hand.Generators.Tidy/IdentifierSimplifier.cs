@@ -20,9 +20,9 @@ public class IdentifierSimplifier(IdentifierNameSyntax container)
         => _container;
     #endregion
 
-    /// <inheritdoc />
-    protected override bool CheckGenericCore(ref NameSyntax name)
-        => false;
+    ///// <inheritdoc />
+    //protected override bool CheckGenericCore(ref NameSyntax name)
+    //    => false;
     /// <inheritdoc />
     protected override bool CheckIdentifier(NameSyntax name)
         => TypeComparer.IdentifierEqual(_container, (IdentifierNameSyntax)name);

@@ -1,7 +1,9 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Hand.Collections;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Hand.Tidy;
 
@@ -18,6 +20,7 @@ public class TypeSimplifier
         {
             SyntaxKind.IdentifierName => type,
             SyntaxKind.QualifiedName => SimplifyQualified((NameSyntax)type),
+            SyntaxKind.AliasQualifiedName => SimplifyAlias((NameSyntax)type),
             SyntaxKind.GenericName => this.SimplifyArgumentList((GenericNameSyntax)type),
             SyntaxKind.PredefinedType => type,
             SyntaxKind.ArrayType => this.SimplifyArray((ArrayTypeSyntax)type),
@@ -32,14 +35,37 @@ public class TypeSimplifier
         };
     }
     /// <summary>
+    /// 简化
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    public TypeSyntax Simplify(SimpleNameSyntax type)
+    {
+        return type.Kind() switch
+        {
+            SyntaxKind.GenericName => this.SimplifyArgumentList((GenericNameSyntax)type),
+            _ => type,
+        };
+    }
+    /// <summary>
     /// 简化限定名
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
-    private GenericNameSyntax SimplifyQualified(NameSyntax name)
+    private NameSyntax SimplifyQualified(NameSyntax name)
     {
         CheckQualified(ref name);
-        return this.SimplifyArgumentList((GenericNameSyntax)name);
+        return name;
+    }
+    /// <summary>
+    /// 简化别名
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    private NameSyntax SimplifyAlias(NameSyntax name)
+    {
+        CheckAlias(ref name);
+        return name;
     }
     /// <summary>
     /// 处理类名
@@ -53,6 +79,7 @@ public class TypeSimplifier
             SyntaxKind.IdentifierName => CheckIdentifier(name),
             SyntaxKind.GenericName => CheckGeneric(ref name),
             SyntaxKind.QualifiedName => CheckQualified(ref name),
+            SyntaxKind.AliasQualifiedName => CheckAlias(ref name),
             _ => false,
         };
     }
@@ -75,6 +102,20 @@ public class TypeSimplifier
         return state;
     }
     /// <summary>
+    /// 处理简单类型名
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    protected bool CheckSimple(ref NameSyntax name)
+    {
+        return name.Kind() switch
+        {
+            SyntaxKind.IdentifierName => CheckIdentifier(name),
+            SyntaxKind.GenericName => CheckGeneric(ref name),
+            _ => false,
+        };
+    }
+    /// <summary>
     /// 处理泛型
     /// </summary>
     /// <param name="name"></param>
@@ -88,7 +129,25 @@ public class TypeSimplifier
     /// <returns></returns>
     protected virtual bool CheckQualified(ref NameSyntax name)
         => false;
-
+    /// <summary>
+    /// 处理别名
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    protected virtual bool CheckAlias(ref NameSyntax name)
+    {
+        var aliasName = (AliasQualifiedNameSyntax)name;
+        var alias = aliasName.Alias;
+        NameSyntax name2 = aliasName.Name;
+        var nameState = CheckSimple(ref name2);
+        if (TypeComparer.IsGlobal(alias))
+        {
+            name = name2;
+            return nameState;
+        }
+        name = SyntaxFactory.AliasQualifiedName(alias, (SimpleNameSyntax)name2);
+        return false;
+    }
     #region Stack
     /// <summary>
     /// 入栈(拆分为简单名)
@@ -144,22 +203,44 @@ public class TypeSimplifier
     /// </summary>
     /// <param name="container"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TypeSimplifier Create(NameSyntax container)
     {
-        switch (container.Kind())
+        return container.Kind() switch
         {
-            case SyntaxKind.IdentifierName:
-                return new IdentifierSimplifier((IdentifierNameSyntax)container);
-            case SyntaxKind.GenericName:
-                return new GenericSimplifier((GenericNameSyntax)container);
-            default:
-                var qualified = (QualifiedNameSyntax)container;
-                var left = qualified.Left;
-                var rights = QualifiedTidyBase.CreateStack(ref left, qualified.Right);
-                if (left.IsKind(SyntaxKind.IdentifierName))
-                    return new IdentifierQualifiedSimplifier((IdentifierNameSyntax)left, [.. rights]);
-                return new GenericQualifiedSimplifier((GenericNameSyntax)left, [.. rights]);
-        }
+            SyntaxKind.IdentifierName => new IdentifierSimplifier((IdentifierNameSyntax)container),
+            SyntaxKind.GenericName => new GenericSimplifier((GenericNameSyntax)container),
+            _ => Create((QualifiedNameSyntax)container),
+        };
+    }
+    /// <summary>
+    /// 构建类型简化器
+    /// </summary>
+    /// <param name="container"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IdentifierSimplifier Create(IdentifierNameSyntax container)
+        => new(container);
+    /// <summary>
+    /// 构建类型简化器
+    /// </summary>
+    /// <param name="container"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static GenericSimplifier Create(GenericNameSyntax container)
+        => new(container);
+    /// <summary>
+    /// 构建类型简化器
+    /// </summary>
+    /// <param name="qualified"></param>
+    /// <returns></returns>
+    public static TypeSimplifier Create(QualifiedNameSyntax qualified)
+    {
+        var left = qualified.Left;
+        var rights = QualifiedTidyBase.CreateStack(ref left, qualified.Right);
+        if (left.IsKind(SyntaxKind.IdentifierName))
+            return new IdentifierQualifiedSimplifier((IdentifierNameSyntax)left, [.. rights]);
+        return new GenericQualifiedSimplifier((GenericNameSyntax)left, [.. rights]);
     }
     /// <summary>
     /// 构建类型简化器

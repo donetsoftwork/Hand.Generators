@@ -38,6 +38,12 @@ public abstract class TypeGeneratorBase
     /// <inheritdoc />
     public override NameSyntax Name 
         => _name;
+    /// <summary>
+    /// 所属容器
+    /// </summary>
+    public ISyntaxScope Container 
+        => _container;
+
     /// <inheritdoc />
     public override void Add(ITypeGenerator type)
         => _inners.Add(type);

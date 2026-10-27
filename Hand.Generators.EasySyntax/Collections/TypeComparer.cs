@@ -12,6 +12,10 @@ namespace Hand.Collections;
 public partial class TypeComparer
     : IEqualityComparer<NameSyntax>, IEqualityComparer<TypeSyntax>
 {
+    /// <summary>
+    /// global别名
+    /// </summary>
+    public static readonly IdentifierNameSyntax GlobalName = SyntaxFactory.IdentifierName("global");
     #region IEqualityComparer<TypeSyntax>
     /// <inheritdoc />
     bool IEqualityComparer<TypeSyntax>.Equals(TypeSyntax? x, TypeSyntax? y)
@@ -53,6 +57,7 @@ public partial class TypeComparer
             {
                 SyntaxKind.IdentifierName => IdentifierEqual((IdentifierNameSyntax)x, (IdentifierNameSyntax)y),
                 SyntaxKind.QualifiedName => QualifiedEqual((QualifiedNameSyntax)x, (QualifiedNameSyntax)y),
+                SyntaxKind.AliasQualifiedName => AliasQualifiedEqual((AliasQualifiedNameSyntax)x, (AliasQualifiedNameSyntax)y),
                 SyntaxKind.GenericName => GenericEqual((GenericNameSyntax)x, (GenericNameSyntax)y),
                 SyntaxKind.PredefinedType => PredefinedEqual((PredefinedTypeSyntax)x, (PredefinedTypeSyntax)y),
                 SyntaxKind.ArrayType => ArrayEqual((ArrayTypeSyntax)x, (ArrayTypeSyntax)y),
@@ -76,19 +81,34 @@ public partial class TypeComparer
     /// <returns></returns>
     public static bool Equal(NameSyntax x, NameSyntax y)
     {
-        var kind = x.Kind();
-        if (y.IsKind(kind))
+        var xKind = x.Kind();
+        var yKind = y.Kind();
+        if (y.IsKind(xKind))
         {
-            return kind switch
+            return xKind switch
             {
                 SyntaxKind.IdentifierName => IdentifierEqual((IdentifierNameSyntax)x, (IdentifierNameSyntax)y),
                 SyntaxKind.QualifiedName => QualifiedEqual((QualifiedNameSyntax)x, (QualifiedNameSyntax)y),
+                SyntaxKind.AliasQualifiedName => AliasQualifiedEqual((AliasQualifiedNameSyntax)x, (AliasQualifiedNameSyntax)y),
                 SyntaxKind.GenericName => GenericEqual((GenericNameSyntax)x, (GenericNameSyntax)y),
                 _ => false,
             };
         }
+        if (xKind == SyntaxKind.AliasQualifiedName)
+            return TryGlobalEqual((AliasQualifiedNameSyntax)x, y);
+        else if (yKind == SyntaxKind.AliasQualifiedName)
+            return TryGlobalEqual((AliasQualifiedNameSyntax)y, x);
         return false;
     }
+    /// <summary>
+    /// 尝试匹配全局别名
+    /// </summary>
+    /// <param name="alias"></param>
+    /// <param name="other"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryGlobalEqual(AliasQualifiedNameSyntax alias, NameSyntax other)
+        => IsGlobal(alias.Alias) && Equal(alias.Name, other);
     /// <summary>
     /// 类型判同
     /// </summary>
@@ -123,6 +143,7 @@ public partial class TypeComparer
         {
             SyntaxKind.IdentifierName => GetIdentifierHashCode((IdentifierNameSyntax)name),
             SyntaxKind.QualifiedName => GetQualifiedHashCode((QualifiedNameSyntax)name),
+            SyntaxKind.AliasQualifiedName => GetAliasQualifiedHashCode((AliasQualifiedNameSyntax)name),
             SyntaxKind.GenericName => GetGenericHashCode((GenericNameSyntax)name),
             _ => 0,
         };
@@ -154,6 +175,7 @@ public partial class TypeComparer
         {
             SyntaxKind.IdentifierName => GetIdentifierHashCode((IdentifierNameSyntax)type),
             SyntaxKind.QualifiedName => GetQualifiedHashCode((QualifiedNameSyntax)type),
+            SyntaxKind.AliasQualifiedName => GetAliasQualifiedHashCode((AliasQualifiedNameSyntax)type),
             SyntaxKind.GenericName => GetGenericHashCode((GenericNameSyntax)type),
             SyntaxKind.PredefinedType => GetPredefinedHashCode((PredefinedTypeSyntax)type),
             SyntaxKind.ArrayType => GetArrayHashCode((ArrayTypeSyntax)type),
@@ -184,6 +206,21 @@ public partial class TypeComparer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsEmpty(IdentifierNameSyntax name)
         => string.IsNullOrEmpty(name.Identifier.ValueText);
+    /// <summary>
+    /// 是否为global别名
+    /// </summary>
+    /// <param name="alias"></param>
+    /// <returns></returns>
+    public static bool IsGlobal(AliasQualifiedNameSyntax alias)
+        => IdentifierEqual(alias.Alias, GlobalName);
+    /// <summary>
+    /// 是否为global别名
+    /// </summary>
+    /// <param name="alias"></param>
+    /// <returns></returns>
+    public static bool IsGlobal(IdentifierNameSyntax alias)
+        => IdentifierEqual(alias, GlobalName);
+
     /// <summary>
     /// 默认实例
     /// </summary>

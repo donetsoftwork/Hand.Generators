@@ -47,12 +47,12 @@ public abstract class AttributeGenerator<TSource>(string attributeName, ISyntaxF
     /// <param name="context"></param>
     /// <param name="provider"></param>
     protected abstract void Initialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<TSource> provider);
-    /// <summary>
-    /// 获取生成代码特性
-    /// </summary>
-    /// <param name="namespaces"></param>
-    /// <returns></returns>
-    protected AttributeSyntax ToGeneratedCodeAttribute(List<string> namespaces)
-        => GetType()
-        .ToGeneratedCodeAttribute(namespaces);
+    ///// <summary>
+    ///// 获取生成代码特性
+    ///// </summary>
+    ///// <param name="namespaces"></param>
+    ///// <returns></returns>
+    //protected AttributeSyntax ToGeneratedCodeAttribute(List<string> namespaces)
+    //    => GetType()
+    //    .ToGeneratedCodeAttribute(namespaces);
 }

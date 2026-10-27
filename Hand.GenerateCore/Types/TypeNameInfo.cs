@@ -1,4 +1,5 @@
-﻿using Hand.Syntax;
+﻿using Hand.Scopes;
+using Hand.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -55,7 +56,6 @@ public class TypeNameInfo(string typeName, NameSyntax @namespace)
     /// <returns></returns>
     public static string CheckFullName(INamespaceSymbol @namespace, string typeName)
         => @namespace.IsGlobalNamespace ? typeName : $"{@namespace.ToDisplayString()}.{typeName}";
-
     /// <summary>
     /// 获取扩展类信息
     /// </summary>
@@ -63,4 +63,19 @@ public class TypeNameInfo(string typeName, NameSyntax @namespace)
     /// <returns></returns>
     public static TypeNameInfo GetInfo(INamedTypeSymbol symbol)
         => new(symbol.Name, symbol.ContainingNamespace.ToName());
+    /// <summary>
+    /// DateTime
+    /// </summary>
+    public static TypeNameInfo DateTime
+        => new("DateTime", NamespaceScope.System);
+    /// <summary>
+    /// Guid
+    /// </summary>
+    public static TypeNameInfo Guid
+        => new("Guid", NamespaceScope.System);
+    /// <summary>
+    /// IDisposable
+    /// </summary>
+    public static TypeNameInfo IDisposable
+        => new("IDisposable", NamespaceScope.System);
 }

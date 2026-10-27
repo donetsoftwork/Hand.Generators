@@ -28,6 +28,7 @@
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" PrivateAssets="all" />
 	</ItemGroup>
 	<ItemGroup>
+		<ProjectReference Include="..\..\Hand.GenerateCore\Hand.GenerateCore.csproj" />
 		<ProjectReference Include="..\..\Hand.Generators.EasySyntax\Hand.Generators.EasySyntax.csproj" />
 		<ProjectReference Include="..\..\Hand.Generators.Tidy\Hand.Generators.Tidy.csproj" />
 	</ItemGroup>

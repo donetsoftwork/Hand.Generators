@@ -57,7 +57,7 @@ public abstract class ScopeBase
     /// <inheritdoc />
     public virtual NameSyntax Display(string typeName, NameSyntax @namespace)
     {
-        if(TypeComparer.IsEmpty( @namespace))
+        if(TypeComparer.IsEmpty(@namespace))
             return SyntaxFactory.IdentifierName(typeName);
 
         if (TryGetNamespace(typeName, out var @namespace0))
@@ -82,7 +82,7 @@ public abstract class ScopeBase
         var metadataName = $"{typeName}`{arguments.Length}";
         if (TryGetNamespace(metadataName, out var @namespace0))
         {
-            if (string.Equals(@namespace0, @namespace))
+            if (TypeComparer.Equal(@namespace0, @namespace))
                 return SyntaxGenerator.Generic(typeName, arguments);
             return SyntaxGenerator.Generic(typeName, arguments).Qualify(@namespace);
         }
@@ -102,7 +102,7 @@ public abstract class ScopeBase
         var metadataName = $"{typeName}`{arguments.Arguments.Count}";
         if (TryGetNamespace(metadataName, out var @namespace0))
         {
-            if (string.Equals(@namespace0, @namespace))
+            if (TypeComparer.Equal(@namespace0, @namespace))
                 return SyntaxFactory.GenericName(SyntaxFactory.Identifier(typeName), arguments);
             return SyntaxFactory.GenericName(SyntaxFactory.Identifier(typeName), arguments).Qualify(@namespace);
         }
@@ -149,6 +149,7 @@ public abstract class ScopeBase
         {
             SyntaxKind.IdentifierName => type,
             SyntaxKind.QualifiedName => SimplifyQualified((QualifiedNameSyntax)type),
+            SyntaxKind.AliasQualifiedName => SimplifyAlias((AliasQualifiedNameSyntax)type),
             SyntaxKind.GenericName => this.SimplifyArgumentList((GenericNameSyntax)type),
             SyntaxKind.PredefinedType => type,
             SyntaxKind.ArrayType => this.SimplifyArray((ArrayTypeSyntax)type),
@@ -161,6 +162,31 @@ public abstract class ScopeBase
             SyntaxKind.ScopedType => this.SimplifyScoped((ScopedTypeSyntax)type),
             _ => type,
         };
+    }
+    /// <inheritdoc />
+    public NameSyntax Simplify(NameSyntax type)
+    {
+        return type.Kind() switch
+        {
+            SyntaxKind.IdentifierName => type,
+            SyntaxKind.QualifiedName => SimplifyQualified((QualifiedNameSyntax)type),
+            SyntaxKind.AliasQualifiedName => SimplifyAlias((AliasQualifiedNameSyntax)type),
+            SyntaxKind.GenericName => this.SimplifyArgumentList((GenericNameSyntax)type),
+            _ => type,
+        };
+    }
+    /// <summary>
+    /// 简化别名
+    /// </summary>
+    /// <param name="aliasName"></param>
+    /// <returns></returns>
+    public NameSyntax SimplifyAlias(AliasQualifiedNameSyntax aliasName)
+    {
+        var alias = aliasName.Alias;
+        var name = SimplifySimple(aliasName.Name);
+        if (TypeComparer.IsGlobal(alias))
+            return name;
+        return SyntaxFactory.AliasQualifiedName(alias, name);
     }
     /// <summary>
     /// 简化限定名
@@ -181,5 +207,12 @@ public abstract class ScopeBase
             return Display(identifierName.Identifier.Text, type.Left);
         }
     }
+    /// <summary>
+    /// 简化简单名
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public SimpleNameSyntax SimplifySimple(SimpleNameSyntax name)
+        => name.IsKind(SyntaxKind.IdentifierName) ? name : this.SimplifyArgumentList((GenericNameSyntax)name);
     #endregion
 }

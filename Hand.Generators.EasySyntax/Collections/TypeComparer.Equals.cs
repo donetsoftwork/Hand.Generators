@@ -50,6 +50,14 @@ partial class TypeComparer
     public static bool QualifiedEqual(QualifiedNameSyntax x, QualifiedNameSyntax y)
         => Equal(x.Left, y.Left) && Equal(x.Right, y.Right);
     /// <summary>
+    /// 比较别名
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <returns></returns>
+    public static bool AliasQualifiedEqual(AliasQualifiedNameSyntax x, AliasQualifiedNameSyntax y)
+        => Equal(x.Alias, y.Alias) && Equal(x.Name, y.Name);
+    /// <summary>
     /// 比较数组
     /// </summary>
     /// <param name="x"></param>
